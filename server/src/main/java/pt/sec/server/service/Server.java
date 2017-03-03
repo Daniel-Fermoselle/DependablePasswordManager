@@ -1,4 +1,4 @@
-package pt.sec.server;
+package pt.sec.server.service;
 
 public class Server{
 	
