@@ -18,7 +18,7 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
 
-        <mainclass>pt.sec.server.ServerApplication</mainclass>
+        <mainclass>pt.sec.server.Application</mainclass>
     </properties>
 
     <dependencies> 

@@ -7,6 +7,7 @@ create table Triplet (
    username char(255),
    password char(255),
    domain char(255),
-   primary key (username, password, domain));
+   publicKey char(255),
+   primary key (username, domain, publicKey));
 
-insert into Triplet values ('nasTyMSR', 'bravo', 'google');
+insert into Triplet values ('nasTyMSR', 'bravo', 'google', 'Poguito');

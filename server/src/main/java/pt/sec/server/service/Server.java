@@ -1,27 +1,35 @@
 package pt.sec.server.service;
 
+import pt.sec.server.domain.PasswordManager;
+
 public class Server{
 	
-	private String mysqlId;
-	private String mysqlPassword;
+	private PasswordManager passwordManager;
 	
-    public Server(String mysqlId, String mysqlPassword) throws Exception {
-    	this.mysqlId = mysqlId;
-    	this.mysqlPassword = mysqlPassword;
-    }        
-	
-	public String getMysqlId() {
-		return mysqlId;
+	public Server(String mysqlId, String mysqlPassword) {
+		this.setPasswordManager(new PasswordManager(mysqlId, mysqlPassword));
 	}
-	public void setMysqlId(String mysqlId) {
-		this.mysqlId = mysqlId;
+    
+    //TODO Method to implement from interface
+	//Marcal
+    public void register(){}
+    
+    //TODO Method to implement from interface
+    //Tiago
+    public void put(){}
+    
+    //TODO Method to implement from interface
+    //Daniel
+    public byte[] get(){
+    	return null;
+    }
+
+	public PasswordManager getPasswordManager() {
+		return passwordManager;
 	}
-	public String getMysqlPassword() {
-		return mysqlPassword;
-	}
-	public void setMysqlPassword(String mysqlPassword) {
-		this.mysqlPassword = mysqlPassword;
-	}
-	
+
+	public void setPasswordManager(PasswordManager passwordManager) {
+		this.passwordManager = passwordManager;
+	}    	
 	
 }
