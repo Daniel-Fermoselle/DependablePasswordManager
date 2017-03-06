@@ -28,7 +28,7 @@ public class Database {
         Statement stmt = conn.createStatement();
         
         // Step 3: Execute a SQL SELECT query, the query result
-        String strSelect = "select userID, publicKey from Users where mobile = '" + publicKey + "'";
+        String strSelect = "select userID, publicKey from Users where publicKey = '" + publicKey + "'";
 
         // Step 4: Process the ResultSet by scrolling the cursor forward via next().
         ResultSet rset = stmt.executeQuery(strSelect);
