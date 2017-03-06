@@ -1,5 +1,8 @@
 package pt.sec.a03.server.domain;
 
+import javax.xml.bind.annotation.XmlRootElement;
+
+@XmlRootElement
 public class Triplet {
 
 	private long tripletID;
@@ -8,7 +11,16 @@ public class Triplet {
 	private String username;
 	private String domain;
 	
-	public Triplet(){}
+	public Triplet() {}
+	
+	public Triplet(String password, String username, String domain) {
+		super();
+		this.password = password;
+		this.username = username;
+		this.domain = domain;
+		this.tripletID = 0;
+		this.userID = 0;
+	}	
 
 	public Triplet(long tripletID, long userID, String password, String username, String domain) {
 		super();

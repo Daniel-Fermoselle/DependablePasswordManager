@@ -92,17 +92,33 @@ public class Database {
         }
     }
     
-    public void saveTriplet(long userID, String password, String username, String domain) throws SQLException{
+    //TODO PublicKey instead of String
+    public void saveTriplet(Triplet t, String publicKey) throws SQLException{
+    	long userID = 0;
 		// Step 1: Allocate a database "Connection" object
 		Connection conn = DriverManager.getConnection(
 				"jdbc:mysql://localhost:3306/experiments?useSSL=false", MYSQL_ID, MYSQL_PASSWORD); // MySQL
 
-		// Step 2: Allocate a "Statement" object in the Connection
-		Statement stmt = conn.createStatement();
+        // Step 2: Allocate a "Statement" object in the Connection
+        Statement select = conn.createStatement();
+        
+        // Step 3: Execute a SQL SELECT query, the query result
+        String strSelect = "select Vault.userID from Vault, Users where Vault.userID=Users.userID and publicKey='" 
+        		+ publicKey + "';";
 
-		// Step 3: Execute a SQL DELETE query, the query result
-		String sqlInsert = "insert into Vault(userID, pw, username, domain) values (" + userID + ", '" + password + "', '" + username + "', '" + domain +"');";
-		stmt.execute(sqlInsert);
+        // Step 4: Process the ResultSet by scrolling the cursor forward via next().
+        ResultSet rset = select.executeQuery(strSelect);
+        while(rset.next()) {   // Move the cursor to the next row
+            userID = rset.getLong("userID");
+        }
+		
+		// Step 5: Allocate a "Statement" object in the Connection
+		Statement insert = conn.createStatement();
+
+		// Step 6: Execute a SQL INSERT query, the query result
+		String sqlInsert = "insert into Vault(userID, pw, username, domain) values (" 
+				+ userID + ", '" + t.getPassword() + "', '" + t.getUsername() + "', '" + t.getDomain() +"');";
+		insert.execute(sqlInsert);
     }
 	
 }
