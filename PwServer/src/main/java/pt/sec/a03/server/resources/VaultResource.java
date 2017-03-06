@@ -24,8 +24,8 @@ public class VaultResource {
 	@POST
 	//TODO
 	public Triplet addPassword(Triplet t, @Context UriInfo uriInfo) throws SQLException {
-		vaultService.put(publicKey, t.getPassword(), t.getUsername(), t.getDomain());
-		/*
+		/*vaultService.put(publicKey, t.getPassword(), t.getUsername(), t.getDomain());
+		
 		Need to call getPassword to get triplet to send
 		URI uri = uriInfo.getAbsolutePathBuilder().path(newId).build();
 		return Response.created(uri)
