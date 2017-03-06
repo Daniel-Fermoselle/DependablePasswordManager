@@ -119,6 +119,11 @@ public class Database {
 		String sqlInsert = "insert into Vault(userID, pw, username, domain) values (" 
 				+ userID + ", '" + t.getPassword() + "', '" + t.getUsername() + "', '" + t.getDomain() +"');";
 		insert.execute(sqlInsert);
-    }
-	
+    }	
+    
+    public boolean userInDB(String publicKey) throws SQLException {
+    	if(getUser(publicKey) != null)
+ 			return true;
+ 		return false;
+ 	}
 }

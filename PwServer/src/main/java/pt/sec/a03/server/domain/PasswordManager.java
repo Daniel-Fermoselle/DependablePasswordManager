@@ -3,6 +3,7 @@ package pt.sec.a03.server.domain;
 import java.sql.SQLException;
 
 import pt.sec.a03.server.database.Database;
+import pt.sec.a03.server.exception.InvalidArgumentException;
 
 public class PasswordManager {
 
@@ -16,7 +17,12 @@ public class PasswordManager {
 	public Triplet getTriplet(String username, String domain) throws SQLException{
 		Database db = new Database();
 		Triplet t = db.getTriplet(username, domain);
-		return t;
+		if(t==null){
+			throw new InvalidArgumentException("Username: " + username + " or Domain: " + " invalid");
+		}
+		else{
+			return t;
+		}
 	}
 	
 }
