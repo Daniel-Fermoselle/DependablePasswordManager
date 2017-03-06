@@ -9,7 +9,7 @@ public class VaultService {
 
 	public void put(String publicKey, String password, String username, String domain) throws SQLException{
 		PasswordManager pwm =  new PasswordManager();
-		pwm.saveTriplet(new Triplet(password, username, domain), publicKey);
+		pwm.saveTriplet(new Triplet(password, username, domain, publicKey));
 	}
 	
 }
