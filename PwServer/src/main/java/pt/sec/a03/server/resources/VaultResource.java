@@ -42,8 +42,7 @@ public class VaultResource {
 	public String getPassword(@HeaderParam("domain") String domain, @HeaderParam("username") String username) 
 			throws SQLException {
 		//System.out.println("Domain: " + domain + " username: " + username);
-		Triplet t = vaultService.get(username, domain);
-		String password = t.getPassword();
+		String password = vaultService.get(username, domain);
 		return password;
 	}
 	

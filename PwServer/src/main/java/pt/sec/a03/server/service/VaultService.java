@@ -13,10 +13,11 @@ public class VaultService {
 		pwm.saveTriplet(new Triplet(password, username, domain), publicKey);
 	}
 	
-	public Triplet get(/*String publicKey,*/ String username, String domain) throws SQLException{
+	public String get(/*String publicKey,*/ String username, String domain) throws SQLException{
 		PasswordManager pwm =  new PasswordManager();
 		Triplet t = pwm.getTriplet(username,domain);
-		return t;
+		String password = t.getPassword();
+		return password;
 	}
 	
 }
