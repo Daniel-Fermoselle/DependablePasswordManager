@@ -4,6 +4,8 @@ import java.net.URI;
 import java.sql.SQLException;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -24,7 +26,7 @@ public class VaultResource {
 	@POST
 	//TODO
 	public Triplet addPassword(Triplet t, @Context UriInfo uriInfo) throws SQLException {
-		vaultService.put(publicKey, t.getPassword(), t.getUsername(), t.getDomain());
+		//vaultService.put(publicKey, t.getPassword(), t.getUsername(), t.getDomain());
 		/*
 		Need to call getPassword to get triplet to send
 		URI uri = uriInfo.getAbsolutePathBuilder().path(newId).build();
@@ -33,6 +35,14 @@ public class VaultResource {
 				.build();
 				*/
 		return new Triplet();
+	}
+	
+	@GET
+	public Triplet getPassword(@HeaderParam("domain") String domain, @HeaderParam("username") String username) 
+			throws SQLException {
+		//System.out.println("Domain: " + domain + " username: " + username);
+		Triplet t = vaultService.get(username, domain);
+		return t;
 	}
 	
 }

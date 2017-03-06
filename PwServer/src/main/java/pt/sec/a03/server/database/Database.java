@@ -60,7 +60,7 @@ public class Database {
 		stmt.execute(sqlInsert);
     }
     
-    public Triplet getTriplet(String domain, String username) throws SQLException{
+    public Triplet getTriplet(String username, String domain) throws SQLException{
         String password = "", usernameDB = "", domainDB = "";
         long tripletID = 0, userID = 0;
 		// Step 1: Allocate a database "Connection" object
@@ -71,7 +71,7 @@ public class Database {
         Statement stmt = conn.createStatement();
         
         // Step 3: Execute a SQL SELECT query, the query result
-        String strSelect = "select tripletID, userID, password, username, domain from Vault where domain = '" + domain + "' and username = '" + username + "';";
+        String strSelect = "select tripletID, userID, pw, username, domain from Vault where domain = '" + domain + "' and username = '" + username + "';";
 
         // Step 4: Process the ResultSet by scrolling the cursor forward via next().
         ResultSet rset = stmt.executeQuery(strSelect);
@@ -79,7 +79,7 @@ public class Database {
         while(rset.next()) {   // Move the cursor to the next row
         	tripletID = rset.getLong("tripletID");
             userID = rset.getLong("userID");
-            password = rset.getString("password");
+            password = rset.getString("pw");
             usernameDB = rset.getString("username");
             domainDB = rset.getString("domain");
             ++rowCount;
