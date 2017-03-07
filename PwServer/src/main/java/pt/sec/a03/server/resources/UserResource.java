@@ -35,7 +35,7 @@ public class UserResource {
 		return userService.getUserByID(id);
 	}
 	
-	@PUT
+	@POST
 	//TODO receive the pk correctly 
 	public Response addUser(@HeaderParam("public-key") String publicKey) {
 		userService.addUser(publicKey);
@@ -43,7 +43,7 @@ public class UserResource {
 					.build();
 	}
 	
-	@POST
+	@PUT
 	@Path("/{userId}")
 	//TODO receive the pk correctly 
 	public Response updateUserWithID(@PathParam("userId") String id, @HeaderParam("public-key") String publicKey) {
