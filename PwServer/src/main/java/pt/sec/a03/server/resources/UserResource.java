@@ -3,6 +3,7 @@ package pt.sec.a03.server.resources;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
+import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -23,6 +24,7 @@ public class UserResource {
 	private UserService userService = new UserService();
 	
 	@GET
+	//TODO receive the pk correctly 
 	public User getUserByPK(@HeaderParam("public-key") String publicKey) {
 		return userService.getUserByPK(publicKey);
 	}
@@ -30,7 +32,7 @@ public class UserResource {
 	@GET
 	@Path("/{userId}")
 	public User getUserByID(@PathParam("userId") String id) {
-		return userService.getUserByPK(id);
+		return userService.getUserByID(id);
 	}
 	
 	@PUT
@@ -40,5 +42,13 @@ public class UserResource {
 		return Response.status(Status.CREATED)
 					.build();
 	}
-
+	
+	@POST
+	@Path("/{userId}")
+	//TODO receive the pk correctly 
+	public Response updateUserWithID(@PathParam("userId") String id, @HeaderParam("public-key") String publicKey) {
+		userService.updateUserWithID(id, publicKey);
+		return Response.status(Status.OK)
+					.build();
+	}
 }

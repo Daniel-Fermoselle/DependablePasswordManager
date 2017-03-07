@@ -150,16 +150,16 @@ public class Database {
 		insert.execute(sqlInsert);
     }
 
-	public boolean userInDBByPK(String publicKey) throws SQLException {
-		if(getUserByPK(publicKey) != null)
-			return true;
-		return false;
+	public void updateUser(String id, String publicKey) throws SQLException {
+		// Step 1: Allocate a database "Connection" object
+    	Connection conn = DriverManager.getConnection(
+				"jdbc:mysql://localhost:3306/experiments?useSSL=false", MYSQL_ID, MYSQL_PASSWORD); // MySQL
+
+		// Step 2: Allocate a "Statement" object in the Connection
+		Statement stmt = conn.createStatement();
+
+		// Step 3 & 4: Execute a SQL UPDATE via executeUpdate()
+		String strUpdate = "update Users set publicKey='" + publicKey + "' where userID='" + id + "';";
+		stmt.executeUpdate(strUpdate);		
 	}
-	
-	public boolean userInDBByID(String id) throws SQLException {
-		if(getUserByID(id) != null)
-			return true;
-		return false;
-	}
-	
 }

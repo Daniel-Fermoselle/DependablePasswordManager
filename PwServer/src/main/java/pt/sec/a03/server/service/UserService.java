@@ -18,4 +18,8 @@ public class UserService {
 	public void addUser(String publicKey) {
 		pwm.addUser(publicKey);
 	}
+
+	public void updateUserWithID(String id, String publicKey) {
+		pwm.updateUserWithID(id, publicKey);
+	}
 }

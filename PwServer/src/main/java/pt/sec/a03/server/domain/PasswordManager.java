@@ -15,7 +15,8 @@ public class PasswordManager {
 		}
 		try {
 			Database db = new Database();
-			if(db.userInDBByPK(publicKey)) {
+			User user = db.getUserByPK(publicKey);
+			if(user != null) {
 				throw new AlreadyExistsException("Already exists in the server user with the following Public Key: " 
 						+ publicKey);		
 			}
@@ -31,8 +32,9 @@ public class PasswordManager {
 	public User getUserByID(String id) {
 		try {
 			Database db = new Database();
-			if(db.userInDBByID(id)) {
-				return db.getUserByID(id);
+			User user = db.getUserByID(id);
+			if(user != null) {
+				return user;
 			}
 			else {
 				throw new DataNotFoundException("The user with the ID " + id + " doesn't exist in the server");
@@ -46,11 +48,28 @@ public class PasswordManager {
 	public User getUserByPK(String publicKey) {
 		try {
 			Database db = new Database();
-			if(db.userInDBByPK(publicKey)) {
-				return db.getUserByPK(publicKey);
+			User user = db.getUserByPK(publicKey);
+			if(user != null) {
+				return user;
 			}
 			else {
 				throw new DataNotFoundException("The user with the Public Key " + publicKey + " doesn't exist in the server");
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+			throw new RuntimeException(e.getMessage());
+		}
+	}
+	
+	public void updateUserWithID(String id, String publicKey) {
+		try {
+			Database db = new Database();
+			User user = db.getUserByID(id);
+			if(user != null) {
+				db.updateUser(id, publicKey);
+			}
+			else {
+				throw new DataNotFoundException("The user with the ID " + id + " doesn't exist in the server");
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -62,6 +81,8 @@ public class PasswordManager {
 		Database db = new Database();
 		db.saveTriplet(t, publicKey);
 	}
+
+	
 
 	
 	
