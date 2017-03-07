@@ -1,15 +1,25 @@
 package pt.sec.a03.server.service;
 
-import java.sql.SQLException;
-
-import pt.sec.a03.server.database.Database;
+import pt.sec.a03.server.domain.PasswordManager;
 import pt.sec.a03.server.domain.User;
 
 public class UserService {
 
-	Database db = new Database();
+	private PasswordManager pwm =  new PasswordManager();
 	
-	public User getUser(String id) throws SQLException{
-		return db.getUser(id);
+	public User getUserByID(String id) {
+		return pwm.getUserByID(id);
+	}
+	
+	public User getUserByPK(String publicKey) {
+		return pwm.getUserByPK(publicKey);
+	}
+	
+	public void addUser(String publicKey) {
+		pwm.addUser(publicKey);
+	}
+
+	public void updateUserWithID(String id, String publicKey) {
+		pwm.updateUserWithID(id, publicKey);
 	}
 }
