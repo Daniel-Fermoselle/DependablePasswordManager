@@ -35,10 +35,10 @@ public class VaultResource {
 	}
 	
 	@GET
-	public Triplet getPassword(@HeaderParam("domain") String domain, @HeaderParam("username") String username) 
+	public Triplet getPassword(@HeaderParam("public-key") String publicKey, @HeaderParam("domain") String domain, @HeaderParam("username") String username) 
 			throws SQLException {
-		//System.out.println("Domain: " + domain + " username: " + username);
-		Triplet password = vaultService.get(username, domain);
+		System.out.println("PublicKey: " + publicKey + " Domain: " + domain + " Username: " + username);
+		Triplet password = vaultService.get(publicKey, username, domain);
 		return password;
 	}
 	
