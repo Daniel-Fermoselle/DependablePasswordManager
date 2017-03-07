@@ -93,7 +93,7 @@ public class Database {
     }
     
     //TODO PublicKey instead of String
-    public void saveTriplet(Triplet t) throws SQLException{
+    public void saveTriplet(Triplet t, String publicKey) throws SQLException{
     	long userID = 0;
 		// Step 1: Allocate a database "Connection" object
 		Connection conn = DriverManager.getConnection(
@@ -104,7 +104,7 @@ public class Database {
         
         // Step 3: Execute a SQL SELECT query, the query result
         String strSelect = "select Vault.userID from Vault, Users where Vault.userID=Users.userID and publicKey='" 
-        		+ t.getPublicKey() + "';";
+        		+ publicKey + "';";
 
         // Step 4: Process the ResultSet by scrolling the cursor forward via next().
         ResultSet rset = select.executeQuery(strSelect);
@@ -120,5 +120,20 @@ public class Database {
 				+ userID + ", '" + t.getPassword() + "', '" + t.getUsername() + "', '" + t.getDomain() +"');";
 		insert.execute(sqlInsert);
     }
+    
+    public void updateTriplet(Triplet t) throws SQLException{
+		// Step 1: Allocate a database "Connection" object
+    	Connection conn = DriverManager.getConnection(
+				"jdbc:mysql://localhost:3306/experiments?useSSL=false", MYSQL_ID, MYSQL_PASSWORD); // MySQL
+
+		// Step 2: Allocate a "Statement" object in the Connection
+		Statement stmt = conn.createStatement();
+
+		// Step 3 & 4: Execute a SQL UPDATE via executeUpdate()
+		String strUpdate = "update Vault set pw='" + t.getPassword() + "' where domain='" + t.getDomain() + "' and username='" 
+		+ t.getUsername() + "';";
+		stmt.executeUpdate(strUpdate);
+    }
+    
 	
 }

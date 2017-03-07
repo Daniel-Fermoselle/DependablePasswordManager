@@ -1,10 +1,10 @@
 package pt.sec.a03.server.resources;
 
 import java.net.URI;
-import java.sql.SQLException;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
+import javax.ws.rs.HeaderParam;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
@@ -23,10 +23,10 @@ public class VaultResource {
 	private VaultService vaultService = new VaultService();
 	
 	@POST
-	//TODO
-	public Response addPassword(Triplet t, @Context UriInfo uriInfo) throws SQLException {
-		vaultService.put(t.getPublicKey(), t.getPassword(), t.getUsername(), t.getDomain());
-		URI uri = uriInfo.getAbsolutePathBuilder().path(t.getPublicKey()).build();
+	//TODO PUT , POST or BOTH?
+	public Response addPassword(@HeaderParam("public-key") String publicKey, Triplet t, @Context UriInfo uriInfo) throws Exception {
+		Triplet newTriplet = vaultService.put(publicKey, t.getPassword(), t.getUsername(), t.getDomain());
+		URI uri = uriInfo.getAbsolutePathBuilder().path(newTriplet.getTripletID() + "").build();
 		return Response.created(uri)
 				.entity(t)
 				.build();

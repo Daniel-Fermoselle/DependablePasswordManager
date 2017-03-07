@@ -10,18 +10,16 @@ public class Triplet {
 	private String password;
 	private String username;
 	private String domain;
-	private String publicKey;
 
 	public Triplet() {}
 	
-	public Triplet(String password, String username, String domain, String publicKey) {
+	public Triplet(String password, String username, String domain) {
 		super();
 		this.tripletID = 0;
 		this.userID = 0;
 		this.password = password;
 		this.username = username;
 		this.domain = domain;
-		this.publicKey = publicKey;
 	}	
 
 	public Triplet(long tripletID, long userID, String password, String username, String domain) {
@@ -31,7 +29,6 @@ public class Triplet {
 		this.password = password;
 		this.username = username;
 		this.domain = domain;
-		this.publicKey = "";
 	}	
 	
 	public long getTripletID() {
@@ -72,14 +69,6 @@ public class Triplet {
 	
 	public void setDomain(String domain) {
 		this.domain = domain;
-	}
-	
-	public String getPublicKey() {
-		return publicKey;
-	}
-
-	public void setPublicKey(String publicKey) {
-		this.publicKey = publicKey;
 	}
 	
 }
