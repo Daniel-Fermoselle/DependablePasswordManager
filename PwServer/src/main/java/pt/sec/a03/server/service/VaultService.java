@@ -4,7 +4,6 @@ import java.sql.SQLException;
 
 import pt.sec.a03.server.domain.PasswordManager;
 import pt.sec.a03.server.domain.Triplet;
-import pt.sec.a03.server.exception.InvalidArgumentException;
 
 public class VaultService {
 
@@ -14,11 +13,12 @@ public class VaultService {
 		pwm.saveTriplet(new Triplet(password, username, domain), publicKey);
 	}
 	
-	public String get(/*String publicKey,*/ String username, String domain) throws SQLException, InvalidArgumentException{
+	public Triplet get(/*String publicKey,*/ String username, String domain) throws SQLException{
 		PasswordManager pwm =  new PasswordManager();
 		Triplet t = pwm.getTriplet(username,domain);
-		String password = t.getPassword();
-		return password;
+		Triplet send = new Triplet();
+		send.setPassword(t.getPassword());
+		return send;
 	}
 	
 }

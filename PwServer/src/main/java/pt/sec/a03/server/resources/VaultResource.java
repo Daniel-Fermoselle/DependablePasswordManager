@@ -1,6 +1,5 @@
 package pt.sec.a03.server.resources;
 
-import java.net.URI;
 import java.sql.SQLException;
 
 import javax.ws.rs.Consumes;
@@ -14,7 +13,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 
 import pt.sec.a03.server.domain.Triplet;
-import pt.sec.a03.server.exception.InvalidArgumentException;
 import pt.sec.a03.server.service.VaultService;
 
 @Path("/vault")
@@ -39,11 +37,10 @@ public class VaultResource {
 	}
 	
 	@GET
-	@Produces(MediaType.TEXT_PLAIN)
-	public String getPassword(@HeaderParam("domain") String domain, @HeaderParam("username") String username) 
-			throws SQLException, InvalidArgumentException {
+	public Triplet getPassword(@HeaderParam("domain") String domain, @HeaderParam("username") String username) 
+			throws SQLException {
 		//System.out.println("Domain: " + domain + " username: " + username);
-		String password = vaultService.get(username, domain);
+		Triplet password = vaultService.get(username, domain);
 		return password;
 	}
 	

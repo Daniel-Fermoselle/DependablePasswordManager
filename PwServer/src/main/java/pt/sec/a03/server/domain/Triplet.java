@@ -1,6 +1,7 @@
 package pt.sec.a03.server.domain;
 
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
 @XmlRootElement
 public class Triplet {
@@ -31,6 +32,7 @@ public class Triplet {
 		this.domain = domain;
 	}	
 	
+	@XmlTransient
 	public long getTripletID() {
 		return tripletID;
 	}
@@ -39,6 +41,7 @@ public class Triplet {
 		this.tripletID = tripletID;
 	}
 
+	@XmlTransient
 	public long getUserID() {
 		return userID;
 	}
