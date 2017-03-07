@@ -11,16 +11,16 @@ public class Triplet {
 	private String password;
 	private String username;
 	private String domain;
-	
+
 	public Triplet() {}
 	
 	public Triplet(String password, String username, String domain) {
 		super();
+		this.tripletID = 0;
+		this.userID = 0;
 		this.password = password;
 		this.username = username;
 		this.domain = domain;
-		this.tripletID = 0;
-		this.userID = 0;
 	}	
 
 	public Triplet(long tripletID, long userID, String password, String username, String domain) {

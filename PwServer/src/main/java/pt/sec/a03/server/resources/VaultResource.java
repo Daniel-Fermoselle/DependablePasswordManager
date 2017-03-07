@@ -1,6 +1,7 @@
 package pt.sec.a03.server.resources;
 
 import java.sql.SQLException;
+import java.net.URI;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -10,6 +11,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
 import pt.sec.a03.server.domain.Triplet;
@@ -23,17 +25,13 @@ public class VaultResource {
 	private VaultService vaultService = new VaultService();
 	
 	@POST
-	//TODO
-	public Triplet addPassword(Triplet t, @Context UriInfo uriInfo) throws SQLException {
-		//vaultService.put(publicKey, t.getPassword(), t.getUsername(), t.getDomain());
-		/*
-		Need to call getPassword to get triplet to send
-		URI uri = uriInfo.getAbsolutePathBuilder().path(newId).build();
+	//TODO PUT , POST or BOTH?
+	public Response addPassword(@HeaderParam("public-key") String publicKey, Triplet t, @Context UriInfo uriInfo) throws Exception {
+		Triplet newTriplet = vaultService.put(publicKey, t.getPassword(), t.getUsername(), t.getDomain());
+		URI uri = uriInfo.getAbsolutePathBuilder().path(newTriplet.getTripletID() + "").build();
 		return Response.created(uri)
-				.entity(newMessage)
+				.entity(newTriplet)
 				.build();
-				*/
-		return new Triplet();
 	}
 	
 	@GET
