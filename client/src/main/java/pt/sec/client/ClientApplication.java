@@ -19,16 +19,19 @@ public class ClientApplication {
 			console.printf("Password Manager initiated:\n");
 
             while (true) {
-
+            	
             	console.printf("Chose one of the following:\n\t-register_user\n\t-save_password\n\t-retrieve_password\n=>");
                 String input = console.readLine();
+
                 
                 if ("Exit".equals(input)) {
                     console.printf("CY@!\n");
                     System.exit(0);
                 }
                 else if("register_user".equals(input)) {
-                	
+                	console.printf("Registering....\n");
+                	cl.register_user();
+                	console.printf("User registered successfully....\n");
                 }
                 else if("save_password".equals(input)) {
                 	String domain = readNormal(console, "Domain: ");
