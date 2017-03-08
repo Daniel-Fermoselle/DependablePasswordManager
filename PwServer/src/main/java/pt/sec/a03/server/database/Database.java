@@ -135,6 +135,8 @@ public class Database {
     
     //TODO PublicKey instead of String
     public void saveTriplet(Triplet t, String publicKey) throws SQLException{
+		System.out.println(publicKey + "   pass" + t.getPassword() + "  username" + t.getUsername() + "  domain" + t.getDomain());
+
     	long userID = 0;
 		// Step 1: Allocate a database "Connection" object
 		Connection conn = DriverManager.getConnection(
@@ -144,8 +146,7 @@ public class Database {
         Statement select = conn.createStatement();
         
         // Step 3: Execute a SQL SELECT query, the query result
-        String strSelect = "select Vault.userID from Vault, Users where Vault.userID=Users.userID and publicKey='" 
-        		+ publicKey + "';";
+        String strSelect = "select userID from Users where publicKey='" + publicKey + "';";
 
         // Step 4: Process the ResultSet by scrolling the cursor forward via next().
         ResultSet rset = select.executeQuery(strSelect);

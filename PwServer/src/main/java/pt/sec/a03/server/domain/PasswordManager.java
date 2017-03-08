@@ -102,7 +102,6 @@ public class PasswordManager {
 			}
 			if(u == null) {
 				throw new DataNotFoundException("The user with the public key " + publicKey + " doesn't exist in the server");
-		
 			}
 			else {		
 				//TODO refactor this to use ID instead of public key so we can avoid doing one select
