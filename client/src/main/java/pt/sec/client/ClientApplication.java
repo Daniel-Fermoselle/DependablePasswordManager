@@ -28,9 +28,9 @@ public class ClientApplication {
                     System.exit(0);
                 }
                 else if("register_user".equals(input)) {
-                	System.out.print("Registering....");
+                	System.out.println("Registering....");
                 	cl.register_user();
-                	System.out.print("User registered successfully....");
+                	System.out.println("User registered successfully....");
                 }
                 else if("save_password".equals(input)) {
                 	System.out.print("Domain: ");
