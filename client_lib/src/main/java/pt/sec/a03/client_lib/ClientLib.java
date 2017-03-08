@@ -20,6 +20,7 @@ public class ClientLib
 	private Client client = ClientBuilder.newClient();
 	private WebTarget baseTarget = client.target("http://localhost:8080/PwServer/webapi/");
 	private WebTarget vaultTarget = baseTarget.path("vault");
+	private WebTarget userTarget = baseTarget.path("users");
 		
     public void init(KeyStore ks) {
     	this.ks = ks;
@@ -27,7 +28,29 @@ public class ClientLib
     
     //Daniel
     public void register_user() {
+    	String pubKey = "1234";
+    	//PublicKey pubKey = null; // ks.getKey("PublicKey", "Pog123");
+    	//String stringPubKey = Base64.encodeBase64String(pubKey.getEncoded());
+    	Response postResponse = userTarget
+    			.request()
+    			.header("public-key", pubKey)
+    			.post(Entity.json(null));
     	
+		if (postResponse.getStatus() == 201) {
+			System.out.println("Sucess");
+		}
+		else if (postResponse.getStatus() == 400) {
+			System.out.println("Invalid argument");
+		}
+		else if (postResponse.getStatus() == 404) {
+			System.out.println("Data Not Found");
+		}
+		else if (postResponse.getStatus() == 500) {
+			System.out.println("Internal server error");
+		}
+		else {
+			System.out.println("Error");
+		}
     }
     
     //Mar

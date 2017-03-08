@@ -20,15 +20,17 @@ public class ClientApplication {
             while (true) {
 
                 System.out.println("Password Manager initiated: ");
-                System.out.println("Chose one of the following: create_user, save_password, get_password");
+                System.out.println("Chose one of the following: register_user, save_password, get_password, exit");
                 String input = br.readLine();
                 
                 if ("Exit".equals(input)) {
                     System.out.println("CY@!");
                     System.exit(0);
                 }
-                else if("create_user".equals(input)) {
-                	
+                else if("register_user".equals(input)) {
+                	System.out.print("Registering....");
+                	cl.register_user();
+                	System.out.print("User registered successfully....");
                 }
                 else if("save_password".equals(input)) {
                 	System.out.print("Domain: ");
