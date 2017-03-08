@@ -34,7 +34,7 @@ public class ClientLib
     public void save_password(String domain, String username, String password) {
     	CommonTriplet commonTriplet = new CommonTriplet(password, username, domain);
     	PublicKey pubKey = null; // ks.getKey("PublicKey", "Pog123");
-    	String stringPubKey = Base64.encodeBase64String(pubKey.getEncoded());
+    	String stringPubKey = "123";//Base64.encodeBase64String(pubKey.getEncoded());
     	Response postResponse = vaultTarget
     			.request()
     			.header("public-key", stringPubKey)
@@ -59,7 +59,29 @@ public class ClientLib
     
     //Tiago
     public String retrive_password(String domain, String username) {
-    	return "String";
+    	PublicKey pubKey = null; // ks.getKey("PublicKey", "Pog123");
+    	String stringPubKey = "123";//Base64.encodeBase64String(pubKey.getEncoded());
+    	Response getResponse = vaultTarget
+    			.request()
+    			.header("public-key", stringPubKey).header("domain", domain).header("username", username)
+    			.get();
+    	
+		if (getResponse.getStatus() == 200) {
+			System.out.println("Sucess");
+		}
+		else if (getResponse.getStatus() == 400) {
+			System.out.println("Invalid argument");
+		}
+		else if (getResponse.getStatus() == 404) {
+			System.out.println("Data Not Found");
+		}
+		else if (getResponse.getStatus() == 500) {
+			System.out.println("Internal server error");
+		}
+		else {
+			System.out.println("Error");
+		}
+		return getResponse.readEntity(CommonTriplet.class).getPassword();
     }
     
     public void close() {
