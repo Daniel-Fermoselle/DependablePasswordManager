@@ -5,6 +5,7 @@ import java.sql.SQLException;
 import pt.sec.a03.server.database.Database;
 import pt.sec.a03.server.exception.AlreadyExistsException;
 import pt.sec.a03.server.exception.DataNotFoundException;
+import pt.sec.a03.server.exception.ForbiddenAccessException;
 import pt.sec.a03.server.exception.InvalidArgumentException;
 
 public class PasswordManager {
@@ -89,24 +90,28 @@ public class PasswordManager {
 	}
 	
 	public Triplet saveTriplet(Triplet t, String publicKey) throws Exception{
-		if(publicKey == null || t.getPassword() == null || t.getUsername() == null || t.getDomain() == null) {
+		if(publicKey == null || t == null || t.getPassword() == null || t.getUsername() == null || t.getDomain() == null) {
 			throw new InvalidArgumentException("The arguments provided are not suitable to create a new password");
 		}
 		try {
 			Database db = new Database();
 			User u = db.getUserByPK(publicKey);
 			Triplet newTriplet = db.getTriplet(t.getUsername(), t.getDomain());
-			//Update password in database
-			if(newTriplet != null){
-				db.updateTriplet(newTriplet);
-			}
 			if(u == null) {
 				throw new DataNotFoundException("The user with the public key " + publicKey + " doesn't exist in the server");
 			}
-			else {		
-				//TODO refactor this to use ID instead of public key so we can avoid doing one select
-				db.saveTriplet(t, u.getPublicKey());
+			if(newTriplet != null){
+				if(newTriplet.getUserID() == u.getUserID()){
+					db.updateTriplet(t);
+				}
+				else{
+					throw new ForbiddenAccessException("The user with the public key " + publicKey + " has no permissions to access this information");		
+				}
+			}			
+			else{
+				db.saveTriplet(t, u.getUserID());
 			}
+						
 			return db.getTriplet(t.getUsername(), t.getDomain());
 		}
 		catch (SQLException e) {
