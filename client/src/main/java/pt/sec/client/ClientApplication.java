@@ -20,26 +20,25 @@ public class ClientApplication {
 
             while (true) {
             	
-            	console.printf("Chose one of the following:\n\t-register_user\n\t-save_password\n\t-retrieve_password\n=>");
+            	console.printf("Chose one of the following:\n\t1 - register_user\n\t2 - save_password\n\t3 - retrieve_password\nExit to quit\n=>");
                 String input = console.readLine();
-
                 
                 if ("Exit".equals(input)) {
                     console.printf("CY@!\n");
                     System.exit(0);
                 }
-                else if("register_user".equals(input)) {
+                else if("1".equals(input)) {
                 	console.printf("Registering....\n");
                 	cl.register_user();
                 	console.printf("User registered successfully....\n");
                 }
-                else if("save_password".equals(input)) {
+                else if("2".equals(input)) {
                 	String domain = readNormal(console, "Domain: ");
                 	String username = readNormal(console, "Username: ");
                 	String password = readNormal(console, "Password: ");
                     cl.save_password(domain, username, password);
                 }
-                else if("retrieve_password".equals(input)) {
+                else if("3".equals(input)) {
                 	String domain = readNormal(console, "Domain: ");
                 	String username = readNormal(console, "Username: ");
                 	console.printf("The password is: " + cl.retrive_password(domain, username) + "\n");

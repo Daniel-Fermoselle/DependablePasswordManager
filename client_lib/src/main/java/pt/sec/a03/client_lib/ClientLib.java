@@ -37,7 +37,7 @@ public class ClientLib
     			.post(Entity.json(null));
     	
 		if (postResponse.getStatus() == 201) {
-			System.out.println("Sucess");
+			System.out.println("Success");
 		}
 		else if (postResponse.getStatus() == 400) {
 			System.out.println("Invalid argument");
@@ -64,7 +64,7 @@ public class ClientLib
     			.post(Entity.json(commonTriplet));
     	
 		if (postResponse.getStatus() == 201) {
-			System.out.println("Sucess");
+			System.out.println("Success");
 		}
 		else if (postResponse.getStatus() == 400) {
 			System.out.println("Invalid argument");
@@ -90,7 +90,7 @@ public class ClientLib
     			.get();
     	
 		if (getResponse.getStatus() == 200) {
-			System.out.println("Sucess");
+			System.out.println("Success");
 		}
 		else if (getResponse.getStatus() == 400) {
 			System.out.println("Invalid argument");
