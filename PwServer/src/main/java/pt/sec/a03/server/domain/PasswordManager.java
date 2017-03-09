@@ -81,8 +81,11 @@ public class PasswordManager {
 	public Triplet getTriplet(String username, String domain) throws SQLException{
 		Database db = new Database();
 		Triplet t = db.getTriplet(username, domain);
+		if(username==null || domain==null){
+			throw new InvalidArgumentException("Username or domain invalid");
+		}
 		if(t==null){
-			throw new InvalidArgumentException("Username: " + username + " or Domain: " + " invalid");
+			throw new DataNotFoundException("Username: " + username + " or Domain: " + domain + " invalid");
 		}
 		else{
 			return t;

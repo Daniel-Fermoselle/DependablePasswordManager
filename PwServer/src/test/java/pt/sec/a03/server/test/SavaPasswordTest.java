@@ -3,8 +3,12 @@ package pt.sec.a03.server.test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
+import java.io.FileNotFoundException;
+import java.sql.SQLException;
+
 import org.junit.Test;
 
+import pt.sec.a03.server.database.Database;
 import pt.sec.a03.server.domain.PasswordManager;
 import pt.sec.a03.server.domain.Triplet;
 import pt.sec.a03.server.exception.DataNotFoundException;
@@ -19,15 +23,27 @@ public class SavaPasswordTest extends AbstractPasswordManagerTest {
 	private static String pubKey = "123";
 	private static String pubKeyNoob = "1234";
 	private static String nullPubKey = null;
+	private Database db;
 	
 	@Override
 	protected void populate() {
+		db = new Database();
 		pwm = new PasswordManager();
 		t1 = new Triplet("poguito", "username", "youtube");
 		t12 = new Triplet("poguito2", "username", "youtube");
 		t2 = new Triplet("noobito", "noobUser", "noobDomain");
 		nullTriplet = null;
 	}
+	
+	@Override
+	protected void after() {
+		try {
+			db.runScript();
+		} catch (FileNotFoundException | SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
 	
 	
 	
@@ -58,7 +74,7 @@ public class SavaPasswordTest extends AbstractPasswordManagerTest {
 	  	} catch (DataNotFoundException e) {
 			System.out.println("This is fine this test should fail with this exception: DataNotFoundException");
 		} catch (Exception e) {
-			e.printStackTrace();
+			fail("This test should fail with exception DataNotFoundException");
 		};
 	  }
 	  
@@ -70,7 +86,7 @@ public class SavaPasswordTest extends AbstractPasswordManagerTest {
 		} catch (DataNotFoundException e) {
 			System.out.println("This is fine this test should fail with this exception: DataNotFoundException");
 		} catch (Exception e) {
-			e.printStackTrace();
+			fail("This test should fail with exception DataNotFoundException");
 		}
 	  }
 	  
@@ -82,7 +98,7 @@ public class SavaPasswordTest extends AbstractPasswordManagerTest {
 		} catch (InvalidArgumentException e) {
 			System.out.println("This is fine this test should fail with this exception: InvalidArgumentException");
 		} catch (Exception e) {
-			e.printStackTrace();
+			fail("This test should fail with exception InvalidArgumentException");
 		}
 	  }
 	  
@@ -94,7 +110,7 @@ public class SavaPasswordTest extends AbstractPasswordManagerTest {
 		} catch (InvalidArgumentException e) {
 			System.out.println("This is fine this test should fail with this exception: InvalidArgumentException");
 		} catch (Exception e) {
-			e.printStackTrace();
+			fail("This test should fail with exception InvalidArgumentException");
 		}
 	  }
 	  
@@ -107,7 +123,7 @@ public class SavaPasswordTest extends AbstractPasswordManagerTest {
 	  	} catch (DataNotFoundException e) {
 			System.out.println("This is fine this test should fail with this exception: DataNotFoundException");
 		} catch (Exception e) {
-			e.printStackTrace();
+			fail("This test should fail with exception DataNotFoundException");
 		};
 	  }
 
