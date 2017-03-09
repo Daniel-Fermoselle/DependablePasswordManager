@@ -78,18 +78,24 @@ public class PasswordManager {
 		}
 	}
 	
-	public Triplet getTriplet(String username, String domain) throws SQLException{
-		Database db = new Database();
-		Triplet t = db.getTriplet(username, domain);
-		if(t==null){
-			throw new InvalidArgumentException("Username: " + username + " or Domain: " + " invalid");
+	public Triplet getTriplet(String username, String domain) {
+		try{
+			Database db = new Database();
+			Triplet t = db.getTriplet(username, domain);
+			if(t==null){
+				throw new InvalidArgumentException("Username: " + username + " or Domain: " + " invalid");
+			}
+			else{
+				return t;
+			}
 		}
-		else{
-			return t;
+		catch (SQLException e) {
+			e.printStackTrace();
+			throw new RuntimeException(e.getMessage());
 		}
 	}
 	
-	public Triplet saveTriplet(Triplet t, String publicKey) throws Exception{
+	public Triplet saveTriplet(Triplet t, String publicKey){
 		if(publicKey == null || t == null || t.getPassword() == null || t.getUsername() == null || t.getDomain() == null) {
 			throw new InvalidArgumentException("The arguments provided are not suitable to create a new password");
 		}

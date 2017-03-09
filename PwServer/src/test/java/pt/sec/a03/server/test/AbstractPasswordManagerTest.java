@@ -20,15 +20,14 @@ public abstract class AbstractPasswordManagerTest {
     public void setUp() throws Exception {
         try {
             populate();
-        } catch (Exception e) {
+        }catch (Exception e) {
             e.printStackTrace();
         }
     }
 
     @After // rollback after each test
     public void tearDown() {
-        try {
-        	
+        try {        	
         }catch (Exception e) {
             e.printStackTrace();
         }

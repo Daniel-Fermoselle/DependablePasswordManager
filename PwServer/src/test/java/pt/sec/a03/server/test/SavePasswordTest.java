@@ -10,7 +10,7 @@ import pt.sec.a03.server.domain.Triplet;
 import pt.sec.a03.server.exception.DataNotFoundException;
 import pt.sec.a03.server.exception.InvalidArgumentException;
 
-public class SavaPasswordTest extends AbstractPasswordManagerTest {
+public class SavePasswordTest extends AbstractPasswordManagerTest {
 	private PasswordManager pwm;
 	private Triplet t1;
 	private Triplet t12;
