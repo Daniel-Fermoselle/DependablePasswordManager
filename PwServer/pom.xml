@@ -29,6 +29,12 @@
 			<artifactId>common_classes</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.apache.ibatis/ibatis-sqlmap -->
+		<dependency>
+			<groupId>org.apache.ibatis</groupId>
+			<artifactId>ibatis-sqlmap</artifactId>
+			<version>3.0-beta-10</version>
+		</dependency>
 	</dependencies>
 
 	<build>

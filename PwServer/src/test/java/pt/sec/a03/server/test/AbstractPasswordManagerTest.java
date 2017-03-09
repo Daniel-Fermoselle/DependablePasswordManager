@@ -1,15 +1,13 @@
 package pt.sec.a03.server.test;
 
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 
-public abstract class AbstractPasswordManagerTest {
+public abstract class AbstractPasswordManagerTest  {
 
 	public AbstractPasswordManagerTest() {
-		// TODO Auto-generated constructor stub
-		
+			
 	}
 	
 	@BeforeClass
@@ -20,6 +18,7 @@ public abstract class AbstractPasswordManagerTest {
     public void setUp() throws Exception {
         try {
             populate();
+            
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -28,12 +27,13 @@ public abstract class AbstractPasswordManagerTest {
     @After // rollback after each test
     public void tearDown() {
         try {
-        	
+        	after();
         }catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    protected abstract void populate(); // each test adds its own data
+	protected abstract void populate(); // each test adds its own data
 
+	protected abstract void after();
 }
