@@ -67,18 +67,26 @@ public class SavePasswordTest extends AbstractPasswordManagerTest {
 	//tests: 
 	  @Test
 	  public void successSavePassword() throws Exception{
+		try{
 		Triplet t3 = pwm.saveTriplet(t2,pubKeyNoob);
 	    assertEquals("Username saved incorrectly.", t2.getUsername(), t3.getUsername());
 	    assertEquals("Domain saved incorrectly.", t2.getDomain(), t3.getDomain());
 	    assertEquals("Password saved incorrectly.", t2.getPassword(), t3.getPassword());
+		} catch (Exception e) {
+			fail("This test should not fail");
+		};
 	  }
 	  
 	  @Test
 	  public void successUpdatePassword() throws Exception{
+		try{
 		Triplet t4 = pwm.saveTriplet(t12,ForbidPublic);
 	    assertEquals("Username saved incorrectly.", t12.getUsername(), t1.getUsername());
 	    assertEquals("Domain saved incorrectly.", t12.getDomain(), t1.getDomain());
 	    assertEquals("Password saved incorrectly.", t12.getPassword(), t4.getPassword());
+		} catch (Exception e) {
+			fail("This test should not fail");
+		};
 	  }
 	  
 	  @Test
@@ -93,6 +101,17 @@ public class SavePasswordTest extends AbstractPasswordManagerTest {
 		};
 	  }
 	  
+	  @Test
+	  public void repetitivePassword(){
+		try{
+			Triplet t4 = pwm.saveTriplet(t1,ForbidPublic);
+			assertEquals("Username saved incorrectly.", t1.getUsername(), t4.getUsername());
+		    assertEquals("Domain saved incorrectly.", t1.getDomain(), t4.getDomain());
+		    assertEquals("Password saved incorrectly.", t1.getPassword(), t4.getPassword());	  	
+		} catch (Exception e) {
+			fail("This test should not fail");
+		};
+	  }
 	  
 	  @Test
 	  public void nullArgumentsSavePassword(){
