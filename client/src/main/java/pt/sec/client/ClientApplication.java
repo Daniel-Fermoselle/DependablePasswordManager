@@ -30,7 +30,7 @@ public class ClientApplication {
 		
 		String KeyStorePass = readPassword(console, "Password to your Key Store: ");
 		
-		String pubKeyAlias = readNormal(console, "Alias for your public key");
+		String pubKeyAlias = readNormal(console, "Alias to your public key: ");
 		
 		KeyStore ks = Crypto.readKeystoreFile(KeyStorePath, KeyStorePass.toCharArray());
 		cl.init(ks, pubKeyAlias);
