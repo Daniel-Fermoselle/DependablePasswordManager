@@ -17,11 +17,8 @@ create table Vault (
 	username varchar(255),
 	domain varchar(255),
 	primary key (tripletID),
-	foreign key (userID) references Users(userID)
-	);
+	foreign key (userID) references Users(userID));
 
 insert into Users(publicKey) values ('123');
-insert into Users(publicKey) values ('sjicasjisaasisajciasjicajsjicasjisaasisajciasjicajsjicasjisaasisajciasjicajsjicasjisaasisajciasjicajsjicasjisaasisajciasjicajsjicasjisaasisajciasjicajsjicasjisaasisajciasjicajsjicasjisaasisajciasjicajsjicasjisaasisajciasjicajsjicasjisaasisajciasjicajsjicasjisaasisajciasjicajsjicasjisaasisajciasjicajsjicasjisaasisajciasjicajsjicasjisaasisajciasjicajsjicasjisaasisajciasjicajsjicasjisaasisajciasjicaj');
 
 insert into Vault(userID, pw, username, domain) values ( 1, 'pas', 'username', 'tecnico');
-insert into Vault(userID, pw, username, domain) values ( 2, 'pas', 'username', 'tecnico');

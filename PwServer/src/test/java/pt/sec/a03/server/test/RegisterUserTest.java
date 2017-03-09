@@ -23,10 +23,15 @@ public class RegisterUserTest extends AbstractPasswordManagerTest {
 	
 	@Override
 	protected void populate() {
+		try{
 		db = new Database();
-		pwm = new PasswordManager();
-		existingUserPK = "123";
-		newUserPK = "Bob";
+			pwm = new PasswordManager();
+			existingUserPK = "123";
+			newUserPK = "Bob";
+			db.saveUser(existingUserPK);
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
 
 	}
 	
