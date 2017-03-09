@@ -1,7 +1,9 @@
 package pt.sec.a03.client_lib;
 
 import java.security.KeyStore;
+import java.security.KeyStoreException;
 import java.security.PublicKey;
+import java.security.cert.Certificate;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -12,28 +14,33 @@ import javax.ws.rs.core.Response;
 import org.apache.commons.codec.binary.Base64;
 
 import pt.sec.a03.common_classes.CommonTriplet;
+import pt.sec.a03.crypto.Crypto;
 
 
 public class ClientLib 
 {
+	
 	private KeyStore ks;
+	private String aliasForPubKey;
 	private Client client = ClientBuilder.newClient();
 	private WebTarget baseTarget = client.target("http://localhost:8080/PwServer/webapi/");
 	private WebTarget vaultTarget = baseTarget.path("vault");
 	private WebTarget userTarget = baseTarget.path("users");
 		
-    public void init(KeyStore ks) {
+    public void init(KeyStore ks, String aliasForPubKey) {
     	this.ks = ks;
+    	this.aliasForPubKey = aliasForPubKey;
     }
     
-    //Daniel
-    public void register_user() {
-    	String pubKey = "1234";
-    	//PublicKey pubKey = null; // ks.getKey("PublicKey", "Pog123");
-    	//String stringPubKey = Base64.encodeBase64String(pubKey.getEncoded());
+    public void register_user() throws KeyStoreException {
+    	//Get PubKey from key store
+    	Certificate cert = ks.getCertificate(aliasForPubKey);
+    	PublicKey pubKey = Crypto.getPublicKeyFromCertificate(cert);
+    	
+    	String stringPubKey = Base64.encodeBase64String(pubKey.getEncoded());
     	Response postResponse = userTarget
     			.request()
-    			.header("public-key", pubKey)
+    			.header("public-key", stringPubKey)
     			.post(Entity.json(null));
     	
 		if (postResponse.getStatus() == 201) {
