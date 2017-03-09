@@ -18,8 +18,7 @@ public abstract class AbstractPasswordManagerTest  {
     public void setUp() throws Exception {
         try {
             populate();
-            
-        } catch (Exception e) {
+        }catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -27,7 +26,7 @@ public abstract class AbstractPasswordManagerTest  {
     @After // rollback after each test
     public void tearDown() {
         try {
-        	after();
+        	after();  	
         }catch (Exception e) {
             e.printStackTrace();
         }

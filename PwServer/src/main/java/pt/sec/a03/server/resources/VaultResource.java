@@ -25,8 +25,7 @@ public class VaultResource {
 	private VaultService vaultService = new VaultService();
 	
 	@POST
-	//TODO PUT , POST or BOTH?
-	public Response addPassword(@HeaderParam("public-key") String publicKey, Triplet t, @Context UriInfo uriInfo) throws Exception {
+	public Response addPassword(@HeaderParam("public-key") String publicKey, Triplet t, @Context UriInfo uriInfo) {
 		Triplet newTriplet = vaultService.put(publicKey, t.getPassword(), t.getUsername(), t.getDomain());
 		URI uri = uriInfo.getAbsolutePathBuilder().path(newTriplet.getTripletID() + "").build();
 		return Response.created(uri)
@@ -35,8 +34,7 @@ public class VaultResource {
 	}
 	
 	@GET
-	public Triplet getPassword(@HeaderParam("public-key") String publicKey, @HeaderParam("domain") String domain, @HeaderParam("username") String username) 
-			throws SQLException {
+	public Triplet getPassword(@HeaderParam("public-key") String publicKey, @HeaderParam("domain") String domain, @HeaderParam("username") String username) {
 		System.out.println("PublicKey: " + publicKey + " Domain: " + domain + " Username: " + username);
 		Triplet password = vaultService.get(publicKey, username, domain);
 		return password;

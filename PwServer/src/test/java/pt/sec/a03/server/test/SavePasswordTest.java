@@ -11,10 +11,11 @@ import org.junit.Test;
 import pt.sec.a03.server.database.Database;
 import pt.sec.a03.server.domain.PasswordManager;
 import pt.sec.a03.server.domain.Triplet;
+import pt.sec.a03.server.domain.User;
 import pt.sec.a03.server.exception.DataNotFoundException;
 import pt.sec.a03.server.exception.InvalidArgumentException;
 
-public class SavaPasswordTest extends AbstractPasswordManagerTest {
+public class SavePasswordTest extends AbstractPasswordManagerTest {
 	private PasswordManager pwm;
 	private Triplet t1;
 	private Triplet t12;
@@ -22,6 +23,7 @@ public class SavaPasswordTest extends AbstractPasswordManagerTest {
 	private Triplet nullTriplet;
 	private static String pubKey = "123";
 	private static String pubKeyNoob = "1234";
+	private static String ForbidPublic = "12345";
 	private static String nullPubKey = null;
 	private Database db;
 	
@@ -32,7 +34,18 @@ public class SavaPasswordTest extends AbstractPasswordManagerTest {
 		t1 = new Triplet("poguito", "username", "youtube");
 		t12 = new Triplet("poguito2", "username", "youtube");
 		t2 = new Triplet("noobito", "noobUser", "noobDomain");
+		//t4 = new Triplet("poguito", "usernameNoob", "tecnico");
 		nullTriplet = null;
+		
+		pwm = new PasswordManager();
+		db = new Database();
+		try {
+			db.saveUser(ForbidPublic);
+			User user = db.getUserByPK(ForbidPublic);
+			db.saveTriplet(t1, user.getUserID());
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	@Override
@@ -119,11 +132,11 @@ public class SavaPasswordTest extends AbstractPasswordManagerTest {
 		try{
 			Triplet t3 = pwm.saveTriplet(t1,pubKey);
 			Triplet t4 = pwm.saveTriplet(t1,nullPubKey);
-			fail("This test should fail with exception DataNotFoundException");
-	  	} catch (DataNotFoundException e) {
-			System.out.println("This is fine this test should fail with this exception: DataNotFoundException");
+			fail("This test should fail with exception InvalidArgumentException");
+	  	} catch (InvalidArgumentException e) {
+			System.out.println("This is fine this test should fail with this exception: InvalidArgumentException");
 		} catch (Exception e) {
-			fail("This test should fail with exception DataNotFoundException");
+			fail("This test should fail with exception InvalidArgumentException");
 		};
 	  }
 
