@@ -25,7 +25,8 @@ public class ClientApplication {
 		}
 		console.printf("Password Manager initiated:\n");
 		
-		String KeyStorePath = readNormal(console, "Full path to your Key Store: ");
+		console.printf("Full path to your Key Store: ");
+		String KeyStorePath = console.readLine();
 		
 		String KeyStorePass = readPassword(console, "Password to your Key Store: ");
 		
