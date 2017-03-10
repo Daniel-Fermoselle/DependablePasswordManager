@@ -1,8 +1,5 @@
 package pt.sec.a03.server.resources;
 
-import java.sql.SQLException;
-import java.net.URI;
-
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
@@ -12,6 +9,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
 import pt.sec.a03.server.domain.Triplet;
@@ -26,10 +24,8 @@ public class VaultResource {
 	
 	@POST
 	public Response addPassword(@HeaderParam("public-key") String publicKey, Triplet t, @Context UriInfo uriInfo) {
-		Triplet newTriplet = vaultService.put(publicKey, t.getPassword(), t.getUsername(), t.getDomain());
-		URI uri = uriInfo.getAbsolutePathBuilder().path(newTriplet.getTripletID() + "").build();
-		return Response.created(uri)
-				.entity(newTriplet)
+		vaultService.put(publicKey, t.getPassword(), t.getUsername(), t.getDomain());
+		return Response.status(Status.CREATED)
 				.build();
 	}
 	

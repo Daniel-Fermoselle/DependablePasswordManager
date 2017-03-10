@@ -14,7 +14,6 @@ import javax.ws.rs.core.Response;
 
 import org.apache.commons.codec.binary.Base64;
 
-import pt.sec.a03.client_lib.filters.GetPasswordFilter;
 import pt.sec.a03.client_lib.filters.LoggingFilter;
 import pt.sec.a03.common_classes.CommonTriplet;
 import pt.sec.a03.crypto.Crypto;
@@ -72,7 +71,6 @@ public class ClientLib
     	
     	String stringPubKey = Base64.encodeBase64String(pubKey.getEncoded());
     	Response postResponse = vaultTarget
-    			.register(GetPasswordFilter.class)
     			.request()
     			.header("public-key", stringPubKey)
     			.post(Entity.json(commonTriplet));
