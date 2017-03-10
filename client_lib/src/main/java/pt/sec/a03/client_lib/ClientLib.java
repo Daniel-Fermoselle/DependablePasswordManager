@@ -1,5 +1,6 @@
 package pt.sec.a03.client_lib;
 
+
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.PublicKey;
@@ -13,6 +14,8 @@ import javax.ws.rs.core.Response;
 
 import org.apache.commons.codec.binary.Base64;
 
+import pt.sec.a03.client_lib.filters.GetPasswordFilter;
+import pt.sec.a03.client_lib.filters.LoggingFilter;
 import pt.sec.a03.common_classes.CommonTriplet;
 import pt.sec.a03.crypto.Crypto;
 
@@ -22,7 +25,8 @@ public class ClientLib
 	
 	private KeyStore ks;
 	private String aliasForPubKey;
-	private Client client = ClientBuilder.newClient();
+	private Client client = ClientBuilder.newClient()
+					.register(LoggingFilter.class);
 	private WebTarget baseTarget = client.target("http://localhost:8080/PwServer/webapi/");
 	private WebTarget vaultTarget = baseTarget.path("vault");
 	private WebTarget userTarget = baseTarget.path("users");
@@ -61,11 +65,14 @@ public class ClientLib
     }
     
     //Mar
-    public void save_password(String domain, String username, String password) {
+    public void save_password(String domain, String username, String password) throws KeyStoreException {
     	CommonTriplet commonTriplet = new CommonTriplet(password, username, domain);
-    	PublicKey pubKey = null; // ks.getKey("PublicKey", "Pog123");
-    	String stringPubKey = "123";//Base64.encodeBase64String(pubKey.getEncoded());
+    	Certificate cert = ks.getCertificate(aliasForPubKey);
+    	PublicKey pubKey = Crypto.getPublicKeyFromCertificate(cert);
+    	
+    	String stringPubKey = Base64.encodeBase64String(pubKey.getEncoded());
     	Response postResponse = vaultTarget
+    			.register(GetPasswordFilter.class)
     			.request()
     			.header("public-key", stringPubKey)
     			.post(Entity.json(commonTriplet));
@@ -88,9 +95,11 @@ public class ClientLib
     }
     
     //Tiago
-    public String retrive_password(String domain, String username) {
-    	PublicKey pubKey = null; // ks.getKey("PublicKey", "Pog123");
-    	String stringPubKey = "123";//Base64.encodeBase64String(pubKey.getEncoded());
+    public String retrive_password(String domain, String username) throws KeyStoreException {
+    	Certificate cert = ks.getCertificate(aliasForPubKey);
+    	PublicKey pubKey = Crypto.getPublicKeyFromCertificate(cert);
+    	
+    	String stringPubKey = Base64.encodeBase64String(pubKey.getEncoded());
     	Response getResponse = vaultTarget
     			.request()
     			.header("public-key", stringPubKey).header("domain", domain).header("username", username)
