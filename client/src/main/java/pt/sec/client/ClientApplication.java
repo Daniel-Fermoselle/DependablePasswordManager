@@ -33,10 +33,11 @@ public class ClientApplication {
 		String pubKeyAlias = readNormal(console, "Alias to your public key: ");
 		
 		KeyStore ks = Crypto.readKeystoreFile(KeyStorePath, KeyStorePass.toCharArray());
-		cl.init(ks, pubKeyAlias);*/
+		cl.init(ks, pubKeyAlias, keyStorePw);*/
 		
 		KeyStore ks = Crypto.readKeystoreFile("ks/Client1.jks", "insecure".toCharArray());
-		cl.init(ks, "client");
+		cl.init(ks, "client", "insecure");
+		//in the function above we might need to send also the password
 		
 		while (true) {
 
