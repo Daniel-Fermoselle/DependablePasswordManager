@@ -41,6 +41,8 @@ public class VaultService {
 	    String stringHashUsername = Crypto.decipherString(Crypto.decode(cipheredHashUsername),
 	            privateServer);
 
+	    String password = new String(Crypto.decode(cipherPassword));
+	    
 	    // Verify signature
 	    //byte[] hashPassword = Crypto.decode(hashPw);
 	    //String stringHashPassword = new String(hashPassword);
@@ -61,7 +63,7 @@ public class VaultService {
 	    }
 	    
 	    PasswordManager pwm =  new PasswordManager();
-		t=pwm.saveTriplet(new Triplet(stringCipheredPassword, stringHashUsername, stringHashDomain), publicKey);
+		t=pwm.saveTriplet(new Triplet(password, stringHashUsername, stringHashDomain), publicKey);
 		
 		}
 		catch(NoSuchAlgorithmException e){

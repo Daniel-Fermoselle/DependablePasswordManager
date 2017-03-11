@@ -81,7 +81,7 @@ public class ClientLib {
 		    byte[] cipherDomain = Crypto.cipherString(new String(hashDomain), serverPubKey);
 		    byte[] cipherUsername = Crypto.cipherString(new String(hashUsername), serverPubKey);
 		    //byte[] cipherPassword = Crypto.cipherString(new String(hashPassword), clientprivKey);
-		    byte[] cipherPassword = Crypto.cipherString(password, clientprivKey);
+		    byte[] cipherPassword = Crypto.cipherString(password, clientPubKey);
 		    String StringCipheredDomain = Crypto.encode(cipherDomain);
 		    String StringCipheredUsername = Crypto.encode(cipherUsername);
 		    String StringCipheredPassword = Crypto.encode(cipherPassword);
