@@ -2,8 +2,10 @@ package pt.sec.a03.client_lib;
 
 import java.security.KeyStore;
 import java.security.KeyStoreException;
+import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.cert.Certificate;
+import java.sql.Timestamp;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -76,26 +78,101 @@ public class ClientLib {
 	}
 
 	// Tiago
-	public String retrive_password(String domain, String username) throws KeyStoreException {
-		Certificate cert = ks.getCertificate(aliasForPubKey);
-		PublicKey pubKey = Crypto.getPublicKeyFromCertificate(cert);
+	public String retrive_password(String domain, String username) {
+		try{
+			//Get keys and certificates
+			Certificate cert1 = ks.getCertificate(aliasForPubKey);
+			PublicKey pubKeyClient = Crypto.getPublicKeyFromCertificate(cert1);
+		    Certificate cert2 = ks.getCertificate("server");
+		    PublicKey pubKeyServer = Crypto.getPublicKeyFromCertificate(cert2);
+			PrivateKey privateKey = Crypto.getPrivateKeyFromKeystore(ks, "client", "insecure");
+			
+			//Hash domain and username
+		    byte[] hashDomain = Crypto.hashString(domain);
+		    byte[] hashUsername = Crypto.hashString(username);
+		    
+		    //Generate timestamp
+		    Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+		    String stringTS = timestamp.toString();
+	
+		    //Cipher domain and username hash with server public key
+		    byte[] cipheredDomain = Crypto.cipherString(new String(hashDomain), pubKeyServer);
+		    byte[] cipheredUsername = Crypto.cipherString(new String(hashUsername), pubKeyServer);
+		    String StringCipheredDomain = Crypto.encode(cipheredDomain);
+		    String StringCipheredUsername = Crypto.encode(cipheredUsername);
+		    
+		    //String with domain and username hash
+		    String stringHashDomain = new String(hashDomain);
+		    String stringHashUsername = new String(hashUsername);
+		    
+		    //Generate signature
+		    String tosign = stringHashDomain + stringHashUsername + stringTS;
 
-		String stringPubKey = Base64.encodeBase64String(pubKey.getEncoded());
-		Response getResponse = vaultTarget.request().header("public-key", stringPubKey).header("domain", domain)
-				.header("username", username).get();
+		    String sig = Crypto.encode(Crypto.makeDigitalSignature(tosign.getBytes(), privateKey));
+		    
+			String stringPubKey = Base64.encodeBase64String(pubKeyClient.getEncoded());
+			Response getResponse = vaultTarget.request()
+					.header("public-key", stringPubKey)
+					.header("signature", sig)
+					.header("timestamp", stringTS)
+					.header("domain",  StringCipheredDomain)
+					.header("username",  StringCipheredUsername).get();
+			
+			//Decipher password
+			String passwordCiphered = getResponse.readEntity(CommonTriplet.class).getPassword();
+			String password = Crypto.decipherString(Crypto.decode(passwordCiphered),
+					privateKey);
 
-		if (getResponse.getStatus() == 200) {
-			System.out.println("Success");
-		} else if (getResponse.getStatus() == 400) {
-			System.out.println("Invalid argument");
-		} else if (getResponse.getStatus() == 404) {
-			System.out.println("Data Not Found");
-		} else if (getResponse.getStatus() == 500) {
-			System.out.println("Internal server error");
-		} else {
-			System.out.println("Error");
+			//Get headers info
+			stringTS = getResponse.getHeaderString("timestamp");
+			String hashPasswordHeader = getResponse.getHeaderString("hash");			
+			String sigToVerify = getResponse.getHeaderString("signature");
+			
+			//Check timestamp freshness
+			if(!Crypto.validTS(stringTS)){
+				System.out.println("Freshness compromised");
+				return "Champog";
+			}
+			
+			//Verify signature
+			sig = stringTS + hashPasswordHeader + passwordCiphered;
+			byte[] sigBytes = Crypto.decode(sigToVerify);
+		    if(Crypto.verifyDigitalSignature(sigBytes, sig.getBytes(), pubKeyServer)){
+				System.out.println("Signature compromised");
+				return "Champog";
+		    }
+		    
+		    //Verify if password's hash is correct
+		    byte[] hashToVerify = Crypto.hashString(password);
+		    byte[] cipheredHash = Crypto.cipherString(new String(hashToVerify), privateKey);
+		    String hashToVerifyString = Crypto.encode(cipheredHash);
+		    
+		    if(!hashToVerifyString.equals(hashPasswordHeader)){
+		    	System.out.println("Passwords don't match");
+		    	return "Champog";
+		    }
+			
+			if (getResponse.getStatus() == 200) {
+				System.out.println("Success");
+			} else if (getResponse.getStatus() == 400) {
+				System.out.println("Invalid argument");
+				return "Champog";
+			} else if (getResponse.getStatus() == 404) {
+				System.out.println("Data Not Found");
+				return "Champog";
+			} else if (getResponse.getStatus() == 500) {
+				System.out.println("Internal server error");
+				return "Champog";
+			} else {
+				System.out.println("Error");
+				return "Champog";
+			}
+			return password;
 		}
-		return getResponse.readEntity(CommonTriplet.class).getPassword();
+		catch(Exception e){
+			e.printStackTrace();
+			return "Champog";
+		}
 	}
 
 	public void close() {
