@@ -23,8 +23,10 @@ public class VaultResource {
 	private VaultService vaultService = new VaultService();
 	
 	@POST
-	public Response addPassword(@HeaderParam("public-key") String publicKey, Triplet t, @Context UriInfo uriInfo) {
-		vaultService.put(publicKey, t.getPassword(), t.getUsername(), t.getDomain());
+	public Response addPassword(@HeaderParam("public-key") String publicKey, Triplet t, @Context UriInfo uriInfo,
+			@HeaderParam("signature") String signature,@HeaderParam("timestamp") String timestamp,
+			@HeaderParam("hash-password") String hashPw) {
+		vaultService.put(publicKey, signature, timestamp, hashPw, t.getPassword(), t.getUsername(), t.getDomain());
 		return Response.status(Status.CREATED)
 				.build();
 	}

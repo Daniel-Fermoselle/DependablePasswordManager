@@ -86,17 +86,18 @@ public class ClientLib {
 		    String StringCipheredUsername = Crypto.encode(cipherUsername);
 		    String StringCipheredPassword = Crypto.encode(cipherPassword);
 		    String stringTs = timestamp.toString();
-		    String headerHashPassword = Crypto.encode(hashPassword);
+		    byte[] cipherHashPassword = Crypto.cipherString(new String(hashPassword), clientprivKey);
+		    String headerHashPassword = Crypto.encode(cipherHashPassword);
 		    //---------
 		    
 		    //---------Creation of the string to use to make the signature to use in the header
 		    String stringHashDomain = new String(hashDomain);
 		    String stringHashUsername = new String(hashUsername);
-		    String stringHashPassword = new String(hashPassword);
+		    //String stringHashPassword = new String(hashPassword);
 		    String stringcipheredPassword = new String(cipherPassword);
 		   
 		    
-		    String dataToSign = stringHashUsername + stringHashDomain + stringTs + stringHashPassword + 
+		    String dataToSign = stringHashUsername + stringHashDomain + stringTs + headerHashPassword + 
 		    		stringcipheredPassword;
 		    
 		    String sig = Crypto.encode(Crypto.makeDigitalSignature(dataToSign.getBytes(), clientprivKey));

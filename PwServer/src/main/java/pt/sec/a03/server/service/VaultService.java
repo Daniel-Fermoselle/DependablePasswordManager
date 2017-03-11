@@ -1,16 +1,69 @@
 package pt.sec.a03.server.service;
 
-import java.sql.SQLException;
+import java.security.KeyFactory;
+import java.security.KeyStore;
+import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.X509EncodedKeySpec;
 
+import pt.sec.a03.crypto.Crypto;
 import pt.sec.a03.server.domain.PasswordManager;
 import pt.sec.a03.server.domain.Triplet;
 
 public class VaultService {
 
+	private static final String aliasForServer = "server";
+	private static final String serverKeyStorePath = "ks/Server1.jks";
+	private static final String serverKeyStorePass = "insecure";
+	
 	//TODO I think that the password manager should be put in a constructor of the vault service
-	public Triplet put(String publicKey, String password, String username, String domain){
+	public Triplet put(String publicKey, String signature, String timestamp, String hashPw,
+			String cipherPassword, String cipheredHashUsername, String cipheredHashDomain){
+		Triplet t = null;
+		try{
+
+	    KeyStore ksServ = Crypto.readKeystoreFile(serverKeyStorePath, serverKeyStorePass.toCharArray());
+	    PrivateKey privateServer = Crypto.getPrivateKeyFromKeystore(ksServ, aliasForServer, serverKeyStorePass);
+
+	    // Verify freshness 
+	    Crypto.validTS(timestamp);
+
+	    // Decipher
+	    String stringHashDomain = Crypto.decipherString(Crypto.decode(cipheredHashDomain),
+	            privateServer);
+	    String stringHashUsername = Crypto.decipherString(Crypto.decode(cipheredHashUsername),
+	            privateServer);
+
+	    // Verify signature
+	    byte[] hashPassword = Crypto.decode(hashPw);
+	    String stringHashPassword = new String(hashPassword);
+	    String stringCipheredPassword = new String(Crypto.decode(cipherPassword));
+
+	    String serverSideTosign = stringHashDomain + stringHashUsername + stringHashPassword +
+	    		stringCipheredPassword + timestamp;
+
+	    byte[] serverSideSig = Crypto.decode(serverSideTosign);
+	    
+	    byte[] pk = Crypto.decode(publicKey);
+	    X509EncodedKeySpec X509publicKey = new X509EncodedKeySpec(pk);
+        KeyFactory kf = KeyFactory.getInstance("RSA");
+        PublicKey pubKey = kf.generatePublic(X509publicKey);
+	    
+	    Crypto.verifyDigitalSignature(serverSideSig, serverSideTosign.getBytes(), pubKey);
 		PasswordManager pwm =  new PasswordManager();
-		return pwm.saveTriplet(new Triplet(password, username, domain), publicKey);
+		t=pwm.saveTriplet(new Triplet(stringCipheredPassword, stringHashUsername, stringHashDomain), publicKey);
+		
+		}
+		catch(NoSuchAlgorithmException e){
+			e.printStackTrace();
+		} catch (InvalidKeySpecException e) {
+			e.printStackTrace();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return t;
 	}
 	
 	public Triplet get(String publicKey, String username, String domain) {
