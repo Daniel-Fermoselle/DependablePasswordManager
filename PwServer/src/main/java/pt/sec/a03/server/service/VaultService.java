@@ -44,10 +44,10 @@ public class VaultService {
 	    // Verify signature
 	    //byte[] hashPassword = Crypto.decode(hashPw);
 	    //String stringHashPassword = new String(hashPassword);
-	    String stringCipheredPassword = new String(Crypto.decode(cipherPassword));
+	    //String stringCipheredPassword = new String(Crypto.decode(cipherPassword));
 
 	    String serverSideTosign = stringHashUsername + stringHashDomain + timestamp + hashPw +
-	    		stringCipheredPassword;
+	    		cipherPassword;
 
 	    byte[] serverSideSig = Crypto.decode(serverSideTosign);
 	    
