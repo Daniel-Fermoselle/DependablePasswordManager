@@ -94,11 +94,11 @@ public class ClientLib {
 		    String stringHashDomain = new String(hashDomain);
 		    String stringHashUsername = new String(hashUsername);
 		    //String stringHashPassword = new String(hashPassword);
-		    String stringcipheredPassword = new String(cipherPassword);
+		    //String stringcipheredPassword = new String(cipherPassword);
 		   
 		    
 		    String dataToSign = stringHashUsername + stringHashDomain + stringTs + headerHashPassword + 
-		    		stringcipheredPassword;
+		    		StringCipheredPassword;
 		    
 		    String sig = Crypto.encode(Crypto.makeDigitalSignature(dataToSign.getBytes(), clientprivKey));
 		    //---------
