@@ -25,7 +25,7 @@ public class ClientApplication {
 		}
 		console.printf("Password Manager initiated:\n");
 		
-		console.printf("Full path to your Key Store: ");
+		/*console.printf("Full path to your Key Store: ");
 		String KeyStorePath = console.readLine();
 		
 		String KeyStorePass = readPassword(console, "Password to your Key Store: ");
@@ -33,7 +33,10 @@ public class ClientApplication {
 		String pubKeyAlias = readNormal(console, "Alias to your public key: ");
 		
 		KeyStore ks = Crypto.readKeystoreFile(KeyStorePath, KeyStorePass.toCharArray());
-		cl.init(ks, pubKeyAlias);
+		cl.init(ks, pubKeyAlias);*/
+		
+		KeyStore ks = Crypto.readKeystoreFile("ks/Client1.jks", "insecure".toCharArray());
+		cl.init(ks, "client");
 		
 		while (true) {
 

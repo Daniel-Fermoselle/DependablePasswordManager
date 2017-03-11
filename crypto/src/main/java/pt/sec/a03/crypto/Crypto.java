@@ -6,6 +6,8 @@ import java.io.FileNotFoundException;
 import java.security.Key;
 import java.security.KeyFactory;
 import java.security.KeyStore;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.Signature;
@@ -26,7 +28,7 @@ public class Crypto {
 
 	private static final long MINUTE_IN_MILLIS = 60000;// one minute in mls
 
-	private static final String CIPHER_ALGORITHM = "RSA/ECB/OAEPWithSHA-256AndMGF1Padding";
+	private static final String CIPHER_ALGORITHM = "RSA";
 
 	//plain -> cipher -> encode  ---- > decode -> decipher -> plain
 	/*___________________
@@ -39,7 +41,7 @@ public class Crypto {
 	{
 		domain: BASE64 encode({{Hash(D)}PubServer)
 		username: BASE64 encode({Hash(U)}PubServer)
-		password: BASE64 encode({{PS}PubCli}PubServer)
+		password: BASE64 encode({PS}PubCli)
 	}
 	
 	Tiago
@@ -66,6 +68,10 @@ public class Crypto {
 	public static PublicKey getPublicKeyFromCertificate(Certificate certificate) {
 		return certificate.getPublicKey();
 	}
+	
+	public static PublicKey getPubKeyFromByte(byte[] bytePubKey) throws Exception {
+		return KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(bytePubKey));
+	}
 
 	public static Certificate readCertificateFile(String certificateFilePath) throws Exception {
 		FileInputStream fis;
@@ -88,12 +94,11 @@ public class Crypto {
 		fis.close();
 		return null;
 	}
+	
+	public static PrivateKey getPrivateKeyFromKeystore(KeyStore keystore,
+			String keyAlias, String keyPassword) throws Exception {
 
-	public static PrivateKey getPrivateKeyFromKeystore(String keyStoreFilePath, char[] keyStorePassword,
-			String keyAlias, char[] keyPassword) throws Exception {
-
-		KeyStore keystore = readKeystoreFile(keyStoreFilePath, keyStorePassword);
-		PrivateKey key = (PrivateKey) keystore.getKey(keyAlias, keyPassword);
+		PrivateKey key = (PrivateKey) keystore.getKey(keyAlias, keyPassword.toCharArray());
 
 		return key;
 	}
@@ -115,7 +120,7 @@ public class Crypto {
 		byte[] cipherText = null;
 		try {
 			// get an RSA cipher object and print the provider
-			final Cipher cipher = Cipher.getInstance(CIPHER_ALGORITHM);
+			Cipher cipher = Cipher.getInstance(CIPHER_ALGORITHM);
 			// encrypt the plain text using the public key
 			cipher.init(Cipher.ENCRYPT_MODE, key);
 			cipherText = cipher.doFinal(toCipher.getBytes());
@@ -129,7 +134,7 @@ public class Crypto {
 		byte[] decipheredText = null;
 	    try {
 	      // get an RSA cipher object and print the provider
-	      final Cipher cipher = Cipher.getInstance(CIPHER_ALGORITHM);
+	      Cipher cipher = Cipher.getInstance(CIPHER_ALGORITHM);
 
 	      // decrypt the text using the private key
 	      cipher.init(Cipher.DECRYPT_MODE, key);
@@ -194,9 +199,12 @@ public class Crypto {
 		else
 			return false;
 	}
+	
+	public static byte[] hashString(String toHash) throws NoSuchAlgorithmException{
+        MessageDigest md = MessageDigest.getInstance("SHA-256");
+        md.update(toHash.getBytes());
 
-	public static PublicKey getPubKeyFromByte(byte[] bytePubKey) throws Exception {
-		return KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(bytePubKey));
+        return md.digest();
 	}
 
 }
