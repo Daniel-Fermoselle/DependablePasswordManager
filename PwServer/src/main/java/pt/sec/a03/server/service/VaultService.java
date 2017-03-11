@@ -15,13 +15,14 @@ import pt.sec.a03.server.domain.Triplet;
 public class VaultService {
 
 	private static final String aliasForServer = "server";
-	private static final String serverKeyStorePath = "ks/Server1.jks";
+	private static final String serverKeyStorePath = "/Users/daniel/Desktop/test/cenas/Server1.jks";
 	private static final String serverKeyStorePass = "insecure";
 	
 	//TODO I think that the password manager should be put in a constructor of the vault service
 	public Triplet put(String publicKey, String signature, String timestamp, String hashPw,
 			String cipherPassword, String cipheredHashUsername, String cipheredHashDomain){
 		Triplet t = null;
+		System.out.println("Working Directory = " + System.getProperty("user.dir"));
 		try{
 
 	    KeyStore ksServ = Crypto.readKeystoreFile(serverKeyStorePath, serverKeyStorePass.toCharArray());
@@ -41,8 +42,8 @@ public class VaultService {
 	    String stringHashPassword = new String(hashPassword);
 	    String stringCipheredPassword = new String(Crypto.decode(cipherPassword));
 
-	    String serverSideTosign = stringHashDomain + stringHashUsername + stringHashPassword +
-	    		stringCipheredPassword + timestamp;
+	    String serverSideTosign = stringHashUsername + stringHashDomain + timestamp + stringHashPassword +
+	    		stringCipheredPassword;
 
 	    byte[] serverSideSig = Crypto.decode(serverSideTosign);
 	    
@@ -51,9 +52,13 @@ public class VaultService {
         KeyFactory kf = KeyFactory.getInstance("RSA");
         PublicKey pubKey = kf.generatePublic(X509publicKey);
 	    
-	    Crypto.verifyDigitalSignature(serverSideSig, serverSideTosign.getBytes(), pubKey);
-		PasswordManager pwm =  new PasswordManager();
-		t=pwm.saveTriplet(new Triplet(stringCipheredPassword, stringHashUsername, stringHashDomain), publicKey);
+	    if(Crypto.verifyDigitalSignature(serverSideSig, serverSideTosign.getBytes(), pubKey)){
+			PasswordManager pwm =  new PasswordManager();
+			t=pwm.saveTriplet(new Triplet(stringCipheredPassword, stringHashUsername, stringHashDomain), publicKey);	
+	    }
+	    else{
+	    	System.out.println("FUI POGADO");
+	    }
 		
 		}
 		catch(NoSuchAlgorithmException e){

@@ -34,10 +34,10 @@ public class Crypto {
 	/*___________________
 	Daniel
 	Function name: Client Put request
-	BASE64 encode( Sig(Hash(U) || Hash(D) || TS || Hash(PS) || {PS}PubCli )) - signature in header
+	BASE64 encode( Sig(Hash(U) || Hash(D) || TS || {Hash(PS)}PubCli || {PS}PubCli )) - signature in header
 	PK in header - public-key in header
 	TS in header - time-stamp in header
-	Hash(PS)     - hash in header
+	{Hash(PS)}PubCli     - hash in header
 	{
 		domain: BASE64 encode({{Hash(D)}PubServer)
 		username: BASE64 encode({Hash(U)}PubServer)

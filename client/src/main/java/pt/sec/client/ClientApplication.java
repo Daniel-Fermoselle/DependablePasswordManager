@@ -34,7 +34,8 @@ public class ClientApplication {
 		
 		KeyStore ks = Crypto.readKeystoreFile(KeyStorePath, KeyStorePass.toCharArray());
 		cl.init(ks, pubKeyAlias, keyStorePw);*/
-		
+		System.out.println("Working Directory = " +
+	              System.getProperty("user.dir"));
 		KeyStore ks = Crypto.readKeystoreFile("ks/Client1.jks", "insecure".toCharArray());
 		cl.init(ks, "client", "insecure");
 		//in the function above we might need to send also the password
