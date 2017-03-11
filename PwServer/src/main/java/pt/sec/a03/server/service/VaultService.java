@@ -31,7 +31,7 @@ public class VaultService {
 	    PrivateKey privateServer = Crypto.getPrivateKeyFromKeystore(ksServ, aliasForServer, serverKeyStorePass);
 
 	    // Verify freshness 
-	    if(Crypto.validTS(timestamp)){
+	    if(!Crypto.validTS(timestamp)){
 	    	throw new InvalidTimestampException("Invalid Timestamp");
 	    }
 
@@ -56,13 +56,12 @@ public class VaultService {
         KeyFactory kf = KeyFactory.getInstance("RSA");
         PublicKey pubKey = kf.generatePublic(X509publicKey);
 	    
-	    if(Crypto.verifyDigitalSignature(serverSideSig, serverSideTosign.getBytes(), pubKey)){
-			PasswordManager pwm =  new PasswordManager();
-			t=pwm.saveTriplet(new Triplet(stringCipheredPassword, stringHashUsername, stringHashDomain), publicKey);	
-	    }
-	    else{
+	    if(!Crypto.verifyDigitalSignature(serverSideSig, serverSideTosign.getBytes(), pubKey)){
 	    	throw new InvalidSignatureException("Invalid Signature");
 	    }
+	    
+	    PasswordManager pwm =  new PasswordManager();
+		t=pwm.saveTriplet(new Triplet(stringCipheredPassword, stringHashUsername, stringHashDomain), publicKey);
 		
 		}
 		catch(NoSuchAlgorithmException e){
