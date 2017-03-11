@@ -94,20 +94,18 @@ public class ClientLib {
 		    //Generate timestamp
 		    Timestamp timestamp = new Timestamp(System.currentTimeMillis());
 		    String stringTS = timestamp.toString();
+		    //String with domain and username hash
+		    String stringHashDomain = new String(hashDomain);
+		    String stringHashUsername = new String(hashUsername);
 	
 		    //Cipher domain and username hash with server public key
 		    byte[] cipheredDomain = Crypto.cipherString(new String(hashDomain), pubKeyServer);
 		    byte[] cipheredUsername = Crypto.cipherString(new String(hashUsername), pubKeyServer);
-		    String StringCipheredDomain = Crypto.encode(cipheredDomain);
-		    String StringCipheredUsername = Crypto.encode(cipheredUsername);
-		    
-		    //String with domain and username hash
-		    String stringHashDomain = new String(hashDomain);
-		    String stringHashUsername = new String(hashUsername);
+		    String encodedDomain = Crypto.encode(cipheredDomain);
+		    String encodedUsername = Crypto.encode(cipheredUsername);		    
 		    
 		    //Generate signature
 		    String tosign = stringHashDomain + stringHashUsername + stringTS;
-
 		    String sig = Crypto.encode(Crypto.makeDigitalSignature(tosign.getBytes(), privateKey));
 		    
 			String stringPubKey = Base64.encodeBase64String(pubKeyClient.getEncoded());
@@ -115,17 +113,17 @@ public class ClientLib {
 					.header("public-key", stringPubKey)
 					.header("signature", sig)
 					.header("timestamp", stringTS)
-					.header("domain",  StringCipheredDomain)
-					.header("username",  StringCipheredUsername).get();
+					.header("domain",  encodedDomain)
+					.header("username",  encodedUsername).get();
 			
 			//Decipher password
-			String passwordCiphered = getResponse.readEntity(CommonTriplet.class).getPassword();
-			String password = Crypto.decipherString(Crypto.decode(passwordCiphered),
+			String passwordReceived = getResponse.readEntity(CommonTriplet.class).getPassword();
+			String password = Crypto.decipherString(Crypto.decode(passwordReceived),
 					privateKey);
 
 			//Get headers info
 			stringTS = getResponse.getHeaderString("timestamp");
-			String hashPasswordHeader = getResponse.getHeaderString("hash");			
+			String encodedHashReceived = getResponse.getHeaderString("hash");			
 			String sigToVerify = getResponse.getHeaderString("signature");
 			
 			//Check timestamp freshness
@@ -135,7 +133,7 @@ public class ClientLib {
 			}
 			
 			//Verify signature
-			sig = stringTS + hashPasswordHeader + passwordCiphered;
+			sig = stringTS + encodedHashReceived + passwordReceived;
 			byte[] sigBytes = Crypto.decode(sigToVerify);
 		    if(Crypto.verifyDigitalSignature(sigBytes, sig.getBytes(), pubKeyServer)){
 				System.out.println("Signature compromised");
@@ -144,10 +142,9 @@ public class ClientLib {
 		    
 		    //Verify if password's hash is correct
 		    byte[] hashToVerify = Crypto.hashString(password);
-		    byte[] cipheredHash = Crypto.cipherString(new String(hashToVerify), privateKey);
-		    String hashToVerifyString = Crypto.encode(cipheredHash);
-		    
-		    if(!hashToVerifyString.equals(hashPasswordHeader)){
+		    byte[] cipheredHashReceived = Crypto.decode(encodedHashReceived);
+		    String hashReceived = new String(Crypto.decipherString(cipheredHashReceived, pubKeyClient));
+		    if(!hashReceived.equals(new String(hashToVerify))){
 		    	System.out.println("Passwords don't match");
 		    	return "Champog";
 		    }
