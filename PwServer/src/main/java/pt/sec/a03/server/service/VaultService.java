@@ -11,6 +11,8 @@ import java.security.spec.X509EncodedKeySpec;
 import pt.sec.a03.crypto.Crypto;
 import pt.sec.a03.server.domain.PasswordManager;
 import pt.sec.a03.server.domain.Triplet;
+import pt.sec.a03.server.exception.InvalidSignatureException;
+import pt.sec.a03.server.exception.InvalidTimestampException;
 
 public class VaultService {
 
@@ -29,7 +31,9 @@ public class VaultService {
 	    PrivateKey privateServer = Crypto.getPrivateKeyFromKeystore(ksServ, aliasForServer, serverKeyStorePass);
 
 	    // Verify freshness 
-	    Crypto.validTS(timestamp);
+	    if(Crypto.validTS(timestamp)){
+	    	throw new InvalidTimestampException("Invalid Timestamp");
+	    }
 
 	    // Decipher
 	    String stringHashDomain = Crypto.decipherString(Crypto.decode(cipheredHashDomain),
@@ -38,11 +42,11 @@ public class VaultService {
 	            privateServer);
 
 	    // Verify signature
-	    byte[] hashPassword = Crypto.decode(hashPw);
-	    String stringHashPassword = new String(hashPassword);
+	    //byte[] hashPassword = Crypto.decode(hashPw);
+	    //String stringHashPassword = new String(hashPassword);
 	    String stringCipheredPassword = new String(Crypto.decode(cipherPassword));
 
-	    String serverSideTosign = stringHashUsername + stringHashDomain + timestamp + stringHashPassword +
+	    String serverSideTosign = stringHashUsername + stringHashDomain + timestamp + hashPw +
 	    		stringCipheredPassword;
 
 	    byte[] serverSideSig = Crypto.decode(serverSideTosign);
@@ -57,7 +61,7 @@ public class VaultService {
 			t=pwm.saveTriplet(new Triplet(stringCipheredPassword, stringHashUsername, stringHashDomain), publicKey);	
 	    }
 	    else{
-	    	System.out.println("FUI POGADO");
+	    	throw new InvalidSignatureException("Invalid Signature");
 	    }
 		
 		}
