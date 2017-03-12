@@ -13,6 +13,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
+import pt.sec.a03.common_classes.CommonTriplet;
 import pt.sec.a03.server.domain.Triplet;
 import pt.sec.a03.server.service.VaultService;
 
@@ -41,13 +42,15 @@ public class VaultResource {
 							@HeaderParam("domain") 	  String domain, 
 							@HeaderParam("username")  String username) {
 		String[] content = vaultService.get(publicKey, username, domain, stringTS, stringSig);
-		Triplet password = new Triplet();
-		password.setPassword(content[3]);
+		CommonTriplet triplet = new CommonTriplet();
+		triplet.setPassword(content[3]);
+		System.out.println("Password: " +  triplet.getPassword());
+		System.out.println("HashPassword: " +  content[2]);
 		return Response.status(Status.OK)
 				.header("signature", content[1])
 				.header("timestamp", content[0])
 				.header("hash-password", content[2])
-				.entity(Entity.json(password))
+				.entity(triplet)
 				.build();
 	}
 	

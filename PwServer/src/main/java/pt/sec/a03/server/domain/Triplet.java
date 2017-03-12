@@ -24,13 +24,14 @@ public class Triplet {
 		this.domain = domain;
 	}	
 
-	public Triplet(long tripletID, long userID, String password, String username, String domain) {
+	public Triplet(long tripletID, long userID, String password, String username, String domain, String pwHash) {
 		super();
 		this.tripletID = tripletID;
 		this.userID = userID;
 		this.password = password;
 		this.username = username;
 		this.domain = domain;
+		this.hash = pwHash;
 	}	
 	
 	@XmlTransient
@@ -80,7 +81,7 @@ public class Triplet {
 	}
 	
 	public void setHash(String hash) {
-		 this.hash = hash;
+		this.hash = hash;
 	}
 	
 	

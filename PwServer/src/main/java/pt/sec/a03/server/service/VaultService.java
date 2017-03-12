@@ -1,12 +1,10 @@
 package pt.sec.a03.server.service;
 
-import java.security.KeyFactory;
 import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
-import java.security.spec.X509EncodedKeySpec;
 
 import java.sql.Timestamp;
 import java.text.ParseException;
@@ -20,7 +18,7 @@ import pt.sec.a03.server.exception.InvalidTimestampException;
 public class VaultService {
 
 	private static final String aliasForServer = "server";
-	private static final String serverKeyStorePath = "/Users/daniel/Desktop/test/cenas/Server1.jks";
+	private static final String serverKeyStorePath = "/Users/sigma/Desktop/Server1.jks";
 	private static final String serverKeyStorePass = "insecure";
 	PrivateKey privKey;
 
@@ -70,10 +68,14 @@ public class VaultService {
 	}
 
 	public String[] get(String publicKey, String username, String domain, String stringTS, String stringSig) {
+		
 		PasswordManager pwm = new PasswordManager();
 		String[] userAndDom = null;
 
 		try {
+			KeyStore ksServ = Crypto.readKeystoreFile(serverKeyStorePath, serverKeyStorePass.toCharArray());
+			this.privKey = Crypto.getPrivateKeyFromKeystore(ksServ, aliasForServer, serverKeyStorePass);
+			
 			// Verify TimeStamp
 			verifyTS(stringTS);
 
@@ -98,6 +100,8 @@ public class VaultService {
 		Triplet t = pwm.getTriplet(userAndDom[0], userAndDom[1]);
 
 		String pwHashFromDB = pwm.getHash(userAndDom[0], userAndDom[1]);
+		
+		System.out.println("Service hashPassword: " + pwHashFromDB);
 
 		Timestamp timestamp = new Timestamp(System.currentTimeMillis());
 		stringTS = timestamp.toString();

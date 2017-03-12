@@ -115,7 +115,7 @@ public class Database {
 	}
 
 	public Triplet getTriplet(String username, String domain) throws SQLException {
-		String password = "", usernameDB = "", domainDB = "";
+		String password = "", usernameDB = "", domainDB = "", pwHash = "";
 		long tripletID = 0, userID = 0;
 		// Step 1: Allocate a database "Connection" object
 		Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/experiments?useSSL=false", MYSQL_ID,
@@ -125,7 +125,7 @@ public class Database {
 		Statement stmt = conn.createStatement();
 
 		// Step 3: Execute a SQL SELECT query, the query result
-		String strSelect = "select tripletID, userID, pw, username, domain from Vault where domain = '" + domain
+		String strSelect = "select tripletID, userID, pw, username, domain, pwHash from Vault where domain = '" + domain
 				+ "' and username = '" + username + "';";
 
 		// Step 4: Process the ResultSet by scrolling the cursor forward via
@@ -138,12 +138,13 @@ public class Database {
 			password = rset.getString("pw");
 			usernameDB = rset.getString("username");
 			domainDB = rset.getString("domain");
+			pwHash = rset.getString("pwHash");
 			++rowCount;
 		}
 		if (rowCount == 0) {
 			return null;
 		} else {
-			return new Triplet(tripletID, userID, password, usernameDB, domainDB);
+			return new Triplet(tripletID, userID, password, usernameDB, domainDB, pwHash);
 		}
 	}
 

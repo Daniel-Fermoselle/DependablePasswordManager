@@ -180,6 +180,7 @@ public class ClientLib {
 			
 			//Decipher password
 			String passwordReceived = getResponse.readEntity(CommonTriplet.class).getPassword();
+			System.out.println("Password: " +  passwordReceived);
 			String password = Crypto.decipherString(Crypto.decode(passwordReceived),
 					privateKey);
 
@@ -197,7 +198,7 @@ public class ClientLib {
 			//Verify signature
 			sig = stringTS + encodedHashReceived + passwordReceived;
 			byte[] sigBytes = Crypto.decode(sigToVerify);
-		    if(Crypto.verifyDigitalSignature(sigBytes, sig.getBytes(), pubKeyServer)){
+		    if(!Crypto.verifyDigitalSignature(sigBytes, sig.getBytes(), pubKeyServer)){
 				System.out.println("Signature compromised");
 				return "Champog";
 		    }
