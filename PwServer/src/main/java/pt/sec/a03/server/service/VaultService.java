@@ -51,7 +51,7 @@ public class VaultService {
 	    String serverSideTosign = stringHashUsername + stringHashDomain + timestamp + hashPw +
 	    		cipherPassword;
 
-	    byte[] serverSideSig = Crypto.decode(serverSideTosign);
+	    byte[] serverSideSig = Crypto.decode(signature);
 	    
 	    byte[] pk = Crypto.decode(publicKey);
 	    X509EncodedKeySpec X509publicKey = new X509EncodedKeySpec(pk);
