@@ -129,4 +129,9 @@ public class PasswordManager {
 			throw new RuntimeException(e.getMessage());
 		}
 	}
+
+	public String getHash(String string, String string2) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

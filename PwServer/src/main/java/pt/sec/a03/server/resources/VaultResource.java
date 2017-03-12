@@ -6,6 +6,7 @@ import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -30,10 +31,20 @@ public class VaultResource {
 	}
 	
 	@GET
-	public Triplet getPassword(@HeaderParam("public-key") String publicKey, @HeaderParam("domain") String domain, @HeaderParam("username") String username) {
-		System.out.println("PublicKey: " + publicKey + " Domain: " + domain + " Username: " + username);
-		Triplet password = vaultService.get(publicKey, username, domain);
-		return password;
+	public Response getPassword(@HeaderParam("public-key") String publicKey, 
+							@HeaderParam("domain") String domain, 
+							@HeaderParam("username") String username,
+							@HeaderParam("timestamp") String stringTS,
+							@HeaderParam("signature") String stringSig) {
+		String[] content = vaultService.get(publicKey, username, domain, stringTS, stringSig);
+		Triplet password = new Triplet();
+		password.setPassword(content[3]);
+		return Response.status(Status.OK)
+				.header("signature", content[1])
+				.header("timestamp", content[0])
+				.header("hash", content[2])
+				.entity(Entity.json(password))
+				.build();
 	}
 	
 }

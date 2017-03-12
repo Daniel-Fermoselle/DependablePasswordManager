@@ -49,19 +49,17 @@ public class Crypto {
 	BASE64 encode( Sig(Hash(U) || Hash(D) || TS)) - signature in header
 	PK in header - public-key in header
 	TS in header - time-stamp in header
-	{
-		domain: BASE64 encode({{Hash(D)}PubServer)
-		username: BASE64 encode({Hash(U)}PubServer)
-	}
+	domain: BASE64 encode({{Hash(D)}PubServer)
+	username: BASE64 encode({Hash(U)}PubServer)
+
 	
 	Marcal
 	Function name: Server Get response
-	BASE64 encode( Sig(TS || Hash(PS) || {PS}PubCli)) - signature in header
-	PK in header - public-key in header
+	BASE64 encode(Sig(TS || BASE64 encode({Hash(PS)}PrivCli) || BASE64 encode({PS}PubCli))) - signature in header
 	TS in header - time-stamp in header
-	Hash(PS)     - hash in header
+	BASE64 encode({Hash(PS)}PrivCli)   - hash in header
 	{
-		password: BASE64 encode({{PS}PubCli}PubCli)
+		password: BASE64 encode({PS}PubCli)
 	}
 	___________________*/
 	
