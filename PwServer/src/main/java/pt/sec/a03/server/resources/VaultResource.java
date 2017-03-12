@@ -32,10 +32,10 @@ public class VaultResource {
 	
 	@GET
 	public Response getPassword(@HeaderParam("public-key") String publicKey, 
-							@HeaderParam("domain") String domain, 
-							@HeaderParam("username") String username,
+							@HeaderParam("signature") String stringSig,
 							@HeaderParam("timestamp") String stringTS,
-							@HeaderParam("signature") String stringSig) {
+							@HeaderParam("domain") 	  String domain, 
+							@HeaderParam("username")  String username) {
 		String[] content = vaultService.get(publicKey, username, domain, stringTS, stringSig);
 		Triplet password = new Triplet();
 		password.setPassword(content[3]);

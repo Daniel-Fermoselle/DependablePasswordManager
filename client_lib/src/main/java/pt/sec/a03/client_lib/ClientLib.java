@@ -90,17 +90,16 @@ public class ClientLib {
 			//Hash domain and username
 		    byte[] hashDomain = Crypto.hashString(domain);
 		    byte[] hashUsername = Crypto.hashString(username);
+		    String stringHashDomain = new String(hashDomain);
+		    String stringHashUsername = new String(hashUsername);
 		    
 		    //Generate timestamp
 		    Timestamp timestamp = new Timestamp(System.currentTimeMillis());
 		    String stringTS = timestamp.toString();
-		    //String with domain and username hash
-		    String stringHashDomain = new String(hashDomain);
-		    String stringHashUsername = new String(hashUsername);
-	
+		    
 		    //Cipher domain and username hash with server public key
-		    byte[] cipheredDomain = Crypto.cipherString(new String(hashDomain), pubKeyServer);
-		    byte[] cipheredUsername = Crypto.cipherString(new String(hashUsername), pubKeyServer);
+		    byte[] cipheredDomain = Crypto.cipherString(stringHashDomain, pubKeyServer);
+		    byte[] cipheredUsername = Crypto.cipherString(stringHashUsername, pubKeyServer);
 		    String encodedDomain = Crypto.encode(cipheredDomain);
 		    String encodedUsername = Crypto.encode(cipheredUsername);		    
 		    
@@ -108,7 +107,7 @@ public class ClientLib {
 		    String tosign = stringHashDomain + stringHashUsername + stringTS;
 		    String sig = Crypto.encode(Crypto.makeDigitalSignature(tosign.getBytes(), privateKey));
 		    
-			String stringPubKey = Base64.encodeBase64String(pubKeyClient.getEncoded());
+			String stringPubKey = Crypto.encode(pubKeyClient.getEncoded());
 			Response getResponse = vaultTarget.request()
 					.header("public-key", stringPubKey)
 					.header("signature", sig)
@@ -122,9 +121,9 @@ public class ClientLib {
 					privateKey);
 
 			//Get headers info
+			String sigToVerify = getResponse.getHeaderString("signature");
 			stringTS = getResponse.getHeaderString("timestamp");
 			String encodedHashReceived = getResponse.getHeaderString("hash");			
-			String sigToVerify = getResponse.getHeaderString("signature");
 			
 			//Check timestamp freshness
 			if(!Crypto.validTS(stringTS)){

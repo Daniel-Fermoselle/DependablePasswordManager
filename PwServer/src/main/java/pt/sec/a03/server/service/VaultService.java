@@ -46,9 +46,9 @@ public class VaultService {
 			e.printStackTrace();
 		}
 	
-		Triplet t = pwm.getTriplet(domAndUser[1],domAndUser[0]);
+		Triplet t = pwm.getTriplet(domAndUser[0],domAndUser[1]);
 		
-		String pwHashFromDB = pwm.getHash(domAndUser[1],domAndUser[0]);
+		String pwHashFromDB = pwm.getHash(domAndUser[0],domAndUser[1]);
 		
 		Timestamp timestamp = new Timestamp(System.currentTimeMillis());
 	    stringTS = timestamp.toString();
@@ -68,7 +68,7 @@ public class VaultService {
 	
 	
 	public void verifyTS(String stringTS) throws ParseException{
-		if (Crypto.validTS(stringTS)) {
+		if (!Crypto.validTS(stringTS)) {
 			//TODO Throw TS Exception
 		}
 	}
@@ -93,7 +93,7 @@ public class VaultService {
 			e.printStackTrace();
 		}
 		
-		return new String[] {hashedDomain, hashedUsername};
+		return new String[] {hashedUsername, hashedDomain};
 	}
 	
 }
