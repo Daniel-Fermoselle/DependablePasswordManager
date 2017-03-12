@@ -13,12 +13,9 @@ create table Users (
 create table Vault (
 	tripletID bigint AUTO_INCREMENT,
 	userID bigint,
-	pw varchar(255),
-	username varchar(255),
-	domain varchar(255),
+	pw TEXT,
+	username TEXT,
+	domain TEXT,
+	pwHash TEXT,
 	primary key (tripletID),
 	foreign key (userID) references Users(userID));
-
-insert into Users(publicKey) values ('123');
-
-insert into Vault(userID, pw, username, domain) values ( 1, 'pas', 'username', 'tecnico');

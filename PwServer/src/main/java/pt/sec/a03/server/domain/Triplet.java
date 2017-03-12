@@ -11,6 +11,7 @@ public class Triplet {
 	private String password;
 	private String username;
 	private String domain;
+	private String hash;
 
 	public Triplet() {}
 	
@@ -73,5 +74,14 @@ public class Triplet {
 	public void setDomain(String domain) {
 		this.domain = domain;
 	}
+
+	public String getHash() {
+		return hash;
+	}
+	
+	public void setHash(String hash) {
+		 this.hash = hash;
+	}
+	
 	
 }

@@ -34,34 +34,39 @@ public class Crypto {
 	/*___________________
 	Daniel
 	Function name: Client Put request
-	BASE64 encode( Sig(Hash(U) || Hash(D) || TS || {Hash(PS)}PubCli || {PS}PubCli )) - signature in header
+	
+	encode( Sig(Hash(U) || Hash(D) || TS || encode({Hash(PS)}PrivCli) || encode({PS}PubCli) )) - signature in header
 	PK in header - public-key in header
-	TS in header - time-stamp in header
-	{Hash(PS)}PubCli     - hash in header
+	TS in header - timestamp in header
+	encode({Hash(PS)}PrivCli) - hash-password in header
 	{
-		domain: BASE64 encode({{Hash(D)}PubServer)
-		username: BASE64 encode({Hash(U)}PubServer)
-		password: BASE64 encode({PS}PubCli)
+		domain:   encode({{Hash(D)}PubServer)
+		username: encode({Hash(U)}PubServer)
+		password: encode({PS}PubCli)
 	}
+	
+	BD:
+	encode({Hash(PS)}PubCli)
+	encode({PS}PubCli)
 	
 	Tiago
 	Function name: Client Get request
-	BASE64 encode( Sig(Hash(U) || Hash(D) || TS)) - signature in header
+	
+	encode( Sig(Hash(U) || Hash(D) || TS)) - signature in header
 	PK in header - public-key in header
 	TS in header - time-stamp in header
-	{
-		domain: BASE64 encode({{Hash(D)}PubServer)
-		username: BASE64 encode({Hash(U)}PubServer)
-	}
+	domain: encode({{Hash(D)}PubServer)
+	username:encode({Hash(U)}PubServer)
+
 	
 	Marcal
 	Function name: Server Get response
-	BASE64 encode( Sig(TS || Hash(PS) || {PS}PubCli)) - signature in header
-	PK in header - public-key in header
+	
+	encode(Sig(TS || encode({Hash(PS)}PrivCli) || encode({PS}PubCli))) - signature in header
 	TS in header - time-stamp in header
-	Hash(PS)     - hash in header
+	encode({Hash(PS)}PrivCli)   - hash in header
 	{
-		password: BASE64 encode({{PS}PubCli}PubCli)
+		password: encode({PS}PubCli)
 	}
 	___________________*/
 	
