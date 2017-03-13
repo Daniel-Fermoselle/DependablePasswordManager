@@ -75,16 +75,25 @@ public class PasswordManager {
 		}
 	}
 
-	public Triplet getTriplet(String username, String domain) {
+	public Triplet getTriplet(String username, String domain, String publicKey) {
 		try {
 			Database db = new Database();
-			Triplet t = db.getTriplet(username, domain);
 			if (username == null || domain == null) {
 				throw new InvalidArgumentException("Username or domain invalid");
 			}
+			User u = db.getUserByPK(publicKey);
+			if (u == null) {
+				throw new DataNotFoundException(
+						"The user with the public key " + publicKey + " doesn't exist in the server");
+			}
+			Triplet t = db.getTriplet(username, domain);
 			if (t == null) {
 				throw new DataNotFoundException("Username: " + username + " or Domain: " + domain + " not found");
 			} else {
+				if(t.getUserID()!=u.getUserID()){
+					throw new ForbiddenAccessException("The user with the public key " + publicKey
+								+ " has no permissions to access this information");
+				}
 				return t;
 			}
 		} catch (SQLException e) {
@@ -101,7 +110,7 @@ public class PasswordManager {
 		try {
 			Database db = new Database();
 			User u = db.getUserByPK(publicKey);
-			Triplet newTriplet = db.getTriplet(t.getUsername(), t.getDomain());
+			Triplet newTriplet = db.getTriplet(t.getUsername(), t.getDomain());//TODO Isto nao devia estar em baixo do primeiro if
 			if (u == null) {
 				throw new DataNotFoundException(
 						"The user with the public key " + publicKey + " doesn't exist in the server");
@@ -124,8 +133,8 @@ public class PasswordManager {
 		}
 	}
 
-	public String getHash(String username, String domain) {
-		return getTriplet(username, domain).getHash();
+	public String getHash(String username, String domain, String publicKey) {
+		return getTriplet(username, domain, publicKey).getHash();
 	}
 
 	public void saveHash(long tripletID, String hashPw) {

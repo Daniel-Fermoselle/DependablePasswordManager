@@ -18,7 +18,7 @@ import pt.sec.a03.server.exception.InvalidTimestampException;
 public class VaultService {
 
 	private static final String aliasForServer = "server";
-	private static final String serverKeyStorePath = "/Users/sigma/Desktop/Server1.jks";
+	private static final String serverKeyStorePath = "/Users/daniel/Desktop/test/cenas/Server1.jks";
 	private static final String serverKeyStorePass = "insecure";
 	PrivateKey privKey;
 
@@ -97,9 +97,9 @@ public class VaultService {
 			e.printStackTrace();
 		}
 
-		Triplet t = pwm.getTriplet(userAndDom[0], userAndDom[1]);
+		Triplet t = pwm.getTriplet(userAndDom[0], userAndDom[1], publicKey);
 
-		String pwHashFromDB = pwm.getHash(userAndDom[0], userAndDom[1]);
+		String pwHashFromDB = pwm.getHash(userAndDom[0], userAndDom[1], publicKey);
 		
 		Timestamp timestamp = new Timestamp(System.currentTimeMillis());
 		stringTS = timestamp.toString();
