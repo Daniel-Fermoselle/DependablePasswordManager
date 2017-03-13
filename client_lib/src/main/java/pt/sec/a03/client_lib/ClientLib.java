@@ -18,6 +18,7 @@ import javax.ws.rs.core.Response;
 
 import org.apache.commons.codec.binary.Base64;
 
+import pt.sec.a03.client_lib.exception.AlreadyExistsException;
 import pt.sec.a03.client_lib.exception.InvalidArgumentException;
 import pt.sec.a03.client_lib.filters.LoggingFilter;
 import pt.sec.a03.common_classes.CommonTriplet;
@@ -43,6 +44,7 @@ public class ClientLib {
 	// Internal message constants
 	private static final String SUCCESS_MSG = "Success";
 	private static final String INVALID_ARG_MSG = "Invalid argument";
+	private static final String ALREADY_EXISTS_MSG = "Entity already exists";
 	private static final String DATA_NOT_FOUND_MSG = "Data Not Found";
 	private static final String SERVER_ERROR_MSG = "Internal server error";
 	private static final String ELSE_MSG = "Error";
@@ -71,21 +73,28 @@ public class ClientLib {
 		checkArguments();
 	}
 
-	public void register_user() throws KeyStoreException {
+	public void register_user(){
 		// Get PubKey from key store
-		Certificate cert = ks.getCertificate(aliasForPubPrivKeys);
+		Certificate cert = null;
+		try {
+			cert = ks.getCertificate(aliasForPubPrivKeys);
+		} catch (KeyStoreException e) {
+			//This should never happen because init should been successful 
+			e.printStackTrace();
+		}
 		PublicKey pubKey = Crypto.getPublicKeyFromCertificate(cert);
 
 		String stringPubKey = Base64.encodeBase64String(pubKey.getEncoded());
 		Response postResponse = userTarget.request().header(PUBLIC_KEY_HEADER_NAME, stringPubKey)
 				.post(Entity.json(null));
+		
+		System.out.println("Status in response: " + postResponse.getStatus());
 
 		if (postResponse.getStatus() == 201) {
 			System.out.println(SUCCESS_MSG);
-		} else if (postResponse.getStatus() == 400) {
-			System.out.println(INVALID_ARG_MSG);
-		} else if (postResponse.getStatus() == 404) {
-			System.out.println(DATA_NOT_FOUND_MSG);
+		} else if (postResponse.getStatus() == 409) {
+			System.out.println(ALREADY_EXISTS_MSG);
+			throw new AlreadyExistsException("This public key already exists in the server");
 		} else if (postResponse.getStatus() == 500) {
 			System.out.println(SERVER_ERROR_MSG);
 		} else {
