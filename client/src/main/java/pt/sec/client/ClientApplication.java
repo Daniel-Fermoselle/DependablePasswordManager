@@ -10,7 +10,7 @@ import pt.sec.a03.crypto.Crypto;
 
 public class ClientApplication {
 	
-	private static final String KEY_STORE_ALIAS_PUB = "client1";
+	private static final String KEY_STORE_ALIAS_PUB = "client";
 
 
 	public static void main(String args[]) throws Exception {
