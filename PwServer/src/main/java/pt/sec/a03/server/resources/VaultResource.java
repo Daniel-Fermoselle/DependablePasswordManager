@@ -44,8 +44,6 @@ public class VaultResource {
 		String[] content = vaultService.get(publicKey, username, domain, stringTS, stringSig);
 		CommonTriplet triplet = new CommonTriplet();
 		triplet.setPassword(content[3]);
-		System.out.println("Password: " +  triplet.getPassword());
-		System.out.println("HashPassword: " +  content[2]);
 		return Response.status(Status.OK)
 				.header("signature", content[1])
 				.header("timestamp", content[0])

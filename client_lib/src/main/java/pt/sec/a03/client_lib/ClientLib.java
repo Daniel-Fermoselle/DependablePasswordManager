@@ -23,54 +23,80 @@ import pt.sec.a03.crypto.Crypto;
 
 public class ClientLib {
 
-	private KeyStore ks;
-	private String aliasForPubKey;
-	private String keyStorePw;
-	private static final String aliasForServerPubKey = "server";
-	private Client client = ClientBuilder.newClient().register(LoggingFilter.class);
-	private WebTarget baseTarget = client.target("http://localhost:8080/PwServer/webapi/");
-	private WebTarget vaultTarget = baseTarget.path("vault");
-	private WebTarget userTarget = baseTarget.path("users");
+	//Keys related constants
+	private static final String ALIAS_FOR_SERVER_PUB_KEY = "server";
 
-	public void init(KeyStore ks, String aliasForPubKey, String keyStorePw) {
+	//Connection related constants 
+	private static final String BASE_TARGET_URI = "http://localhost:8080/PwServer/webapi/";
+	private static final String VAULT_URI = "vault";
+	private static final String USERS_URI = "users";
+	
+	private static final String PUBLIC_KEY_HEADER_NAME = "public-key";
+	private static final String SIGNATURE_HEADER_NAME = "signature";
+	private static final String TIME_STAMP_HEADER_NAME = "timestamp";
+	private static final String HASH_PASSWORD_HEADER_NAME = "hash-password";
+	private static final String DOMAIN_HEADER_NAME = "domain";
+	private static final String USERNAME_HEADER_NAME = "username";
+
+	//Internal message constants
+	private static final String SUCCESS_MSG = "Success";
+	private static final String INVALID_ARG_MSG = "Invalid argument";
+	private static final String DATA_NOT_FOUND_MSG = "Data Not Found";
+	private static final String SERVER_ERROR_MSG = "Internal server error";
+	private static final String ELSE_MSG = "Error";
+	
+	private static final String INVALID_TIME_STAMP_MSG = "Freshness compromised";
+	private static final String INVALID_SIGNATURE_MSG = "Signature compromised";
+	private static final String INVALID_PASSWORD_MSG = "Passwords don't match";
+
+	private KeyStore ks;
+	private String aliasForPubPrivKeys;
+	private String keyStorePw;
+
+	private Client client = ClientBuilder.newClient().register(LoggingFilter.class);
+	private WebTarget baseTarget = client.target(BASE_TARGET_URI);
+	private WebTarget vaultTarget = baseTarget.path(VAULT_URI);
+	private WebTarget userTarget = baseTarget.path(USERS_URI);
+	
+	
+
+	public void init(KeyStore ks, String aliasForPubPrivKey, String keyStorePw) {
 		this.ks = ks;
-		this.aliasForPubKey = aliasForPubKey;//this should be called alias for client keystore
+		this.aliasForPubPrivKeys = aliasForPubPrivKey;
 		this.keyStorePw = keyStorePw;
 	}
 
 	public void register_user() throws KeyStoreException {
 		// Get PubKey from key store
-		Certificate cert = ks.getCertificate(aliasForPubKey);
+		Certificate cert = ks.getCertificate(aliasForPubPrivKeys);
 		PublicKey pubKey = Crypto.getPublicKeyFromCertificate(cert);
 
 		String stringPubKey = Base64.encodeBase64String(pubKey.getEncoded());
-		Response postResponse = userTarget.request().header("public-key", stringPubKey).post(Entity.json(null));
+		Response postResponse = userTarget.request().header(PUBLIC_KEY_HEADER_NAME, stringPubKey).post(Entity.json(null));
 
 		if (postResponse.getStatus() == 201) {
-			System.out.println("Success");
+			System.out.println(SUCCESS_MSG);
 		} else if (postResponse.getStatus() == 400) {
-			System.out.println("Invalid argument");
+			System.out.println(INVALID_ARG_MSG);
 		} else if (postResponse.getStatus() == 404) {
-			System.out.println("Data Not Found");
+			System.out.println(DATA_NOT_FOUND_MSG);
 		} else if (postResponse.getStatus() == 500) {
-			System.out.println("Internal server error");
+			System.out.println(SERVER_ERROR_MSG);
 		} else {
-			System.out.println("Error");
+			System.out.println(ELSE_MSG);
 		}
 	}
 
 	// Mar
 	public void save_password(String domain, String username, String password) throws KeyStoreException {
 		try{
-			Certificate cert = ks.getCertificate(aliasForPubKey);
+			Certificate cert = ks.getCertificate(aliasForPubPrivKeys);
 			PublicKey clientPubKey = Crypto.getPublicKeyFromCertificate(cert);
-			PrivateKey clientprivKey = Crypto.getPrivateKeyFromKeystore(ks, aliasForPubKey, keyStorePw);
+			PrivateKey clientprivKey = Crypto.getPrivateKeyFromKeystore(ks, aliasForPubPrivKeys, keyStorePw);
 	
-			Certificate serverCert = ks.getCertificate(aliasForServerPubKey);
+			Certificate serverCert = ks.getCertificate(ALIAS_FOR_SERVER_PUB_KEY);
 			PublicKey serverPubKey = Crypto.getPublicKeyFromCertificate(serverCert);
 			
-			
-	
 			//--------Initial hashs and timestamp
 			byte[] hashDomain = Crypto.hashString(domain);
 			byte[] hashUsername = Crypto.hashString(username);
@@ -94,8 +120,7 @@ public class ClientLib {
 		    String StringCipheredPassword = Crypto.encode(cipherPassword);
 		    String headerHashPassword = Crypto.encode(cipherHashPassword);
 		    //---------
-		    
-		   		    
+		    	    
 		    String dataToSign = stringHashUsername + stringHashDomain + stringTs + headerHashPassword + 
 		    		StringCipheredPassword;
 		    
@@ -115,22 +140,22 @@ public class ClientLib {
 		    String stringPubKey = Crypto.encode(clientPubKey.getEncoded());
 		    
 			Response postResponse = vaultTarget.request()
-					.header("public-key", stringPubKey)
-					.header("signature", sig)
-					.header("timestamp", stringTs)
-					.header("hash-password", headerHashPassword)
+					.header(PUBLIC_KEY_HEADER_NAME, stringPubKey)
+					.header(SIGNATURE_HEADER_NAME, sig)
+					.header(TIME_STAMP_HEADER_NAME, stringTs)
+					.header(HASH_PASSWORD_HEADER_NAME, headerHashPassword)
 					.post(Entity.json(commonTriplet));
 	
 			if (postResponse.getStatus() == 201) {
-				System.out.println("Success");
+				System.out.println(SUCCESS_MSG);
 			} else if (postResponse.getStatus() == 400) {
-				System.out.println("Invalid argument");
+				System.out.println(INVALID_ARG_MSG);
 			} else if (postResponse.getStatus() == 404) {
-				System.out.println("Data Not Found");
+				System.out.println(DATA_NOT_FOUND_MSG);
 			} else if (postResponse.getStatus() == 500) {
-				System.out.println("Internal server error");
+				System.out.println(SERVER_ERROR_MSG);
 			} else {
-				System.out.println("Error");
+				System.out.println(ELSE_MSG);
 			}
 		}
 		catch (NoSuchAlgorithmException e) {
@@ -144,11 +169,11 @@ public class ClientLib {
 	public String retrive_password(String domain, String username) {
 		try{
 			//Get keys and certificates
-			Certificate cert1 = ks.getCertificate(aliasForPubKey);
+			Certificate cert1 = ks.getCertificate(aliasForPubPrivKeys);
 			PublicKey pubKeyClient = Crypto.getPublicKeyFromCertificate(cert1);
-		    Certificate cert2 = ks.getCertificate("server");
+		    Certificate cert2 = ks.getCertificate(ALIAS_FOR_SERVER_PUB_KEY);
 		    PublicKey pubKeyServer = Crypto.getPublicKeyFromCertificate(cert2);
-			PrivateKey privateKey = Crypto.getPrivateKeyFromKeystore(ks, "client", "insecure");
+			PrivateKey privateKey = Crypto.getPrivateKeyFromKeystore(ks, aliasForPubPrivKeys, keyStorePw);
 			
 			//Hash domain and username
 		    byte[] hashDomain = Crypto.hashString(domain);
@@ -172,26 +197,25 @@ public class ClientLib {
 		    
 			String stringPubKey = Crypto.encode(pubKeyClient.getEncoded());
 			Response getResponse = vaultTarget.request()
-					.header("public-key", stringPubKey)
-					.header("signature", sig)
-					.header("timestamp", stringTS)
-					.header("domain",  encodedDomain)
-					.header("username",  encodedUsername).get();
+					.header(PUBLIC_KEY_HEADER_NAME, stringPubKey)
+					.header(SIGNATURE_HEADER_NAME, sig)
+					.header(TIME_STAMP_HEADER_NAME, stringTS)
+					.header(DOMAIN_HEADER_NAME,  encodedDomain)
+					.header(USERNAME_HEADER_NAME,  encodedUsername).get();
 			
 			//Decipher password
 			String passwordReceived = getResponse.readEntity(CommonTriplet.class).getPassword();
-			System.out.println("Password: " +  passwordReceived);
 			String password = Crypto.decipherString(Crypto.decode(passwordReceived),
 					privateKey);
 
 			//Get headers info
-			String sigToVerify = getResponse.getHeaderString("signature");
-			stringTS = getResponse.getHeaderString("timestamp");
-			String encodedHashReceived = getResponse.getHeaderString("hash-password");			
+			String sigToVerify = getResponse.getHeaderString(SIGNATURE_HEADER_NAME);
+			stringTS = getResponse.getHeaderString(TIME_STAMP_HEADER_NAME);
+			String encodedHashReceived = getResponse.getHeaderString(HASH_PASSWORD_HEADER_NAME);			
 			
 			//Check timestamp freshness
 			if(!Crypto.validTS(stringTS)){
-				System.out.println("Freshness compromised");
+				System.out.println(INVALID_TIME_STAMP_MSG);
 				return "Champog";
 			}
 			
@@ -199,7 +223,7 @@ public class ClientLib {
 			sig = stringTS + encodedHashReceived + passwordReceived;
 			byte[] sigBytes = Crypto.decode(sigToVerify);
 		    if(!Crypto.verifyDigitalSignature(sigBytes, sig.getBytes(), pubKeyServer)){
-				System.out.println("Signature compromised");
+				System.out.println(INVALID_SIGNATURE_MSG);
 				return "Champog";
 		    }
 		    
@@ -208,23 +232,23 @@ public class ClientLib {
 		    byte[] cipheredHashReceived = Crypto.decode(encodedHashReceived);
 		    String hashReceived = Crypto.decipherString(cipheredHashReceived, pubKeyClient);
 		    if(!hashReceived.equals(new String(hashToVerify))){
-		    	System.out.println("Passwords don't match");
+		    	System.out.println(INVALID_PASSWORD_MSG);
 		    	return "Champog";
 		    }
 			
 			if (getResponse.getStatus() == 200) {
-				System.out.println("Success");
+				System.out.println(SUCCESS_MSG);
 			} else if (getResponse.getStatus() == 400) {
-				System.out.println("Invalid argument");
+				System.out.println(INVALID_ARG_MSG);
 				return "Champog";
 			} else if (getResponse.getStatus() == 404) {
-				System.out.println("Data Not Found");
+				System.out.println(DATA_NOT_FOUND_MSG);
 				return "Champog";
 			} else if (getResponse.getStatus() == 500) {
-				System.out.println("Internal server error");
+				System.out.println(SERVER_ERROR_MSG);
 				return "Champog";
 			} else {
-				System.out.println("Error");
+				System.out.println(ELSE_MSG);
 				return "Champog";
 			}
 			return password;

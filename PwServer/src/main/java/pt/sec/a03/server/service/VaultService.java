@@ -101,8 +101,6 @@ public class VaultService {
 
 		String pwHashFromDB = pwm.getHash(userAndDom[0], userAndDom[1]);
 		
-		System.out.println("Service hashPassword: " + pwHashFromDB);
-
 		Timestamp timestamp = new Timestamp(System.currentTimeMillis());
 		stringTS = timestamp.toString();
 
