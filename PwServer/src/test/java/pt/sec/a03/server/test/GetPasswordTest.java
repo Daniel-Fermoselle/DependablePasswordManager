@@ -53,7 +53,7 @@ public class GetPasswordTest extends AbstractPasswordManagerTest {
 
 	@Test
 	public void test01_getPassword() throws Exception {
-		Triplet t = pwm.getTriplet("belly", "sonae");
+		Triplet t = pwm.getTriplet("belly", "sonae", "123456789");
 		
 		assertTrue(equalTriplets(t, t1));
 	}
@@ -61,7 +61,7 @@ public class GetPasswordTest extends AbstractPasswordManagerTest {
 	@Test
 	public void test02_getPassword() throws Exception {
 		try {
-			pwm.getTriplet(null, "tecnico");
+			pwm.getTriplet(null, "tecnico", "123456789");
 			fail("This test should fail with exception InvalidArgumentException");
 		} catch (InvalidArgumentException e){
 			
@@ -73,7 +73,7 @@ public class GetPasswordTest extends AbstractPasswordManagerTest {
 	@Test
 	public void test03_getPassword() throws Exception {
 		try {
-			pwm.getTriplet("belly", null);
+			pwm.getTriplet("belly", null, "123456789");
 			fail("This test should fail with exception InvalidArgumentException");
 		} catch (InvalidArgumentException e){
 			
@@ -85,7 +85,7 @@ public class GetPasswordTest extends AbstractPasswordManagerTest {
 	@Test
 	public void test04_getPassword() throws Exception {
 		try {
-			pwm.getTriplet("belly", "pingo");
+			pwm.getTriplet("belly", "pingo", "123456789");
 			fail("This test should fail with exception DataNotFoundException");
 		} catch (DataNotFoundException e){
 			
@@ -97,12 +97,24 @@ public class GetPasswordTest extends AbstractPasswordManagerTest {
 	@Test
 	public void test05_getPassword() throws Exception {
 		try {
-			pwm.getTriplet("rambo", "sonae");
+			pwm.getTriplet("rambo", "sonae", "123456789");
 			fail("This test should fail with exception DataNotFoundException");
 		} catch (DataNotFoundException e){
 			
 		} catch (Exception e) {
 			fail("This test should fail with exception DataNotFoundException");
+		}
+	}
+	
+	@Test
+	public void test06_getPassword() throws Exception {
+		try {
+			Triplet t = pwm.getTriplet("belly", "sonae", "12345678");
+			fail("This test should fail with exception ForbiddenAccessException");
+		} catch (DataNotFoundException e){
+			
+		} catch (Exception e) {
+			fail("This test should fail with exception ForbiddenAccessException");
 		}
 	}
 	
