@@ -19,13 +19,11 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 
-import org.apache.commons.codec.binary.Base64;
-
 import pt.sec.a03.client_lib.exception.AlreadyExistsException;
 import pt.sec.a03.client_lib.exception.DataNotFoundException;
+import pt.sec.a03.client_lib.exception.IllegalAccessExistException;
 import pt.sec.a03.client_lib.exception.InvalidArgumentException;
 import pt.sec.a03.client_lib.exception.UsernameAndDomainAlreadyExistException;
-import pt.sec.a03.client_lib.filters.LoggingFilter;
 import pt.sec.a03.common_classes.CommonTriplet;
 import pt.sec.a03.crypto.Crypto;
 
@@ -64,7 +62,7 @@ public class ClientLib {
 	private String aliasForPubPrivKeys;
 	private String keyStorePw;
 
-	private Client client = ClientBuilder.newClient().register(LoggingFilter.class);
+	private Client client = ClientBuilder.newClient();
 	private WebTarget baseTarget = client.target(BASE_TARGET_URI);
 	private WebTarget vaultTarget = baseTarget.path(VAULT_URI);
 	private WebTarget userTarget = baseTarget.path(USERS_URI);
@@ -237,11 +235,26 @@ public class ClientLib {
 			// Generate signature
 			String tosign = stringHashUsername + stringHashDomain + stringTS;
 			String sig = Crypto.encode(Crypto.makeDigitalSignature(tosign.getBytes(), privateKey));
-
+			
 			String stringPubKey = Crypto.encode(pubKeyClient.getEncoded());
 			Response getResponse = vaultTarget.request().header(PUBLIC_KEY_HEADER_NAME, stringPubKey)
 					.header(SIGNATURE_HEADER_NAME, sig).header(TIME_STAMP_HEADER_NAME, stringTS)
 					.header(DOMAIN_HEADER_NAME, encodedDomain).header(USERNAME_HEADER_NAME, encodedUsername).get();
+
+			if (getResponse.getStatus() == 400) {
+				System.out.println(INVALID_ARG_MSG);
+				return "Champog";
+			} else if (getResponse.getStatus() == 403) {
+				System.out.println(FORBIDEN_MSG);
+				throw new IllegalAccessExistException(
+						"This combination of username and domain already exists");
+			} else if (getResponse.getStatus() == 404) {
+				System.out.println(DATA_NOT_FOUND_MSG);
+				throw new DataNotFoundException("This public key is not registered in the server");
+			} else if (getResponse.getStatus() == 500) {
+				System.out.println(SERVER_ERROR_MSG);
+				return "Champog";
+			}
 
 			// Decipher password
 			String passwordReceived = getResponse.readEntity(CommonTriplet.class).getPassword();
@@ -251,7 +264,7 @@ public class ClientLib {
 			String sigToVerify = getResponse.getHeaderString(SIGNATURE_HEADER_NAME);
 			stringTS = getResponse.getHeaderString(TIME_STAMP_HEADER_NAME);
 			String encodedHashReceived = getResponse.getHeaderString(HASH_PASSWORD_HEADER_NAME);
-
+			
 			// Check timestamp freshness
 			if (!Crypto.validTS(stringTS)) {
 				System.out.println(INVALID_TIME_STAMP_MSG);
@@ -274,27 +287,16 @@ public class ClientLib {
 				System.out.println(INVALID_PASSWORD_MSG);
 				return "Champog";
 			}
-
+			
 			if (getResponse.getStatus() == 200) {
 				System.out.println(SUCCESS_MSG);
-			} else if (getResponse.getStatus() == 400) {
-				System.out.println(INVALID_ARG_MSG);
-				return "Champog";
-			} else if (getResponse.getStatus() == 403) {
-				System.out.println(FORBIDEN_MSG);
-				throw new UsernameAndDomainAlreadyExistException(
-						"This combination of username and domain already exists");
-			} else if (getResponse.getStatus() == 404) {
-				System.out.println(DATA_NOT_FOUND_MSG);
-				return "Champog";
-			} else if (getResponse.getStatus() == 500) {
-				System.out.println(SERVER_ERROR_MSG);
-				return "Champog";
 			} else {
 				System.out.println(ELSE_MSG);
 				return "Champog";
 			}
+			
 			return password;
+			
 		} catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException | KeyStoreException
 				| UnrecoverableKeyException | ParseException e) {
 			e.printStackTrace();

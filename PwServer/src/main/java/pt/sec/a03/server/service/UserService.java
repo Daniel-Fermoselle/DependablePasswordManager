@@ -1,6 +1,10 @@
 package pt.sec.a03.server.service;
 
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
+import java.security.SignatureException;
+import java.security.spec.InvalidKeySpecException;
 
 import pt.sec.a03.crypto.Crypto;
 import pt.sec.a03.server.domain.PasswordManager;
@@ -22,13 +26,16 @@ public class UserService {
 		try {
 			String toSign = timestamp + publicKey;
 			byte[] serverSideSig = Crypto.decode(signature);
-			PublicKey pk = Crypto.getPubKeyFromByte(Crypto.decode(publicKey));
+			PublicKey pk;
+				pk = Crypto.getPubKeyFromByte(Crypto.decode(publicKey));
 			if (!Crypto.verifyDigitalSignature(serverSideSig, toSign.getBytes(), pk)) {
 				throw new InvalidSignatureException("Invalid Signature");
 			}
 			pwm.addUser(publicKey);
-		} catch (Exception e) {
+		} catch (InvalidKeySpecException | NoSuchAlgorithmException | 
+				 InvalidKeyException | SignatureException e) {
 			e.printStackTrace();
+			throw new RuntimeException(e.getMessage());
 		}
 	}
 

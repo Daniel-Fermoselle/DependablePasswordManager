@@ -11,8 +11,8 @@ import org.junit.runners.MethodSorters;
 
 import pt.sec.a03.client_lib.ClientLib;
 import pt.sec.a03.client_lib.exception.DataNotFoundException;
+import pt.sec.a03.client_lib.exception.IllegalAccessExistException;
 import pt.sec.a03.client_lib.exception.InvalidArgumentException;
-import pt.sec.a03.client_lib.exception.UsernameAndDomainAlreadyExistException;
 import pt.sec.a03.crypto.Crypto;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -28,6 +28,8 @@ public class RetrivePasswordTest extends AbstractClientLibTest {
 
 	private static final String DOMAIN_1 = "YouTube";
 	private static final String USERNAME_1 = "lol_gosu";
+	private static final String DOMAIN_2 = "YouTubee";
+	private static final String USERNAME_2 = "lol_gosuu";
 	private static final String PASSWORD_1 = "bestAdc";
 	private static final String PASSWORD_2 = "buffLucian";
 
@@ -133,18 +135,48 @@ public class RetrivePasswordTest extends AbstractClientLibTest {
 	}
 
 	/**
-	 * Username and Domain already exist for other user
+	 * Username and Domain exist for other user
 	 */
 	@Test
 	public void test06_retrivePassword() {
 		try {
 			c2.register_user();
-			c1.retrive_password(DOMAIN_1, USERNAME_1);
-			fail("This test should fail with exception UsernameAndDomainAlreadyExistException");
-		} catch (UsernameAndDomainAlreadyExistException e) {
+			c2.retrive_password(DOMAIN_1, USERNAME_1);
+			fail("This test should fail with exception IllegalAccessExistException");
+		} catch (IllegalAccessExistException e) {
 
 		} catch (Exception e) {
-			fail("This test should fail with exception UsernameAndDomainAlreadyExistException");
+			fail("This test should fail with exception IllegalAccessExistException");
+		}
+	}
+	
+	/**
+	 * Username and Domain exist for other user
+	 */
+	@Test
+	public void test07_retrivePassword() {
+		try {
+			c1.retrive_password(DOMAIN_1, USERNAME_2);
+			fail("This test should fail with exception DataNotFoundException");
+		} catch (DataNotFoundException e) {
+
+		} catch (Exception e) {
+			fail("This test should fail with exception DataNotFoundException");
+		}
+	}
+	
+	/**
+	 * Username and Domain exist for other user
+	 */
+	@Test
+	public void test08_retrivePassword() {
+		try {
+			c1.retrive_password(DOMAIN_2, USERNAME_1);
+			fail("This test should fail with exception DataNotFoundException");
+		} catch (DataNotFoundException e) {
+
+		} catch (Exception e) {
+			fail("This test should fail with exception DataNotFoundException");
 		}
 	}
 }

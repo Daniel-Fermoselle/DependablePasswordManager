@@ -23,34 +23,38 @@ import pt.sec.a03.server.exception.InvalidTimestampException;
 
 public class VaultService {
 
-	private static final String aliasForServer = "server";
-	private static final String serverKeyStorePath = "/Users/tiagomsr/Documents/workspace/SEC/DependablePasswordManager/PwServer/ks/Server1.jks";
-	private static final String serverKeyStorePass = "insecure";
+	private static final String ALIAS_FOR_SERVER = "server";
+	private static final String SERVER_KEY_STORE_PATH = "/Users/sigma/Desktop/Server1.jks";
+	private static final String SERVER_KEY_STORE_PASS = "insecure";
 	PrivateKey privKey;
+	KeyStore ksServ;
+	PasswordManager pwm;
 
-	// TODO I think that the password manager should be put in a constructor of
-	// the vault service
+	public VaultService() {
+		try {
+			this.ksServ = Crypto.readKeystoreFile(SERVER_KEY_STORE_PATH, SERVER_KEY_STORE_PASS.toCharArray());
+			this.privKey = Crypto.getPrivateKeyFromKeystore(ksServ, ALIAS_FOR_SERVER, SERVER_KEY_STORE_PASS);
+			this.pwm = new PasswordManager();
+		} catch (KeyStoreException | NoSuchAlgorithmException | CertificateException | IOException
+				| UnrecoverableKeyException e) {
+			e.printStackTrace();
+			throw new RuntimeException(e.getMessage());
+		}
+	}
+
 	public void put(String publicKey, String signature, String timestamp, String hashPw, String cipherPassword,
 			String cipheredHashUsername, String cipheredHashDomain) {
 
-		System.out.println("Working Directory = " + System.getProperty("user.dir"));
-
+		String[] userAndDom = null;
 		try {
-
-			KeyStore ksServ = Crypto.readKeystoreFile(serverKeyStorePath, serverKeyStorePass.toCharArray());
-			PrivateKey privateServer = Crypto.getPrivateKeyFromKeystore(ksServ, aliasForServer, serverKeyStorePass);
-
 			// Verify freshness
-			if (!Crypto.validTS(timestamp)) {
-				throw new InvalidTimestampException("Invalid Timestamp");
-			}
+			verifyTS(timestamp);
 
 			// Decipher
-			String stringHashDomain = Crypto.decipherString(Crypto.decode(cipheredHashDomain), privateServer);
-			String stringHashUsername = Crypto.decipherString(Crypto.decode(cipheredHashUsername), privateServer);
+			userAndDom = decipherUsernameAndDomain(cipheredHashDomain, cipheredHashUsername);
 
 			// Verify signature
-			String serverSideTosign = stringHashUsername + stringHashDomain + timestamp + hashPw + cipherPassword;
+			String serverSideTosign = userAndDom[0] + userAndDom[1] + timestamp + hashPw + cipherPassword;
 
 			byte[] serverSideSig = Crypto.decode(signature);
 
@@ -60,47 +64,20 @@ public class VaultService {
 				throw new InvalidSignatureException("Invalid Signature");
 			}
 
-			PasswordManager pwm = new PasswordManager();
-			Triplet t = pwm.saveTriplet(new Triplet(cipherPassword, stringHashUsername, stringHashDomain), publicKey);
+			Triplet t = pwm.saveTriplet(new Triplet(cipherPassword, userAndDom[0], userAndDom[1]), publicKey);
 			pwm.saveHash(t.getTripletID(), hashPw);
 
-		} catch (NoSuchAlgorithmException e) {
+		} catch (NoSuchAlgorithmException | InvalidKeySpecException | InvalidKeyException | SignatureException
+				| ParseException e) {
 			e.printStackTrace();
-		} catch (InvalidKeySpecException e) {
-			e.printStackTrace();
-		} catch (KeyStoreException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (CertificateException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InvalidKeyException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (SignatureException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (UnrecoverableKeyException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (ParseException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			throw new RuntimeException(e.getMessage());
 		}
 	}
 
 	public String[] get(String publicKey, String username, String domain, String stringTS, String stringSig) {
-		
-		PasswordManager pwm = new PasswordManager();
 		String[] userAndDom = null;
 
 		try {
-			KeyStore ksServ = Crypto.readKeystoreFile(serverKeyStorePath, serverKeyStorePass.toCharArray());
-			this.privKey = Crypto.getPrivateKeyFromKeystore(ksServ, aliasForServer, serverKeyStorePass);
-			
 			// Verify TimeStamp
 			verifyTS(stringTS);
 
@@ -113,59 +90,32 @@ public class VaultService {
 			PublicKey cliPublicKey = Crypto.getPubKeyFromByte(Crypto.decode(publicKey));
 
 			if (!Crypto.verifyDigitalSignature(Crypto.decode(stringSig), verifySig.getBytes(), cliPublicKey)) {
-				// TODO Throw proper exception
+				throw new InvalidSignatureException("Invalid Signature");
 			}
 
-		} catch (ParseException e) {
+			Triplet t = pwm.getTriplet(userAndDom[0], userAndDom[1], publicKey);
+
+			String pwHashFromDB = pwm.getHash(userAndDom[0], userAndDom[1], publicKey);
+
+			Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+			stringTS = timestamp.toString();
+
+			String toSign = stringTS + pwHashFromDB + t.getPassword();
+
+			String sign = Crypto.encode(Crypto.makeDigitalSignature(toSign.getBytes(), this.privKey));
+
+			return new String[] { stringTS, sign, pwHashFromDB, t.getPassword() };
+
+		} catch (NoSuchAlgorithmException | InvalidKeySpecException | InvalidKeyException | SignatureException
+				| ParseException e) {
 			e.printStackTrace();
-		} catch (UnrecoverableKeyException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (KeyStoreException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (NoSuchAlgorithmException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (CertificateException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InvalidKeySpecException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InvalidKeyException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (SignatureException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			throw new RuntimeException(e.getMessage());
 		}
-
-		Triplet t = pwm.getTriplet(userAndDom[0], userAndDom[1], publicKey);
-
-		String pwHashFromDB = pwm.getHash(userAndDom[0], userAndDom[1], publicKey);
-		
-		Timestamp timestamp = new Timestamp(System.currentTimeMillis());
-		stringTS = timestamp.toString();
-
-		String toSign = stringTS + pwHashFromDB + t.getPassword();
-
-		String sign = null;
-		try {
-			sign = Crypto.encode(Crypto.makeDigitalSignature(toSign.getBytes(), this.privKey));
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		return new String[] { stringTS, sign, pwHashFromDB, t.getPassword() };
 	}
 
 	public void verifyTS(String stringTS) throws ParseException {
 		if (!Crypto.validTS(stringTS)) {
-			// TODO Throw TS Exception
+			throw new InvalidTimestampException("Invalid Timestamp");
 		}
 	}
 
@@ -176,18 +126,9 @@ public class VaultService {
 		String hashedDomain = null;
 		String hashedUsername = null;
 
-		try {
-			hashedDomain = Crypto.decipherString(byteDomain, this.privKey);
-		} catch (Exception e) {
-			// TODO Throw proper exeception
-			e.printStackTrace();
-		}
-		try {
-			hashedUsername = Crypto.decipherString(byteUsername, this.privKey);
-		} catch (Exception e) {
-			// TODO Throw proper exeception
-			e.printStackTrace();
-		}
+		hashedDomain = Crypto.decipherString(byteDomain, this.privKey);
+
+		hashedUsername = Crypto.decipherString(byteUsername, this.privKey);
 
 		return new String[] { hashedUsername, hashedDomain };
 	}
