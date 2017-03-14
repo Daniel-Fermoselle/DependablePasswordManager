@@ -37,13 +37,14 @@ public class UserResource {
 	
 	@POST
 	//TODO receive the pk correctly 
-	public Response addUser(@HeaderParam("public-key") String publicKey) {
-		userService.addUser(publicKey);
+	public Response addUser(@HeaderParam("public-key") String publicKey, @HeaderParam("signature") String signature,
+			@HeaderParam("timestamp") String timestamp) {
+		userService.addUser(publicKey, signature, timestamp);
 		return Response.status(Status.CREATED)
 					.build();
 	}
 	
-	@PUT
+	@PUT//Depricated needs signature
 	@Path("/{userId}")
 	//TODO receive the pk correctly 
 	public Response updateUserWithID(@PathParam("userId") String id, @HeaderParam("public-key") String publicKey) {
