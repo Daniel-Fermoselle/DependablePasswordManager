@@ -3,17 +3,23 @@ package pt.sec.a03.crypto;
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.KeyFactory;
 import java.security.KeyStore;
+import java.security.KeyStoreException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.Signature;
 import java.security.SignatureException;
+import java.security.UnrecoverableKeyException;
 import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
+import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -74,11 +80,11 @@ public class Crypto {
 		return certificate.getPublicKey();
 	}
 	
-	public static PublicKey getPubKeyFromByte(byte[] bytePubKey) throws Exception {
+	public static PublicKey getPubKeyFromByte(byte[] bytePubKey) throws InvalidKeySpecException, NoSuchAlgorithmException {
 		return KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(bytePubKey));
 	}
 
-	public static Certificate readCertificateFile(String certificateFilePath) throws Exception {
+	public static Certificate readCertificateFile(String certificateFilePath) throws CertificateException, IOException {
 		FileInputStream fis;
 
 		try {
@@ -101,14 +107,14 @@ public class Crypto {
 	}
 	
 	public static PrivateKey getPrivateKeyFromKeystore(KeyStore keystore,
-			String keyAlias, String keyPassword) throws Exception {
+			String keyAlias, String keyPassword) throws UnrecoverableKeyException, KeyStoreException, NoSuchAlgorithmException {
 
 		PrivateKey key = (PrivateKey) keystore.getKey(keyAlias, keyPassword.toCharArray());
 
 		return key;
 	}
 
-	public static KeyStore readKeystoreFile(String keyStoreFilePath, char[] keyStorePassword) throws Exception {
+	public static KeyStore readKeystoreFile(String keyStoreFilePath, char[] keyStorePassword) throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException {
 		FileInputStream fis;
 		try {
 			fis = new FileInputStream(keyStoreFilePath);
@@ -150,7 +156,7 @@ public class Crypto {
 	    return new String(decipheredText);
 	}
 	
-	public static byte[] makeDigitalSignature(byte[] bytes, PrivateKey privateKey) throws Exception {
+	public static byte[] makeDigitalSignature(byte[] bytes, PrivateKey privateKey) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException {
 
 		// get a signature object using the SHA-256 and RSA combo
 		// and sign the plain-text with the private key
@@ -162,8 +168,7 @@ public class Crypto {
 		return signature;
 	}
 
-	public static boolean verifyDigitalSignature(byte[] cipherDigest, byte[] bytes, PublicKey publicKey)
-			throws Exception {
+	public static boolean verifyDigitalSignature(byte[] cipherDigest, byte[] bytes, PublicKey publicKey) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException {
 
 		// verify the signature with the public key
 		Signature sig = Signature.getInstance("SHA256withRSA");

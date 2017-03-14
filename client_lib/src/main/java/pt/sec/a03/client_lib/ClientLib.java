@@ -1,14 +1,17 @@
 package pt.sec.a03.client_lib;
 
+import java.security.InvalidKeyException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.SignatureException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.Certificate;
 import java.sql.Timestamp;
+import java.text.ParseException;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -19,7 +22,9 @@ import javax.ws.rs.core.Response;
 import org.apache.commons.codec.binary.Base64;
 
 import pt.sec.a03.client_lib.exception.AlreadyExistsException;
+import pt.sec.a03.client_lib.exception.DataNotFoundException;
 import pt.sec.a03.client_lib.exception.InvalidArgumentException;
+import pt.sec.a03.client_lib.exception.UsernameAndDomainAlreadyExistException;
 import pt.sec.a03.client_lib.filters.LoggingFilter;
 import pt.sec.a03.common_classes.CommonTriplet;
 import pt.sec.a03.crypto.Crypto;
@@ -44,6 +49,7 @@ public class ClientLib {
 	// Internal message constants
 	private static final String SUCCESS_MSG = "Success";
 	private static final String INVALID_ARG_MSG = "Invalid argument";
+	private static final String FORBIDEN_MSG = "Forbiden operation";
 	private static final String ALREADY_EXISTS_MSG = "Entity already exists";
 	private static final String DATA_NOT_FOUND_MSG = "Data Not Found";
 	private static final String SERVER_ERROR_MSG = "Internal server error";
@@ -52,6 +58,7 @@ public class ClientLib {
 	private static final String INVALID_TIME_STAMP_MSG = "Freshness compromised";
 	private static final String INVALID_SIGNATURE_MSG = "Signature compromised";
 	private static final String INVALID_PASSWORD_MSG = "Passwords don't match";
+
 
 	// Attributes
 	private KeyStore ks;
@@ -88,8 +95,6 @@ public class ClientLib {
 		Response postResponse = userTarget.request().header(PUBLIC_KEY_HEADER_NAME, stringPubKey)
 				.post(Entity.json(null));
 		
-		System.out.println("Status in response: " + postResponse.getStatus());
-
 		if (postResponse.getStatus() == 201) {
 			System.out.println(SUCCESS_MSG);
 		} else if (postResponse.getStatus() == 409) {
@@ -103,7 +108,13 @@ public class ClientLib {
 	}
 
 	// Mar
-	public void save_password(String domain, String username, String password) throws KeyStoreException {
+	public void save_password(String domain, String username, String password){
+		if(domain == null || username == null || password == null) {
+			throw new InvalidArgumentException("One of the arguments of the init method was null");
+		}
+		if(password.length() >= 246) {
+			throw new InvalidArgumentException("Password to big to the system 245 bytes maximum");
+		}
 		try {
 			Certificate cert = ks.getCertificate(aliasForPubPrivKeys);
 			PublicKey clientPubKey = Crypto.getPublicKeyFromCertificate(cert);
@@ -156,23 +167,29 @@ public class ClientLib {
 			Response postResponse = vaultTarget.request().header(PUBLIC_KEY_HEADER_NAME, stringPubKey)
 					.header(SIGNATURE_HEADER_NAME, sig).header(TIME_STAMP_HEADER_NAME, stringTs)
 					.header(HASH_PASSWORD_HEADER_NAME, headerHashPassword).post(Entity.json(commonTriplet));
+			
+			System.out.println("Status:  " + postResponse.getStatus());
 
 			if (postResponse.getStatus() == 201) {
 				System.out.println(SUCCESS_MSG);
 			} else if (postResponse.getStatus() == 400) {
 				System.out.println(INVALID_ARG_MSG);
+			} else if (postResponse.getStatus() == 403) {
+				System.out.println(FORBIDEN_MSG);
+				throw new UsernameAndDomainAlreadyExistException("This combination of username and domain already exists");
 			} else if (postResponse.getStatus() == 404) {
 				System.out.println(DATA_NOT_FOUND_MSG);
+				throw new DataNotFoundException("This public key is not registered in the server");
 			} else if (postResponse.getStatus() == 500) {
 				System.out.println(SERVER_ERROR_MSG);
 			} else {
 				System.out.println(ELSE_MSG);
 			}
-		} catch (NoSuchAlgorithmException e) {
+		} catch (NoSuchAlgorithmException | InvalidKeyException | 
+				 SignatureException       | KeyStoreException   | 
+				 UnrecoverableKeyException e) {
 			e.printStackTrace();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+		} 
 	}
 
 	// Tiago
@@ -247,6 +264,9 @@ public class ClientLib {
 			} else if (getResponse.getStatus() == 400) {
 				System.out.println(INVALID_ARG_MSG);
 				return "Champog";
+			} else if (getResponse.getStatus() == 403) {
+				System.out.println(FORBIDEN_MSG);
+				throw new UsernameAndDomainAlreadyExistException("This combination of username and domain already exists");
 			} else if (getResponse.getStatus() == 404) {
 				System.out.println(DATA_NOT_FOUND_MSG);
 				return "Champog";
@@ -258,10 +278,12 @@ public class ClientLib {
 				return "Champog";
 			}
 			return password;
-		} catch (Exception e) {
+		} catch (NoSuchAlgorithmException  | InvalidKeyException | 
+				 SignatureException        | KeyStoreException   | 
+				 UnrecoverableKeyException | ParseException e) {
 			e.printStackTrace();
 			return "Champog";
-		}
+		} 
 	}
 
 	public void close() {

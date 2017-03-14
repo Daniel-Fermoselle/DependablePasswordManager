@@ -4,12 +4,15 @@ import static org.junit.Assert.fail;
 
 import java.security.KeyStore;
 
+import org.junit.FixMethodOrder;
 import org.junit.Test;
+import org.junit.runners.MethodSorters;
 
 import pt.sec.a03.client_lib.ClientLib;
 import pt.sec.a03.client_lib.exception.AlreadyExistsException;
 import pt.sec.a03.crypto.Crypto;
 
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class RegisterUserTest extends AbstractClientLibTest {
 
 	private static final String KEY_STORE_1 = "ks/Client1.jks";
@@ -43,7 +46,7 @@ public class RegisterUserTest extends AbstractClientLibTest {
 	 * Normal arguments
 	 */
 	@Test
-	public void test01_init() {
+	public void test01_registerUser() {
 		c1.register_user();
 	}
 
@@ -51,7 +54,7 @@ public class RegisterUserTest extends AbstractClientLibTest {
 	 * User already registered
 	 */
 	@Test
-	public void test02_init() {
+	public void test02_registerUser() {
 		try {
 			c1.register_user();
 			fail("This test should fail with exception AlreadyExistsException");
