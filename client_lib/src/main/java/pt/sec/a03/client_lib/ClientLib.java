@@ -66,29 +66,47 @@ public class ClientLib {
 		this.keyStorePw = keyStorePw;
 	}
 
-	public void register_user() throws KeyStoreException {
+	public void register_user() {
 		// Get PubKey from key store
-		Certificate cert = ks.getCertificate(aliasForPubPrivKeys);
-		PublicKey pubKey = Crypto.getPublicKeyFromCertificate(cert);
+		try {
+			Certificate cert = ks.getCertificate(aliasForPubPrivKeys);
+			PublicKey pubKey = Crypto.getPublicKeyFromCertificate(cert);
+			PrivateKey clientprivKey = Crypto.getPrivateKeyFromKeystore(ks, aliasForPubPrivKeys, keyStorePw);
+			
+		    //Generate timestamp
+		    Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+		    String stringTS = timestamp.toString();
 
-		String stringPubKey = Base64.encodeBase64String(pubKey.getEncoded());
-		Response postResponse = userTarget.request().header(PUBLIC_KEY_HEADER_NAME, stringPubKey).post(Entity.json(null));
+			String stringPubKey = Crypto.encode(pubKey.getEncoded());
+			
+		    //Generate signature
+		    String tosign = stringTS + stringPubKey;
+		    String sig = Crypto.encode(Crypto.makeDigitalSignature(tosign.getBytes(), clientprivKey));
+		    
+			Response postResponse = userTarget.request()
+					.header(SIGNATURE_HEADER_NAME, sig)
+					.header(PUBLIC_KEY_HEADER_NAME, stringPubKey)
+					.header(TIME_STAMP_HEADER_NAME, stringTS)
+					.post(Entity.json(null));
 
-		if (postResponse.getStatus() == 201) {
-			System.out.println(SUCCESS_MSG);
-		} else if (postResponse.getStatus() == 400) {
-			System.out.println(INVALID_ARG_MSG);
-		} else if (postResponse.getStatus() == 404) {
-			System.out.println(DATA_NOT_FOUND_MSG);
-		} else if (postResponse.getStatus() == 500) {
-			System.out.println(SERVER_ERROR_MSG);
-		} else {
-			System.out.println(ELSE_MSG);
+			if (postResponse.getStatus() == 201) {
+				System.out.println(SUCCESS_MSG);
+			} else if (postResponse.getStatus() == 400) {
+				System.out.println(INVALID_ARG_MSG);
+			} else if (postResponse.getStatus() == 404) {
+				System.out.println(DATA_NOT_FOUND_MSG);
+			} else if (postResponse.getStatus() == 500) {
+				System.out.println(SERVER_ERROR_MSG);
+			} else {
+				System.out.println(ELSE_MSG);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
 
 	// Mar
-	public void save_password(String domain, String username, String password) throws KeyStoreException {
+	public void save_password(String domain, String username, String password) {
 		try{
 			Certificate cert = ks.getCertificate(aliasForPubPrivKeys);
 			PublicKey clientPubKey = Crypto.getPublicKeyFromCertificate(cert);
