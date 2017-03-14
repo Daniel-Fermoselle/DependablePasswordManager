@@ -32,6 +32,16 @@ public class Crypto {
 
 	//plain -> cipher -> encode  ---- > decode -> decipher -> plain
 	/*___________________
+
+	Function name: Register user
+	
+	encode(Sig(TS || encode(PK)) - signature in header
+	PK in header - public-key in header
+	TS in header - timestamp in header
+	{
+	}
+		 
+
 	Daniel
 	Function name: Client Put request
 	
