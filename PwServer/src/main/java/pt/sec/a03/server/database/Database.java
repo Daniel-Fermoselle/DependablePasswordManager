@@ -199,7 +199,7 @@ public class Database {
 		ScriptRunner sr = new ScriptRunner(jdbcConnection);
 
 		// Give the input file to Reader
-		Reader reader = new BufferedReader(new FileReader("database.sql"));
+		Reader reader = new BufferedReader(new FileReader(SQL_SCRIPT_PATH));
 
 		// Exctute script
 		sr.runScript(reader);
