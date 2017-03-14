@@ -194,6 +194,9 @@ public class ClientLib {
 
 	// Tiago
 	public String retrive_password(String domain, String username) {
+		if(domain == null || username == null) {
+			throw new InvalidArgumentException("One of the arguments of the init method was null");
+		}
 		try {
 			// Get keys and certificates
 			Certificate cert1 = ks.getCertificate(aliasForPubPrivKeys);
