@@ -13,10 +13,8 @@ import java.security.cert.Certificate;
 import java.sql.Timestamp;
 import java.text.ParseException;
 
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.client.*;
+import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.core.Response;
 
 import pt.sec.a03.client_lib.exception.AlreadyExistsException;
@@ -78,7 +76,12 @@ public class ClientLib {
 	}
 
 	public void register_user() {
+		String[] infoToSend = prepareForRegisterUser();
+		Response response = sendRegisterUser(infoToSend);
+		processRegisterUser(response);
+	}
 
+	public String[] prepareForRegisterUser() {
 		// Get PubKey from key store
 		Certificate cert;
 		try {
@@ -96,27 +99,32 @@ public class ClientLib {
 			String tosign = stringTS + stringPubKey;
 			String sig = Crypto.encode(Crypto.makeDigitalSignature(tosign.getBytes(), clientprivKey));
 
-			Response postResponse = userTarget.request().header(SIGNATURE_HEADER_NAME, sig)
-					.header(PUBLIC_KEY_HEADER_NAME, stringPubKey).header(TIME_STAMP_HEADER_NAME, stringTS)
-					.post(Entity.json(null));
+			return new String[] { sig, stringPubKey, stringTS };
 
-			if (postResponse.getStatus() == 201) {
-				System.out.println(SUCCESS_MSG);
-			} else if (postResponse.getStatus() == 409) {
-				System.out.println(ALREADY_EXISTS_MSG);
-				throw new AlreadyExistsException("This public key already exists in the server");
-			} else if (postResponse.getStatus() == 500) {
-				System.out.println(SERVER_ERROR_MSG);
-			} else {
-				System.out.println(ELSE_MSG);
-			}
-		} catch (KeyStoreException | InvalidKeyException      | 
-				NoSuchAlgorithmException | SignatureException | 
-				UnrecoverableKeyException e) {
+		} catch (KeyStoreException | InvalidKeyException | NoSuchAlgorithmException | SignatureException
+				| UnrecoverableKeyException e) {
 			e.printStackTrace();
 			throw new RuntimeException(e.getMessage());
 		}
+	}
 
+	public Response sendRegisterUser(String[] infoToSend) {
+		return userTarget.request().header(SIGNATURE_HEADER_NAME, infoToSend[0])
+				.header(PUBLIC_KEY_HEADER_NAME, infoToSend[1]).header(TIME_STAMP_HEADER_NAME, infoToSend[2])
+				.post(Entity.json(null));
+	}
+
+	public void processRegisterUser(Response postResponse) {
+		if (postResponse.getStatus() == 201) {
+			System.out.println(SUCCESS_MSG);
+		} else if (postResponse.getStatus() == 409) {
+			System.out.println(ALREADY_EXISTS_MSG);
+			throw new AlreadyExistsException("This public key already exists in the server");
+		} else if (postResponse.getStatus() == 500) {
+			System.out.println(SERVER_ERROR_MSG);
+		} else {
+			System.out.println(ELSE_MSG);
+		}
 	}
 
 	public void save_password(String domain, String username, String password) {
@@ -126,6 +134,13 @@ public class ClientLib {
 		if (password.length() >= 246) {
 			throw new InvalidArgumentException("Password to big to the system 245 bytes maximum");
 		}
+
+		String[] infoToSend = prepareForSave(domain, username, password);
+		Response response = sendSavePassword(infoToSend);
+		processSavePassword(response);
+	}
+
+	public String[] prepareForSave(String domain, String username, String password) {
 		try {
 			Certificate cert = ks.getCertificate(aliasForPubPrivKeys);
 			PublicKey clientPubKey = Crypto.getPublicKeyFromCertificate(cert);
@@ -165,49 +180,54 @@ public class ClientLib {
 			String sig = Crypto.encode(Crypto.makeDigitalSignature(dataToSign.getBytes(), clientprivKey));
 			// ---------
 
-			/*
-			 * The triplet { domain: BASE64 encode({{Hash(Domain)}Public key
-			 * Server) username: BASE64 encode({Hash(User)}Public key Server)
-			 * password: BASE64 encode({Password}Public key Client) }
-			 */
-			CommonTriplet commonTriplet = new CommonTriplet(StringCipheredPassword, StringCipheredUsername,
-					StringCipheredDomain);
 			// -------
 			String stringPubKey = Crypto.encode(clientPubKey.getEncoded());
 
-			Response postResponse = vaultTarget.request().header(PUBLIC_KEY_HEADER_NAME, stringPubKey)
-					.header(SIGNATURE_HEADER_NAME, sig).header(TIME_STAMP_HEADER_NAME, stringTs)
-					.header(HASH_PASSWORD_HEADER_NAME, headerHashPassword).post(Entity.json(commonTriplet));
+			return new String[] { stringPubKey, sig, stringTs, headerHashPassword, StringCipheredPassword,
+					StringCipheredUsername, StringCipheredDomain };
 
-			System.out.println("Status:  " + postResponse.getStatus());
-
-			if (postResponse.getStatus() == 201) {
-				System.out.println(SUCCESS_MSG);
-			} else if (postResponse.getStatus() == 400) {
-				System.out.println(INVALID_ARG_MSG);
-			} else if (postResponse.getStatus() == 403) {
-				System.out.println(FORBIDEN_MSG);
-				throw new UsernameAndDomainAlreadyExistException(
-						"This combination of username and domain already exists");
-			} else if (postResponse.getStatus() == 404) {
-				System.out.println(DATA_NOT_FOUND_MSG);
-				throw new DataNotFoundException("This public key is not registered in the server");
-			} else if (postResponse.getStatus() == 500) {
-				System.out.println(SERVER_ERROR_MSG);
-			} else {
-				System.out.println(ELSE_MSG);
-			}
 		} catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException | KeyStoreException
 				| UnrecoverableKeyException e) {
 			e.printStackTrace();
+			throw new RuntimeException(e.getMessage());
 		}
 	}
 
-	// Tiago
+	public Response sendSavePassword(String[] infoToSend) {
+		CommonTriplet commonTriplet = new CommonTriplet(infoToSend[4], infoToSend[5], infoToSend[6]);
+		return vaultTarget.request().header(PUBLIC_KEY_HEADER_NAME, infoToSend[0])
+				.header(SIGNATURE_HEADER_NAME, infoToSend[1]).header(TIME_STAMP_HEADER_NAME, infoToSend[2])
+				.header(HASH_PASSWORD_HEADER_NAME, infoToSend[3]).post(Entity.json(commonTriplet));
+	}
+
+	public void processSavePassword(Response postResponse) {
+		if (postResponse.getStatus() == 201) {
+			System.out.println(SUCCESS_MSG);
+		} else if (postResponse.getStatus() == 400) {
+			System.out.println(INVALID_ARG_MSG);
+		} else if (postResponse.getStatus() == 403) {
+			System.out.println(FORBIDEN_MSG);
+			throw new UsernameAndDomainAlreadyExistException("This combination of username and domain already exists");
+		} else if (postResponse.getStatus() == 404) {
+			System.out.println(DATA_NOT_FOUND_MSG);
+			throw new DataNotFoundException("This public key is not registered in the server");
+		} else if (postResponse.getStatus() == 500) {
+			System.out.println(SERVER_ERROR_MSG);
+		} else {
+			System.out.println(ELSE_MSG);
+		}
+	}
+
 	public String retrive_password(String domain, String username) {
 		if (domain == null || username == null) {
 			throw new InvalidArgumentException("One of the arguments of the init method was null");
 		}
+		String[] infoToSend = prepareForRetrivePassword(domain, username);
+		Response response = sendRetrivePassword(infoToSend);
+		return processRetrivePassword(response);
+	}
+
+	public String[] prepareForRetrivePassword(String domain, String username) {
 		try {
 			// Get keys and certificates
 			Certificate cert1 = ks.getCertificate(aliasForPubPrivKeys);
@@ -235,19 +255,39 @@ public class ClientLib {
 			// Generate signature
 			String tosign = stringHashUsername + stringHashDomain + stringTS;
 			String sig = Crypto.encode(Crypto.makeDigitalSignature(tosign.getBytes(), privateKey));
-			
+
 			String stringPubKey = Crypto.encode(pubKeyClient.getEncoded());
-			Response getResponse = vaultTarget.request().header(PUBLIC_KEY_HEADER_NAME, stringPubKey)
-					.header(SIGNATURE_HEADER_NAME, sig).header(TIME_STAMP_HEADER_NAME, stringTS)
-					.header(DOMAIN_HEADER_NAME, encodedDomain).header(USERNAME_HEADER_NAME, encodedUsername).get();
+
+			return new String[] { stringPubKey, sig, stringTS, encodedDomain, encodedUsername };
+
+		} catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException | KeyStoreException
+				| UnrecoverableKeyException e) {
+			e.printStackTrace();
+			throw new RuntimeException(e.getMessage());
+		}
+	}
+
+	public Response sendRetrivePassword(String[] infoToSend) {
+		return vaultTarget.request().header(PUBLIC_KEY_HEADER_NAME, infoToSend[0])
+				.header(SIGNATURE_HEADER_NAME, infoToSend[1]).header(TIME_STAMP_HEADER_NAME, infoToSend[2])
+				.header(DOMAIN_HEADER_NAME, infoToSend[3]).header(USERNAME_HEADER_NAME, infoToSend[4]).get();
+	}
+
+	public String processRetrivePassword(Response getResponse) {
+		try {
+			// Get keys and certificates
+			Certificate cert1 = ks.getCertificate(aliasForPubPrivKeys);
+			PublicKey pubKeyClient = Crypto.getPublicKeyFromCertificate(cert1);
+			Certificate cert2 = ks.getCertificate(ALIAS_FOR_SERVER_PUB_KEY);
+			PublicKey pubKeyServer = Crypto.getPublicKeyFromCertificate(cert2);
+			PrivateKey privateKey = Crypto.getPrivateKeyFromKeystore(ks, aliasForPubPrivKeys, keyStorePw);
 
 			if (getResponse.getStatus() == 400) {
 				System.out.println(INVALID_ARG_MSG);
 				return "Champog";
 			} else if (getResponse.getStatus() == 403) {
 				System.out.println(FORBIDEN_MSG);
-				throw new IllegalAccessExistException(
-						"This combination of username and domain already exists");
+				throw new IllegalAccessExistException("This combination of username and domain already exists");
 			} else if (getResponse.getStatus() == 404) {
 				System.out.println(DATA_NOT_FOUND_MSG);
 				throw new DataNotFoundException("This public key is not registered in the server");
@@ -262,9 +302,9 @@ public class ClientLib {
 
 			// Get headers info
 			String sigToVerify = getResponse.getHeaderString(SIGNATURE_HEADER_NAME);
-			stringTS = getResponse.getHeaderString(TIME_STAMP_HEADER_NAME);
+			String stringTS = getResponse.getHeaderString(TIME_STAMP_HEADER_NAME);
 			String encodedHashReceived = getResponse.getHeaderString(HASH_PASSWORD_HEADER_NAME);
-			
+
 			// Check timestamp freshness
 			if (!Crypto.validTS(stringTS)) {
 				System.out.println(INVALID_TIME_STAMP_MSG);
@@ -272,7 +312,7 @@ public class ClientLib {
 			}
 
 			// Verify signature
-			sig = stringTS + encodedHashReceived + passwordReceived;
+			String sig = stringTS + encodedHashReceived + passwordReceived;
 			byte[] sigBytes = Crypto.decode(sigToVerify);
 			if (!Crypto.verifyDigitalSignature(sigBytes, sig.getBytes(), pubKeyServer)) {
 				System.out.println(INVALID_SIGNATURE_MSG);
@@ -287,16 +327,16 @@ public class ClientLib {
 				System.out.println(INVALID_PASSWORD_MSG);
 				return "Champog";
 			}
-			
+
 			if (getResponse.getStatus() == 200) {
 				System.out.println(SUCCESS_MSG);
 			} else {
 				System.out.println(ELSE_MSG);
 				return "Champog";
 			}
-			
+
 			return password;
-			
+
 		} catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException | KeyStoreException
 				| UnrecoverableKeyException | ParseException e) {
 			e.printStackTrace();
@@ -325,11 +365,4 @@ public class ClientLib {
 		}
 	}
 
-	public KeyStore getKs() {
-		return ks;
-	}
-
-	public void setKs(KeyStore ks) {
-		this.ks = ks;
-	}
 }
