@@ -32,10 +32,13 @@ public class UserService {
 				throw new InvalidSignatureException("Invalid Signature");
 			}
 			pwm.addUser(publicKey);
-		} catch (InvalidKeySpecException | NoSuchAlgorithmException | 
-				 InvalidKeyException | SignatureException e) {
+		} catch (NoSuchAlgorithmException e) {
 			e.printStackTrace();
 			throw new RuntimeException(e.getMessage());
+		}  catch (InvalidKeySpecException | InvalidKeyException e) {
+			throw new pt.sec.a03.server.exception.InvalidKeyException(e.getMessage());
+		} catch (SignatureException e) {
+			throw new InvalidSignatureException("Invalid Signature");
 		}
 	}
 

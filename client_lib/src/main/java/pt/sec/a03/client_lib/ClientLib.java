@@ -13,6 +13,7 @@ import java.security.cert.Certificate;
 import java.sql.Timestamp;
 import java.text.ParseException;
 
+import javax.ws.rs.BadRequestException;
 import javax.ws.rs.client.*;
 import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.core.Response;
@@ -48,6 +49,7 @@ public class ClientLib {
 	private static final String FORBIDEN_MSG = "Forbiden operation";
 	private static final String ALREADY_EXISTS_MSG = "Entity already exists";
 	private static final String DATA_NOT_FOUND_MSG = "Data Not Found";
+	private static final String BAD_REQUEST_MSG = "Invalid Request";
 	private static final String SERVER_ERROR_MSG = "Internal server error";
 	private static final String ELSE_MSG = "Error";
 
@@ -117,6 +119,9 @@ public class ClientLib {
 	public void processRegisterUser(Response postResponse) {
 		if (postResponse.getStatus() == 201) {
 			System.out.println(SUCCESS_MSG);
+		} else if (postResponse.getStatus() == 400) {
+			System.out.println(BAD_REQUEST_MSG);
+			throw new BadRequestException("There were an error with the headers of the request");
 		} else if (postResponse.getStatus() == 409) {
 			System.out.println(ALREADY_EXISTS_MSG);
 			throw new AlreadyExistsException("This public key already exists in the server");

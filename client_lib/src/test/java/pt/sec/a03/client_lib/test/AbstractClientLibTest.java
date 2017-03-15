@@ -5,6 +5,9 @@ import java.io.FileReader;
 import java.io.Reader;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.Timestamp;
+import java.util.Calendar;
+import java.util.Date;
 
 import org.apache.ibatis.jdbc.ScriptRunner;
 import org.junit.After;
@@ -66,6 +69,13 @@ public abstract class AbstractClientLibTest {
 
 	protected abstract void after();
 	
+	public String genInvalidTS(){
+		Calendar calendar = Calendar.getInstance();
+	    calendar.setTime(new Date());
+	    calendar.add(Calendar.HOUR, 3);
+	    Timestamp timestamp = new Timestamp(calendar.getTimeInMillis());		    
+		return timestamp.toString();
+	}
 
 
 }

@@ -39,7 +39,7 @@ public class VaultService {
 				| UnrecoverableKeyException e) {
 			e.printStackTrace();
 			throw new RuntimeException(e.getMessage());
-		}
+		} 
 	}
 
 	public void put(String publicKey, String signature, String timestamp, String hashPw, String cipherPassword,
@@ -67,10 +67,13 @@ public class VaultService {
 			Triplet t = pwm.saveTriplet(new Triplet(cipherPassword, userAndDom[0], userAndDom[1]), publicKey);
 			pwm.saveHash(t.getTripletID(), hashPw);
 
-		} catch (NoSuchAlgorithmException | InvalidKeySpecException | InvalidKeyException | SignatureException
-				| ParseException e) {
+		} catch (NoSuchAlgorithmException |  ParseException e) {
 			e.printStackTrace();
 			throw new RuntimeException(e.getMessage());
+		} catch (SignatureException e ) {
+			throw new InvalidSignatureException(e.getMessage());
+		} catch (InvalidKeySpecException | InvalidKeyException e) {
+			throw new pt.sec.a03.server.exception.InvalidKeyException(e.getMessage());
 		}
 	}
 
