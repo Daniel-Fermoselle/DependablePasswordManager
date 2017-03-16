@@ -85,6 +85,12 @@ What you are looking for is something like this /usr/local/Cellar/tomcat/8.5.11/
 > ./client.sh install
 > mvn exec:java
 
+Important thing to note here when you run the command:
+> ./client.sh
+The server must be executing so you can pass the integrity tests, i.e. you must execute the following command before:
+>./server.sh path
+
+
 ```
  
 -------------------------------------------------------------------------------
