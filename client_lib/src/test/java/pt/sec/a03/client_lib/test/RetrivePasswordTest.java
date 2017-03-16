@@ -218,7 +218,7 @@ public class RetrivePasswordTest extends AbstractClientLibTest {
 	public void test10_retrivePassword() {
 		try {
 			String[] infoToSend = c1.prepareForRetrivePassword(DOMAIN_1, USERNAME_1);
-			infoToSend[1] = FAKE_SIGNATURE;
+			infoToSend[2] = genInvalidTS();
 			Response response = c1.sendRetrivePassword(infoToSend);
 			c1.processRetrivePassword(response);
 			fail("This test should fail with exception BadRequestException");
