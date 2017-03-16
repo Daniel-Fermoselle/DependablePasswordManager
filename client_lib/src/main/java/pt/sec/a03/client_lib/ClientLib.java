@@ -17,6 +17,7 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.ws.rs.BadRequestException;
+import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.client.*;
 import javax.ws.rs.core.Response;
 
@@ -27,6 +28,7 @@ import pt.sec.a03.client_lib.exception.InvalidArgumentException;
 import pt.sec.a03.client_lib.exception.InvalidReceivedPasswordException;
 import pt.sec.a03.client_lib.exception.InvalidSignatureException;
 import pt.sec.a03.client_lib.exception.InvalidTimestampException;
+import pt.sec.a03.client_lib.exception.UnexpectedErrorExeception;
 import pt.sec.a03.client_lib.exception.UsernameAndDomainAlreadyExistException;
 import pt.sec.a03.common_classes.CommonTriplet;
 import pt.sec.a03.crypto.Crypto;
@@ -56,6 +58,13 @@ public class ClientLib {
 	private static final String BAD_REQUEST_MSG = "Invalid Request";
 	private static final String SERVER_ERROR_MSG = "Internal server error";
 	private static final String ELSE_MSG = "Error";
+	
+	private static final String NULL_ARGUMENSTS_MSG = "One of the arguments was null";
+	private static final String OVERSIZE_PASSWORD_MSG = "Password to big to the system 245 bytes maximum";
+	private static final String INVALID_TIMESTAMP_EXCEPTION_MSG = "The timestamp received is invalid";
+	private static final String BAD_REQUEST_EXCEPTION_MSG = "There were an problem with the headers of the request";
+	private static final String INTERNAL_SERVER_FAILURE_EXCEPTION_MSG = "There were an problem with the server";
+	private static final String UNEXPECTED_ERROR_EXCEPTION_MSG = "There was an unexpected error";
 
 	// Attributes
 	private KeyStore ks;
@@ -69,7 +78,7 @@ public class ClientLib {
 
 	public void init(KeyStore ks, String aliasForPubPrivKey, String keyStorePw) {
 		if (ks == null || aliasForPubPrivKey == null || keyStorePw == null) {
-			throw new InvalidArgumentException("One of the arguments of the init method was null");
+			throw new InvalidArgumentException(NULL_ARGUMENSTS_MSG);
 		}
 		this.ks = ks;
 		this.aliasForPubPrivKeys = aliasForPubPrivKey;
@@ -121,23 +130,25 @@ public class ClientLib {
 			System.out.println(SUCCESS_MSG);
 		} else if (postResponse.getStatus() == 400) {
 			System.out.println(BAD_REQUEST_MSG);
-			throw new BadRequestException("There were an error with the headers of the request");
+			throw new BadRequestException(BAD_REQUEST_EXCEPTION_MSG);
 		} else if (postResponse.getStatus() == 409) {
 			System.out.println(ALREADY_EXISTS_MSG);
 			throw new AlreadyExistsException("This public key already exists in the server");
 		} else if (postResponse.getStatus() == 500) {
 			System.out.println(SERVER_ERROR_MSG);
+			throw new InternalServerErrorException(INTERNAL_SERVER_FAILURE_EXCEPTION_MSG);
 		} else {
 			System.out.println(ELSE_MSG);
+			throw new UnexpectedErrorExeception(UNEXPECTED_ERROR_EXCEPTION_MSG);
 		}
 	}
 
 	public void save_password(String domain, String username, String password) {
 		if (domain == null || username == null || password == null) {
-			throw new InvalidArgumentException("One of the arguments of the init method was null");
+			throw new InvalidArgumentException(NULL_ARGUMENSTS_MSG);
 		}
 		if (password.length() >= 246) {
-			throw new InvalidArgumentException("Password to big to the system 245 bytes maximum");
+			throw new InvalidArgumentException(OVERSIZE_PASSWORD_MSG);
 		}
 
 		String[] infoToSend = prepareForSave(domain, username, password);
@@ -210,7 +221,7 @@ public class ClientLib {
 			System.out.println(SUCCESS_MSG);
 		} else if (postResponse.getStatus() == 400) {
 			System.out.println(BAD_REQUEST_MSG);
-			throw new BadRequestException("There were an error with the headers of the request");
+			throw new BadRequestException(BAD_REQUEST_EXCEPTION_MSG);
 		} else if (postResponse.getStatus() == 403) {
 			System.out.println(FORBIDEN_MSG);
 			throw new UsernameAndDomainAlreadyExistException("This combination of username and domain already exists");
@@ -219,14 +230,16 @@ public class ClientLib {
 			throw new DataNotFoundException("This public key is not registered in the server");
 		} else if (postResponse.getStatus() == 500) {
 			System.out.println(SERVER_ERROR_MSG);
+			throw new InternalServerErrorException(INTERNAL_SERVER_FAILURE_EXCEPTION_MSG);
 		} else {
 			System.out.println(ELSE_MSG);
+			throw new UnexpectedErrorExeception(UNEXPECTED_ERROR_EXCEPTION_MSG);
 		}
 	}
 
 	public String retrive_password(String domain, String username) {
 		if (domain == null || username == null) {
-			throw new InvalidArgumentException("One of the arguments of the init method was null");
+			throw new InvalidArgumentException(NULL_ARGUMENSTS_MSG);
 		}
 		String[] infoToSend = prepareForRetrivePassword(domain, username);
 		Response response = sendRetrivePassword(infoToSend);
@@ -290,7 +303,7 @@ public class ClientLib {
 
 			if (getResponse.getStatus() == 400) {
 				System.out.println(BAD_REQUEST_MSG);
-				throw new BadRequestException("There were an error with the headers of the request");
+				throw new BadRequestException(BAD_REQUEST_EXCEPTION_MSG);
 			} else if (getResponse.getStatus() == 403) {
 				System.out.println(FORBIDEN_MSG);
 				throw new IllegalAccessExistException("This combination of username and domain already exists");
@@ -299,7 +312,7 @@ public class ClientLib {
 				throw new DataNotFoundException("This public key is not registered in the server");
 			} else if (getResponse.getStatus() == 500) {
 				System.out.println(SERVER_ERROR_MSG);
-				return "Champog";
+				throw new InternalServerErrorException(INTERNAL_SERVER_FAILURE_EXCEPTION_MSG);
 			}
 
 			// Decipher password
@@ -313,7 +326,7 @@ public class ClientLib {
 
 			// Check timestamp freshness
 			if (!Crypto.validTS(stringTS)) {
-				throw new InvalidTimestampException("The timestamp received is invalid");
+				throw new InvalidTimestampException(INVALID_TIMESTAMP_EXCEPTION_MSG);
 			}
 
 			// Verify signature
@@ -333,12 +346,11 @@ public class ClientLib {
 
 			if (getResponse.getStatus() == 200) {
 				System.out.println(SUCCESS_MSG);
+				return password;
 			} else {
 				System.out.println(ELSE_MSG);
-				return "Champog";
+				throw new UnexpectedErrorExeception(UNEXPECTED_ERROR_EXCEPTION_MSG);
 			}
-
-			return password;
 
 		} catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException | KeyStoreException
 				| UnrecoverableKeyException | ParseException | NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException e) {
@@ -358,12 +370,12 @@ public class ClientLib {
 			cer2 = ks.getCertificate(ALIAS_FOR_SERVER_PUB_KEY);
 			Crypto.getPrivateKeyFromKeystore(ks, aliasForPubPrivKeys, keyStorePw);
 		} catch (UnrecoverableKeyException | KeyStoreException e) {
-			throw new InvalidArgumentException("Invalid Arguments on the init method");
+			throw new InvalidArgumentException(NULL_ARGUMENSTS_MSG);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		if (cer1 == null || cer2 == null) {
-			throw new InvalidArgumentException("Invalid Arguments on the init method");
+			throw new InvalidArgumentException(NULL_ARGUMENSTS_MSG);
 		}
 	}
 
