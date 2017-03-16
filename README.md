@@ -64,14 +64,14 @@ Open Database.java in a text editor and change the fields to your MySQL id and p
 Open VaultService.java in a text editor and change the fields to the keystore absolute path:
 	- serverKeyStorePath (the keystore is located in the Project/PwServer/ks directory)
 
-Return to Project/PwServer
+Return to PwServer
 
 ```
 
 [5] Install libraries, modules and run the application
 
 ```
-Return to Project/PwServer, use the following command if you are still in the service directory
+Return to PwServer, use the following command if you are still in the service directory
 > cd ../../../../../../../../ 
 
 Now, copy the path to your webapp folder of tomcat
