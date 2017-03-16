@@ -44,7 +44,7 @@ public class ClientApplication {
 		while (true) {
 			try {
 				console.printf(
-						"Chose one of the following:\n\t1 - register_user\n\t2 - save_password\n\t3 - retrieve_password\nExit to quit\n=>");
+						"Choose one of the following:\n\t1 - register_user\n\t2 - save_password\n\t3 - retrieve_password\nExit to quit\n=>");
 				String input = console.readLine();
 
 				if ("Exit".equals(input)) {
@@ -67,7 +67,7 @@ public class ClientApplication {
 					console.printf("Try again! ^_^\n");
 				}
 			} catch (Exception e) {
-				console.printf("There was an error with the method you tried to execute try again");
+				console.printf("There was an error with the method you tried to execute try again\n");
 			}
 		}
 	}
