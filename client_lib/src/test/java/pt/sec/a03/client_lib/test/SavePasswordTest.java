@@ -5,6 +5,9 @@ import static org.junit.Assert.fail;
 
 import java.security.KeyStore;
 
+import javax.ws.rs.BadRequestException;
+import javax.ws.rs.core.Response;
+
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
@@ -30,6 +33,13 @@ public class SavePasswordTest extends AbstractClientLibTest {
 	private static final String USERNAME_1 = "lol_gosu";
 	private static final String PASSWORD_1 = "bestAdc";
 	private static final String PASSWORD_2 = "buffLucian";
+	private static final String DOMAIN_3 = "YouTube";
+	private static final String USERNAME_3 = "lol_qt";
+	private static final String PASSWORD_3 = "godAdc";
+	
+	private static final String FAKE_SIGNATURE = "fewvrwrwrgkwrgkwewkge";
+	private static final String FAKE_HASH = "WFEFERGGREGegerge";
+	private static final String FAKE_DOMAIN = "kfiefjwekfwkefelwke";
 
 	private KeyStore ks1;
 	private KeyStore ks2;
@@ -63,8 +73,8 @@ public class SavePasswordTest extends AbstractClientLibTest {
 		try {
 			restore();
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+			throw new RuntimeException(e.getMessage());
 		}
 	}
 
@@ -161,6 +171,78 @@ public class SavePasswordTest extends AbstractClientLibTest {
 
 		} catch (Exception e) {
 			fail("This test should fail with exception UsernameAndDomainAlreadyExistException");
+		}
+	}
+	
+	/**
+	 * Invalid signature
+	 */
+	@Test
+	public void test08_savePassword() {
+		try {
+			String[] infoToSend = c1.prepareForSave(DOMAIN_3, USERNAME_3, PASSWORD_3);
+			infoToSend[1] = FAKE_SIGNATURE;
+			Response response = c1.sendSavePassword(infoToSend);
+			c1.processSavePassword(response);
+			fail("This test should fail with exception BadRequestException");
+		} catch (BadRequestException e) {
+
+		} catch (Exception e) {
+			fail("This test should fail with exception BadRequestException");
+		}
+	}
+	
+	/**
+	 * Invalid TS
+	 */
+	@Test
+	public void test09_savePassword() {
+		try {
+			String[] infoToSend = c1.prepareForSave(DOMAIN_3, USERNAME_3, PASSWORD_3);
+			infoToSend[2] = genInvalidTS();
+			Response response = c1.sendSavePassword(infoToSend);
+			c1.processSavePassword(response);
+			fail("This test should fail with exception BadRequestException");
+		} catch (BadRequestException e) {
+
+		} catch (Exception e) {
+			fail("This test should fail with exception BadRequestException");
+		}
+	}
+	
+	/**
+	 * Invalid hash
+	 */
+	@Test
+	public void test10_savePassword() {
+		try {
+			String[] infoToSend = c1.prepareForSave(DOMAIN_3, USERNAME_3, PASSWORD_3);
+			infoToSend[3] = FAKE_HASH;
+			Response response = c1.sendSavePassword(infoToSend);
+			c1.processSavePassword(response);
+			fail("This test should fail with exception BadRequestException");
+		} catch (BadRequestException e) {
+
+		} catch (Exception e) {
+			fail("This test should fail with exception BadRequestException");
+		}
+	}
+	
+	/**
+	 * Invalid hash
+	 */
+	@Test
+	public void test11_savePassword() {
+		try {
+			String[] infoToSend = c1.prepareForSave(DOMAIN_3, USERNAME_3, PASSWORD_3);
+			infoToSend[5] = FAKE_DOMAIN;
+			Response response = c1.sendSavePassword(infoToSend);
+			c1.processSavePassword(response);
+			fail("This test should fail with exception BadRequestException");
+		} catch (BadRequestException e) {
+
+		} catch (Exception e) {
+			fail("This test should fail with exception BadRequestException");
 		}
 	}
 }

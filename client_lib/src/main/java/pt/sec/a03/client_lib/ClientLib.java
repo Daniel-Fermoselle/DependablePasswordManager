@@ -13,15 +13,20 @@ import java.security.cert.Certificate;
 import java.sql.Timestamp;
 import java.text.ParseException;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.client.*;
-import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.core.Response;
 
 import pt.sec.a03.client_lib.exception.AlreadyExistsException;
 import pt.sec.a03.client_lib.exception.DataNotFoundException;
 import pt.sec.a03.client_lib.exception.IllegalAccessExistException;
 import pt.sec.a03.client_lib.exception.InvalidArgumentException;
+import pt.sec.a03.client_lib.exception.InvalidReceivedPasswordException;
+import pt.sec.a03.client_lib.exception.InvalidSignatureException;
+import pt.sec.a03.client_lib.exception.InvalidTimestampException;
 import pt.sec.a03.client_lib.exception.UsernameAndDomainAlreadyExistException;
 import pt.sec.a03.common_classes.CommonTriplet;
 import pt.sec.a03.crypto.Crypto;
@@ -45,17 +50,12 @@ public class ClientLib {
 
 	// Internal message constants
 	private static final String SUCCESS_MSG = "Success";
-	private static final String INVALID_ARG_MSG = "Invalid argument";
 	private static final String FORBIDEN_MSG = "Forbiden operation";
 	private static final String ALREADY_EXISTS_MSG = "Entity already exists";
 	private static final String DATA_NOT_FOUND_MSG = "Data Not Found";
 	private static final String BAD_REQUEST_MSG = "Invalid Request";
 	private static final String SERVER_ERROR_MSG = "Internal server error";
 	private static final String ELSE_MSG = "Error";
-
-	private static final String INVALID_TIME_STAMP_MSG = "Freshness compromised";
-	private static final String INVALID_SIGNATURE_MSG = "Signature compromised";
-	private static final String INVALID_PASSWORD_MSG = "Passwords don't match";
 
 	// Attributes
 	private KeyStore ks;
@@ -192,7 +192,7 @@ public class ClientLib {
 					StringCipheredUsername, StringCipheredDomain };
 
 		} catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException | KeyStoreException
-				| UnrecoverableKeyException e) {
+				| UnrecoverableKeyException | NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException e) {
 			e.printStackTrace();
 			throw new RuntimeException(e.getMessage());
 		}
@@ -209,7 +209,8 @@ public class ClientLib {
 		if (postResponse.getStatus() == 201) {
 			System.out.println(SUCCESS_MSG);
 		} else if (postResponse.getStatus() == 400) {
-			System.out.println(INVALID_ARG_MSG);
+			System.out.println(BAD_REQUEST_MSG);
+			throw new BadRequestException("There were an error with the headers of the request");
 		} else if (postResponse.getStatus() == 403) {
 			System.out.println(FORBIDEN_MSG);
 			throw new UsernameAndDomainAlreadyExistException("This combination of username and domain already exists");
@@ -266,7 +267,7 @@ public class ClientLib {
 			return new String[] { stringPubKey, sig, stringTS, encodedDomain, encodedUsername };
 
 		} catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException | KeyStoreException
-				| UnrecoverableKeyException e) {
+				| UnrecoverableKeyException | NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException e) {
 			e.printStackTrace();
 			throw new RuntimeException(e.getMessage());
 		}
@@ -288,8 +289,8 @@ public class ClientLib {
 			PrivateKey privateKey = Crypto.getPrivateKeyFromKeystore(ks, aliasForPubPrivKeys, keyStorePw);
 
 			if (getResponse.getStatus() == 400) {
-				System.out.println(INVALID_ARG_MSG);
-				return "Champog";
+				System.out.println(BAD_REQUEST_MSG);
+				throw new BadRequestException("There were an error with the headers of the request");
 			} else if (getResponse.getStatus() == 403) {
 				System.out.println(FORBIDEN_MSG);
 				throw new IllegalAccessExistException("This combination of username and domain already exists");
@@ -312,16 +313,14 @@ public class ClientLib {
 
 			// Check timestamp freshness
 			if (!Crypto.validTS(stringTS)) {
-				System.out.println(INVALID_TIME_STAMP_MSG);
-				return "Champog";
+				throw new InvalidTimestampException("The timestamp received is invalid");
 			}
 
 			// Verify signature
 			String sig = stringTS + encodedHashReceived + passwordReceived;
 			byte[] sigBytes = Crypto.decode(sigToVerify);
 			if (!Crypto.verifyDigitalSignature(sigBytes, sig.getBytes(), pubKeyServer)) {
-				System.out.println(INVALID_SIGNATURE_MSG);
-				return "Champog";
+				throw new InvalidSignatureException("The signature is wrong");
 			}
 
 			// Verify if password's hash is correct
@@ -329,8 +328,7 @@ public class ClientLib {
 			byte[] cipheredHashReceived = Crypto.decode(encodedHashReceived);
 			String hashReceived = Crypto.decipherString(cipheredHashReceived, pubKeyClient);
 			if (!hashReceived.equals(new String(hashToVerify))) {
-				System.out.println(INVALID_PASSWORD_MSG);
-				return "Champog";
+				throw new InvalidReceivedPasswordException("Password received was different than the one sent to the server");
 			}
 
 			if (getResponse.getStatus() == 200) {
@@ -343,9 +341,8 @@ public class ClientLib {
 			return password;
 
 		} catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException | KeyStoreException
-				| UnrecoverableKeyException | ParseException e) {
-			e.printStackTrace();
-			return "Champog";
+				| UnrecoverableKeyException | ParseException | NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException e) {
+			throw new BadRequestException(e.getMessage());
 		}
 	}
 

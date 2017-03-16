@@ -26,7 +26,10 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
+import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 
 import org.apache.commons.codec.binary.Base64;
 
@@ -137,32 +140,29 @@ public class Crypto {
 		return keystore;
 	}
 
-	public static byte[] cipherString(String toCipher, Key key) {
+	public static byte[] cipherString(String toCipher, Key key) 
+			throws NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException {
 		byte[] cipherText = null;
-		try {
+
 			// get an RSA cipher object and print the provider
 			Cipher cipher = Cipher.getInstance(CIPHER_ALGORITHM);
 			// encrypt the plain text using the public key
 			cipher.init(Cipher.ENCRYPT_MODE, key);
 			cipherText = cipher.doFinal(toCipher.getBytes());
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+	
 		return cipherText;
 	}
 		
-	public static String decipherString(byte[] toDecipher, Key key) {
+	public static String decipherString(byte[] toDecipher, Key key) 
+			throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
 		byte[] decipheredText = null;
-	    try {
+	
 	      // get an RSA cipher object and print the provider
 	      Cipher cipher = Cipher.getInstance(CIPHER_ALGORITHM);
 
 	      // decrypt the text using the private key
 	      cipher.init(Cipher.DECRYPT_MODE, key);
 	      decipheredText = cipher.doFinal(toDecipher);
-	    } catch (Exception ex) {
-	      ex.printStackTrace();
-	    }
 	    return new String(decipheredText);
 	}
 	

@@ -15,6 +15,11 @@ import java.security.spec.InvalidKeySpecException;
 import java.sql.Timestamp;
 import java.text.ParseException;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import javax.ws.rs.BadRequestException;
+
 import pt.sec.a03.crypto.Crypto;
 import pt.sec.a03.server.domain.PasswordManager;
 import pt.sec.a03.server.domain.Triplet;
@@ -67,9 +72,8 @@ public class VaultService {
 			Triplet t = pwm.saveTriplet(new Triplet(cipherPassword, userAndDom[0], userAndDom[1]), publicKey);
 			pwm.saveHash(t.getTripletID(), hashPw);
 
-		} catch (NoSuchAlgorithmException |  ParseException e) {
-			e.printStackTrace();
-			throw new RuntimeException(e.getMessage());
+		} catch (NoSuchAlgorithmException |  ParseException | NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException e) {
+			throw new BadRequestException(e.getMessage());
 		} catch (SignatureException e ) {
 			throw new InvalidSignatureException(e.getMessage());
 		} catch (InvalidKeySpecException | InvalidKeyException e) {
@@ -109,10 +113,12 @@ public class VaultService {
 
 			return new String[] { stringTS, sign, pwHashFromDB, t.getPassword() };
 
-		} catch (NoSuchAlgorithmException | InvalidKeySpecException | InvalidKeyException | SignatureException
-				| ParseException e) {
-			e.printStackTrace();
-			throw new RuntimeException(e.getMessage());
+		} catch (NoSuchAlgorithmException |  ParseException | NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException e) {
+			throw new BadRequestException(e.getMessage());
+		} catch (SignatureException e ) {
+			throw new InvalidSignatureException(e.getMessage());
+		} catch (InvalidKeySpecException | InvalidKeyException e) {
+			throw new pt.sec.a03.server.exception.InvalidKeyException(e.getMessage());
 		}
 	}
 
@@ -122,7 +128,8 @@ public class VaultService {
 		}
 	}
 
-	public String[] decipherUsernameAndDomain(String domain, String username) {
+	public String[] decipherUsernameAndDomain(String domain, String username) 
+			throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException {
 		byte[] byteDomain = Crypto.decode(domain);
 		byte[] byteUsername = Crypto.decode(username);
 

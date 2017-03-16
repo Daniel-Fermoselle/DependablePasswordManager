@@ -5,6 +5,9 @@ import static org.junit.Assert.fail;
 
 import java.security.KeyStore;
 
+import javax.ws.rs.BadRequestException;
+import javax.ws.rs.core.Response;
+
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
@@ -13,6 +16,8 @@ import pt.sec.a03.client_lib.ClientLib;
 import pt.sec.a03.client_lib.exception.DataNotFoundException;
 import pt.sec.a03.client_lib.exception.IllegalAccessExistException;
 import pt.sec.a03.client_lib.exception.InvalidArgumentException;
+import pt.sec.a03.client_lib.exception.InvalidSignatureException;
+import pt.sec.a03.client_lib.exception.InvalidTimestampException;
 import pt.sec.a03.crypto.Crypto;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -33,6 +38,13 @@ public class RetrivePasswordTest extends AbstractClientLibTest {
 	private static final String PASSWORD_1 = "bestAdc";
 	private static final String PASSWORD_2 = "buffLucian";
 
+	private static final String FAKE_SIGNATURE = "fewvrwrwrgkwrgkwewkge";
+	
+	private static final String SIGNATURE_HEADER_NAME = "signature";
+	private static final String TIME_STAMP_HEADER_NAME = "timestamp";
+
+	private static final String FAKE_HASH = "WFEFERGGREGegerge";
+	
 	private KeyStore ks1;
 	private KeyStore ks2;
 	private ClientLib c1;
@@ -177,6 +189,97 @@ public class RetrivePasswordTest extends AbstractClientLibTest {
 
 		} catch (Exception e) {
 			fail("This test should fail with exception DataNotFoundException");
+		}
+	}
+	
+	
+	/**
+	 * Invalid Signature
+	 */
+	@Test
+	public void test09_retrivePassword() {
+		try {
+			String[] infoToSend = c1.prepareForRetrivePassword(DOMAIN_1, USERNAME_1);
+			infoToSend[1] = FAKE_SIGNATURE;
+			Response response = c1.sendRetrivePassword(infoToSend);
+			c1.processRetrivePassword(response);
+			fail("This test should fail with exception BadRequestException");
+		} catch (BadRequestException e) {
+
+		} catch (Exception e) {
+			fail("This test should fail with exception BadRequestException");
+		}
+	}
+	
+	/**
+	 * Invalid Signature
+	 */
+	@Test
+	public void test10_retrivePassword() {
+		try {
+			String[] infoToSend = c1.prepareForRetrivePassword(DOMAIN_1, USERNAME_1);
+			infoToSend[1] = FAKE_SIGNATURE;
+			Response response = c1.sendRetrivePassword(infoToSend);
+			c1.processRetrivePassword(response);
+			fail("This test should fail with exception BadRequestException");
+		} catch (BadRequestException e) {
+
+		} catch (Exception e) {
+			fail("This test should fail with exception BadRequestException");
+		}
+	}
+	
+	/**
+	 * Invalid Signature received
+	 */
+	@Test
+	public void test11_retrivePassword() {
+		try {
+			String[] infoToSend = c1.prepareForRetrivePassword(DOMAIN_1, USERNAME_1);
+			Response response = c1.sendRetrivePassword(infoToSend);
+			response.getHeaders().putSingle(SIGNATURE_HEADER_NAME, FAKE_SIGNATURE);
+			c1.processRetrivePassword(response);
+			fail("This test should fail with exception InvalidSignatureException");
+		} catch (InvalidSignatureException e) {
+
+		} catch (Exception e) {
+			fail("This test should fail with exception InvalidSignatureException");
+		}
+	}
+	
+	/**
+	 * Invalid TS received
+	 */
+	@Test
+	public void test12_retrivePassword() {
+		try {
+			String[] infoToSend = c1.prepareForRetrivePassword(DOMAIN_1, USERNAME_1);
+			Response response = c1.sendRetrivePassword(infoToSend);
+			response.getHeaders().putSingle(TIME_STAMP_HEADER_NAME, genInvalidTS());
+			c1.processRetrivePassword(response);
+			fail("This test should fail with exception InvalidTimestampException");
+		} catch (InvalidTimestampException e) {
+
+		} catch (Exception e) {
+			fail("This test should fail with exception InvalidTimestampException");
+		}
+	}
+	
+	/**
+	 * Invalid TS received
+	 */
+	@Test
+	public void test13_retrivePassword() {
+		try {
+			String[] infoToSend = c1.prepareForRetrivePassword(DOMAIN_1, USERNAME_1);
+			infoToSend[3] = FAKE_HASH;
+			Response response = c1.sendRetrivePassword(infoToSend);
+			c1.processRetrivePassword(response);
+			fail("This test should fail with exception BadRequestException");
+		} catch (BadRequestException e) {
+
+		} catch (Exception e) {
+			fail("This test should fail with exception BadRequestException");
 		}
 	}
 }
