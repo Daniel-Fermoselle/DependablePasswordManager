@@ -82,7 +82,7 @@ What you are looking for is something like this /usr/local/Cellar/tomcat/8.5.11/
 > ./server.sh path (eg: ./server.sh /usr/local/Cellar/tomcat/8.5.11/libexec/webapps/)
 > cd ../client
 > ./client.sh clean (if you want to clean the targets of the previous installements of our project)
-> ./client.sh install
+> ./client.sh install (while installing the client library the security test are being run, each test is commented saying what is being tested in the client_lib tests package)
 > mvn exec:java
 
 Important thing to note here when you run the command:
