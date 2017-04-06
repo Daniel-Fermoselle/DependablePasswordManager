@@ -1,23 +1,24 @@
 package pt.sec.a03.server;
 
-import org.glassfish.grizzly.http.server.HttpServer;
+import java.io.Closeable;
 
-import com.sun.jersey.api.container.grizzly2.GrizzlyServerFactory;
 import com.sun.jersey.api.core.PackagesResourceConfig;
 import com.sun.jersey.api.core.ResourceConfig;
+import com.sun.jersey.simple.container.SimpleServerFactory;
 
 public class MyApplication{
 	public static void main(String[] args) throws Exception{
-	    HttpServer server = null;
+		Closeable server = null;
 	    try {
 	    	ResourceConfig rc = new PackagesResourceConfig("pt.sec.a03.server");
-	        server = GrizzlyServerFactory.createHttpServer("http://localhost:5555", rc);
+	        server = SimpleServerFactory.create("http://" + args[0], rc);
+	        System.out.println("Server running on " + args[0] + "...");
 	        System.out.println("Press any key to stop the service...");
 	        System.in.read();
 	    } finally {
 	        try {
 	            if (server != null) {
-	                server.stop();
+	                server.close();
 	            }
 	        } finally {
 	            ;

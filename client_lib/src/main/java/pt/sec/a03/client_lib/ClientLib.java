@@ -39,7 +39,7 @@ public class ClientLib {
 	private static final String ALIAS_FOR_SERVER_PUB_KEY = "server";
 
 	// Connection related constants
-	private static final String BASE_TARGET_URI = "http://localhost:5555/PwServer/";
+	private static final String BASE_TARGET_URI = "http://localhost:5555/";
 	private static final String VAULT_URI = "vault";
 	private static final String USERS_URI = "users";
 
