@@ -29,7 +29,7 @@ public class InitTest extends AbstractClientLibTest {
 	public InitTest() {
 		super();
 	}
-
+	
 	@Override
 	protected void populate() {
 		c1 = new ClientLib();

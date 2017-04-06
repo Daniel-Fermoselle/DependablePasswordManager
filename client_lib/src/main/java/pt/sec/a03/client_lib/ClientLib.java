@@ -39,7 +39,6 @@ public class ClientLib {
 	private static final String ALIAS_FOR_SERVER_PUB_KEY = "server";
 
 	// Connection related constants
-	private static final String BASE_TARGET_URI = "http://localhost:5555/";
 	private static final String VAULT_URI = "vault";
 	private static final String USERS_URI = "users";
 
@@ -72,7 +71,7 @@ public class ClientLib {
 	private String keyStorePw;
 
 	private Client client = ClientBuilder.newClient();
-	private WebTarget baseTarget = client.target(BASE_TARGET_URI);
+	private WebTarget baseTarget = client.target("http://localhost:5555/");
 	private WebTarget vaultTarget = baseTarget.path(VAULT_URI);
 	private WebTarget userTarget = baseTarget.path(USERS_URI);
 

@@ -10,8 +10,6 @@ import pt.sec.a03.crypto.Crypto;
 
 public class ClientApplication {
 
-	private static final String KEY_STORE_ALIAS_PUB = "client";
-
 	public static void main(String args[]) throws Exception {
 
 		ClientLib cl = new ClientLib();
@@ -22,24 +20,10 @@ public class ClientApplication {
 			System.exit(0);
 		}
 		console.printf("Password Manager initiated:\n");
-
-		/*
-		 * console.printf("Full path to your Key Store: "); String KeyStorePath
-		 * = console.readLine();
-		 * 
-		 * String KeyStorePass = readPassword(console,
-		 * "Password to your Key Store: ");
-		 * 
-		 * String pubKeyAlias = readNormal(console,
-		 * "Alias to your public key: ");
-		 * 
-		 * KeyStore ks = Crypto.readKeystoreFile(KeyStorePath,
-		 * KeyStorePass.toCharArray()); cl.init(ks, pubKeyAlias, keyStorePw);
-		 */
+		
 		System.out.println("Working Directory = " + System.getProperty("user.dir"));
 		KeyStore ks = Crypto.readKeystoreFile("ks/Client1.jks", "insecure".toCharArray());
 		cl.init(ks, "client", "insecure");
-		// in the function above we might need to send also the password
 
 		while (true) {
 			try {

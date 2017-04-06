@@ -10,7 +10,7 @@ if [ $cmd == "install" ]; then
 	mvn install
 	cd ../client
 	mvn install
-else
+elif [ $cmd == "clean" ]; then
 	cd ../crypto
 	mvn clean
 	cd ../common_classes
@@ -19,6 +19,8 @@ else
 	mvn clean
 	cd ../client
 	mvn clean
+else
+	mvn exec:java
 fi
 
 done
