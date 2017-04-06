@@ -4,8 +4,10 @@
 	<groupId>pt.sec.a03</groupId>
 	<artifactId>PwServer</artifactId>
 	<packaging>war</packaging>
+	
+	<name>${project.artifactId}</name>
+	
 	<version>0.0.1-SNAPSHOT</version>
-	<name>PwServer Maven Webapp</name>
 	<url>http://maven.apache.org</url>
 	<dependencies>
 		<dependency>
@@ -40,25 +42,70 @@
 			<artifactId>ibatis-sqlmap</artifactId>
 			<version>3.0-beta-10</version>
 		</dependency>
+		<dependency>
+			<groupId>com.sun.jersey</groupId>
+			<artifactId>jersey-core</artifactId>
+			<version>1.10</version>
+		</dependency>
+		<dependency>
+			<groupId>com.sun.jersey</groupId>
+			<artifactId>jersey-grizzly2</artifactId>
+			<version>1.10</version>
+		</dependency>
 	</dependencies>
 
 	<build>
-		<finalName>PwServer</finalName>
 		<plugins>
 			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>2.5.1</version>
-				<inherited>true</inherited>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>exec-maven-plugin</artifactId>
+				<version>1.5.0</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>java</goal>
+						</goals>
+					</execution>
+				</executions>
 				<configuration>
-					<source>1.8</source>
-					<target>1.8</target>
+					<!-- to prevent deprecation warning: -->
+					<killAfter>-1</killAfter>
+					<mainClass>${mainclass}</mainClass>
+					<arguments>
+					</arguments>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>appassembler-maven-plugin</artifactId>
+				<version>1.10</version>
+				<executions>
+					<execution>
+						<phase>install</phase>
+						<goals>
+							<goal>assemble</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<programs>
+						<program>
+							<mainClass>${mainclass}</mainClass>
+							<id>${project.artifactId}</id>
+						</program>
+					</programs>
 				</configuration>
 			</plugin>
 		</plugins>
 	</build>
+	
 	<properties>
 		<jersey.version>2.25</jersey.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		
+		<maven.compiler.source>1.8</maven.compiler.source>
+		<maven.compiler.target>1.8</maven.compiler.target>
+
+		<mainclass>pt.sec.a03.server.MyApplication</mainclass>
 	</properties>
 </project>
