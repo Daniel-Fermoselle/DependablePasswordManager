@@ -7,12 +7,17 @@ import com.sun.jersey.api.core.ResourceConfig;
 import com.sun.jersey.simple.container.SimpleServerFactory;
 
 public class MyApplication{
+	
+	public static String DATABASE_PORT;
+	
 	public static void main(String[] args) throws Exception{
 		Closeable server = null;
 	    try {
+	    	DATABASE_PORT = args[1];
 	    	ResourceConfig rc = new PackagesResourceConfig("pt.sec.a03.server");
 	        server = SimpleServerFactory.create("http://" + args[0], rc);
 	        System.out.println("Server running on " + args[0] + "...");
+	        System.out.println("Hello" + DATABASE_PORT + "...");
 	        System.out.println("Press any key to stop the service...");
 	        System.in.read();
 	    } finally {

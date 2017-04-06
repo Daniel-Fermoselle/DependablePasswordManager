@@ -1,7 +1,7 @@
-for cmd in $*
+for cmd in "$@"
 do
 
-if [ $cmd == "install" ]; then
+if [ "$cmd" == "install" ]; then
 	cd ../crypto
 	mvn install
 	cd ../common_classes
@@ -10,7 +10,7 @@ if [ $cmd == "install" ]; then
 	mvn install
 	cd ../client
 	mvn install
-elif [ $cmd == "clean" ]; then
+elif [ "$cmd" == "clean" ]; then
 	cd ../crypto
 	mvn clean
 	cd ../common_classes
@@ -19,7 +19,7 @@ elif [ $cmd == "clean" ]; then
 	mvn clean
 	cd ../client
 	mvn clean
-elif [ $cmd == "compile" ]; then
+elif [ "$cmd" == "compile" ]; then
 	cd ../crypto
 	mvn compile
 	cd ../common_classes
