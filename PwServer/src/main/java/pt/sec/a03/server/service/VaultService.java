@@ -29,7 +29,7 @@ import pt.sec.a03.server.exception.InvalidTimestampException;
 public class VaultService {
 
 	private static final String ALIAS_FOR_SERVER = "server";
-	private static final String SERVER_KEY_STORE_PATH = "/Users/sigma/Desktop/Server1.jks";
+	private static final String SERVER_KEY_STORE_PATH = "/Users/tiagomsr/Documents/workspace/SEC/DependablePasswordManager/PwServer/ks/Server1.jks";
 	private static final String SERVER_KEY_STORE_PASS = "insecure";
 	PrivateKey privKey;
 	KeyStore ksServ;
