@@ -32,7 +32,7 @@ public class InitTest extends AbstractClientLibTest {
 	
 	@Override
 	protected void populate() {
-		c1 = new ClientLib();
+		c1 = new ClientLib("localhost:5555");
 		try {
 			ks1 = Crypto.readKeystoreFile(KEY_STORE_1, KEY_STORE_PASSWORD_1.toCharArray());
 			ks2 = Crypto.readKeystoreFile(KEY_STORE_2, KEY_STORE_PASSWORD_2.toCharArray());

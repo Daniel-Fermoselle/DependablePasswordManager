@@ -19,8 +19,17 @@ elif [ $cmd == "clean" ]; then
 	mvn clean
 	cd ../client
 	mvn clean
+elif [ $cmd == "compile" ]; then
+	cd ../crypto
+	mvn compile
+	cd ../common_classes
+	mvn compile
+	cd ../client_lib
+	mvn compile
+	cd ../client
+	mvn compile
 else
-	mvn exec:java
+	mvn exec:java -Dexec.args="$cmd"
 fi
 
 done

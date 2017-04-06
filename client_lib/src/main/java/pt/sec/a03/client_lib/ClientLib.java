@@ -70,10 +70,17 @@ public class ClientLib {
 	private String aliasForPubPrivKeys;
 	private String keyStorePw;
 
-	private Client client = ClientBuilder.newClient();
-	private WebTarget baseTarget = client.target("http://localhost:5555/");
-	private WebTarget vaultTarget = baseTarget.path(VAULT_URI);
-	private WebTarget userTarget = baseTarget.path(USERS_URI);
+	private Client client;
+	private WebTarget baseTarget;
+	private WebTarget vaultTarget;
+	private WebTarget userTarget ;
+	
+	public ClientLib(String host){
+		client = ClientBuilder.newClient();
+		baseTarget = client.target("http://"+ host + "/");
+		vaultTarget = baseTarget.path(VAULT_URI);
+		userTarget = baseTarget.path(USERS_URI);
+	}
 
 	public void init(KeyStore ks, String aliasForPubPrivKey, String keyStorePw) {
 		if (ks == null || aliasForPubPrivKey == null || keyStorePw == null) {

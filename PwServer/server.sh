@@ -15,6 +15,13 @@ elif [ $cmd == "clean" ]; then
 	mvn clean
 	cd ../PwServer
 	mvn clean
+elif [ $cmd == "compile" ]; then
+	cd ../crypto
+	mvn compile
+	cd ../common_classes
+	mvn compile
+	cd ../PwServer
+	mvn compile
 else
 	mvn exec:java -Dexec.args="$cmd"
 fi
