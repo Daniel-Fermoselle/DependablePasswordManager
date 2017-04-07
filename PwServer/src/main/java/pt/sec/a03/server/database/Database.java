@@ -24,19 +24,30 @@ public class Database {
 	public static final String MYSQL_ID = "root";
 	public static final String MYSQL_PASSWORD = "rootroot";
 	public static final String SQL_SCRIPT_PATH = "database.sql";
+	public static final String MY_SQL_DB_DEFAULT = "jdbc:mysql://localhost:3306/experiments?useSSL=false";
 
 	private Connection conn;
 	private Statement stmt;
 
 	public Database() {
-		try {
+		String mysqlDB = MY_SQL_DB_DEFAULT;
+		String mysqlID = MYSQL_ID;
+		String mysqlPW = MYSQL_PASSWORD;
+		try {			
 			String fileString = new String(Files.readAllBytes(Paths.get("metadata.in")), StandardCharsets.UTF_8);
-			fileString = fileString.replace("\n", "");
-			conn = DriverManager.getConnection(fileString, MYSQL_ID, MYSQL_PASSWORD);
-			stmt = conn.createStatement();
-		} catch (SQLException | IOException e) {
-			e.printStackTrace();
-			throw new RuntimeException(e.getMessage());
+			String[] args = fileString.split(",");
+			mysqlDB = args[0].replace("\n", "");		
+			mysqlID = args[1].replace("\n", "");	
+			mysqlPW = args[2].replaceAll("\n", "");
+		} catch (IOException e) {
+		} finally{
+			try {
+				this.conn = DriverManager.getConnection(mysqlDB, mysqlID, mysqlPW);
+				this.stmt = conn.createStatement();
+			} catch (SQLException e) {
+				e.printStackTrace();
+				throw new RuntimeException(e.getMessage());
+			}
 		}
 	}
 
