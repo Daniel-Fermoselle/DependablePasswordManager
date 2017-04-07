@@ -3,7 +3,11 @@ package pt.sec.a03.server.database;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.IOException;
 import java.io.Reader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -20,16 +24,21 @@ public class Database {
 	public static final String MYSQL_ID = "root";
 	public static final String MYSQL_PASSWORD = "rootroot";
 	public static final String SQL_SCRIPT_PATH = "database.sql";
-	public static final String MY_SQL_DB = "jdbc:mysql://localhost:3306/experiments?useSSL=false";
 
 	private Connection conn;
 	private Statement stmt;
 
 	public Database() {
 		try {
-			conn = DriverManager.getConnection(MY_SQL_DB, MYSQL_ID, MYSQL_PASSWORD);
+			String fileString = new String(Files.readAllBytes(Paths.get("metadata.in")), StandardCharsets.UTF_8);
+			fileString = fileString.replace("\n", "");
+			conn = DriverManager.getConnection(fileString, MYSQL_ID, MYSQL_PASSWORD);
 			stmt = conn.createStatement();
 		} catch (SQLException e) {
+			e.printStackTrace();
+			throw new RuntimeException(e.getMessage());
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 			throw new RuntimeException(e.getMessage());
 		}
