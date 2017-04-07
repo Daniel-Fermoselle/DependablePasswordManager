@@ -34,11 +34,7 @@ public class Database {
 			fileString = fileString.replace("\n", "");
 			conn = DriverManager.getConnection(fileString, MYSQL_ID, MYSQL_PASSWORD);
 			stmt = conn.createStatement();
-		} catch (SQLException e) {
-			e.printStackTrace();
-			throw new RuntimeException(e.getMessage());
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
+		} catch (SQLException | IOException e) {
 			e.printStackTrace();
 			throw new RuntimeException(e.getMessage());
 		}
