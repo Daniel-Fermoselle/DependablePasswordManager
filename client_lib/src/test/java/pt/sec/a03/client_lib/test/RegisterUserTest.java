@@ -80,7 +80,7 @@ public class RegisterUserTest extends AbstractClientLibTest {
 			String[] infoToSend = c1.prepareForRegisterUser();
 			infoToSend[0] ="pohsdadwqdwdwdqwdqwdqws";
 			Response postReponse = c1.sendRegisterUser(infoToSend);
-			c1.processRegisterUser(postReponse);
+			c1.processRegisterUser(postReponse, infoToSend[3]);//added infoToSend[3] which contains the toSign string from the client side
 			fail("This test should fail with exception BadRequestException");
 		} catch (BadRequestException e) {
 
@@ -98,7 +98,7 @@ public class RegisterUserTest extends AbstractClientLibTest {
 			String[] infoToSend = c1.prepareForRegisterUser();
 			infoToSend[1] ="pohsdadwqdwdwdqwdqwdqws";
 			Response postReponse = c1.sendRegisterUser(infoToSend);
-			c1.processRegisterUser(postReponse);
+			c1.processRegisterUser(postReponse, infoToSend[3]);//added infoToSend[3] which contains the toSign string from the client side
 			fail("This test should fail with exception BadRequestException");
 		} catch (BadRequestException e) {
 
@@ -116,7 +116,7 @@ public class RegisterUserTest extends AbstractClientLibTest {
 			String[] infoToSend = c1.prepareForRegisterUser();
 			infoToSend[2] = genInvalidTS();
 			Response postReponse = c1.sendRegisterUser(infoToSend);
-			c1.processRegisterUser(postReponse);
+			c1.processRegisterUser(postReponse, infoToSend[3]);//added infoToSend[3] which contains the toSign string from the client side
 			fail("This test should fail with exception BadRequestException");
 		} catch (BadRequestException e) {
 

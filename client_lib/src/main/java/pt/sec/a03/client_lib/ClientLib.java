@@ -89,7 +89,7 @@ public class ClientLib {
 	public void register_user() {
 		String[] infoToSend = prepareForRegisterUser();
 		Response response = sendRegisterUser(infoToSend);
-		processRegisterUser(response);
+		processRegisterUser(response, infoToSend[3]);
 	}
 
 	public String[] prepareForRegisterUser() {
@@ -110,7 +110,7 @@ public class ClientLib {
 			String tosign = stringTS + stringPubKey;
 			String sig = Crypto.encode(Crypto.makeDigitalSignature(tosign.getBytes(), clientprivKey));
 
-			return new String[] { sig, stringPubKey, stringTS };
+			return new String[] { sig, stringPubKey, stringTS, tosign};
 
 		} catch (KeyStoreException | InvalidKeyException | NoSuchAlgorithmException | SignatureException
 				| UnrecoverableKeyException e) {
@@ -125,8 +125,29 @@ public class ClientLib {
 				.post(Entity.json(null));
 	}
 
-	public void processRegisterUser(Response postResponse) {
+	public void processRegisterUser(Response postResponse,String sig) {
 		if (postResponse.getStatus() == 201) {
+			String sigToVerify = postResponse.getHeaderString(SIGNATURE_HEADER_NAME);
+			String stringTS = postResponse.getHeaderString(TIME_STAMP_HEADER_NAME);
+			Certificate serverCert;
+			try {
+				serverCert = ks.getCertificate(ALIAS_FOR_SERVER_PUB_KEY);
+				PublicKey serverPubKey = Crypto.getPublicKeyFromCertificate(serverCert);
+				byte[] clientSideServerSig = Crypto.decode(sigToVerify);
+				verifyTS(stringTS);
+				if (!Crypto.verifyDigitalSignature(clientSideServerSig, sig.getBytes(), serverPubKey)) {
+					throw new InvalidSignatureException("Invalid Signature");
+				}
+
+			} catch (InvalidKeyException | KeyStoreException e) {
+				// TODO FAZER EXCEPTION
+				e.printStackTrace();
+			} catch (NoSuchAlgorithmException | ParseException e) {
+				// TODO FAZER EXCEPTION
+				e.printStackTrace();
+			} catch (SignatureException e) {
+				throw new InvalidSignatureException(e.getMessage());
+			}
 			System.out.println(SUCCESS_MSG);
 		} else if (postResponse.getStatus() == 400) {
 			System.out.println(BAD_REQUEST_MSG);
@@ -201,17 +222,8 @@ public class ClientLib {
 			String stringPubKey = Crypto.encode(clientPubKey.getEncoded());
 
 			return new String[] { stringPubKey, sig, stringTs, headerHashPassword, StringCipheredPassword,
-					StringCipheredUsername, StringCipheredDomain, dataToSign };// Added
-																				// this
-																				// last
-																				// string
-																				// to
-																				// compare
-																				// when
-																				// receiving
-																				// the
-																				// server
-																				// signature
+					StringCipheredUsername, StringCipheredDomain, dataToSign };// Added this last string to compare when receiving
+																				// the server signature
 
 		} catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException | KeyStoreException
 				| UnrecoverableKeyException | NoSuchPaddingException | IllegalBlockSizeException

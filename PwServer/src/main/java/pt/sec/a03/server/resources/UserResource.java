@@ -39,8 +39,10 @@ public class UserResource {
 	//TODO receive the pk correctly 
 	public Response addUser(@HeaderParam("public-key") String publicKey, @HeaderParam("signature") String signature,
 			@HeaderParam("timestamp") String timestamp) {
-		userService.addUser(publicKey, signature, timestamp);
+		String [] answer = userService.addUser(publicKey, signature, timestamp);
 		return Response.status(Status.CREATED)
+					.header("signature", answer[0])
+					.header("timestamp", answer[1])
 					.build();
 	}
 	
