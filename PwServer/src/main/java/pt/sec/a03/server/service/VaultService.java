@@ -29,7 +29,7 @@ import pt.sec.a03.server.exception.InvalidTimestampException;
 public class VaultService {
 
 	private static final String ALIAS_FOR_SERVER = "server";
-	private static final String SERVER_KEY_STORE_PATH = "/Users/sigma/Desktop/Server1.jks";
+	private static final String SERVER_KEY_STORE_PATH = "/Users/daniel/Desktop/Server1.jks";
 	private static final String SERVER_KEY_STORE_PASS = "insecure";
 	PrivateKey privKey;
 	KeyStore ksServ;
@@ -47,7 +47,7 @@ public class VaultService {
 		} 
 	}
 
-	public void put(String publicKey, String signature, String timestamp, String hashPw, String cipherPassword,
+	public String[] put(String publicKey, String signature, String timestamp, String hashPw, String cipherPassword,
 			String cipheredHashUsername, String cipheredHashDomain) {
 
 		String[] userAndDom = null;
@@ -71,7 +71,13 @@ public class VaultService {
 
 			Triplet t = pwm.saveTriplet(new Triplet(cipherPassword, userAndDom[0], userAndDom[1]), publicKey);
 			pwm.saveHash(t.getTripletID(), hashPw);
-
+			
+			//--prepare answer--//
+			Timestamp ts = new Timestamp(System.currentTimeMillis());
+			String stringTs = ts.toString();
+			String sig = Crypto.encode(Crypto.makeDigitalSignature(serverSideTosign.getBytes(), privKey));
+			return new String[] { sig, stringTs};
+			
 		} catch (NoSuchAlgorithmException |  ParseException | NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException e) {
 			throw new BadRequestException(e.getMessage());
 		} catch (SignatureException e ) {

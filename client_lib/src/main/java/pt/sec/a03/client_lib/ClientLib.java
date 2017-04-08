@@ -58,7 +58,7 @@ public class ClientLib {
 	private static final String BAD_REQUEST_MSG = "Invalid Request";
 	private static final String SERVER_ERROR_MSG = "Internal server error";
 	private static final String ELSE_MSG = "Error";
-	
+
 	private static final String NULL_ARGUMENSTS_MSG = "One of the arguments was null";
 	private static final String OVERSIZE_PASSWORD_MSG = "Password to big to the system 245 bytes maximum";
 	private static final String INVALID_TIMESTAMP_EXCEPTION_MSG = "The timestamp received is invalid";
@@ -152,8 +152,9 @@ public class ClientLib {
 		}
 
 		String[] infoToSend = prepareForSave(domain, username, password);
+		String sig = infoToSend[7];
 		Response response = sendSavePassword(infoToSend);
-		processSavePassword(response);
+		processSavePassword(response, sig);
 	}
 
 	public String[] prepareForSave(String domain, String username, String password) {
@@ -200,10 +201,21 @@ public class ClientLib {
 			String stringPubKey = Crypto.encode(clientPubKey.getEncoded());
 
 			return new String[] { stringPubKey, sig, stringTs, headerHashPassword, StringCipheredPassword,
-					StringCipheredUsername, StringCipheredDomain };
+					StringCipheredUsername, StringCipheredDomain, dataToSign };// Added
+																				// this
+																				// last
+																				// string
+																				// to
+																				// compare
+																				// when
+																				// receiving
+																				// the
+																				// server
+																				// signature
 
 		} catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException | KeyStoreException
-				| UnrecoverableKeyException | NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException e) {
+				| UnrecoverableKeyException | NoSuchPaddingException | IllegalBlockSizeException
+				| BadPaddingException e) {
 			e.printStackTrace();
 			throw new RuntimeException(e.getMessage());
 		}
@@ -216,8 +228,30 @@ public class ClientLib {
 				.header(HASH_PASSWORD_HEADER_NAME, infoToSend[3]).post(Entity.json(commonTriplet));
 	}
 
-	public void processSavePassword(Response postResponse) {
+	public void processSavePassword(Response postResponse, String sig) {
 		if (postResponse.getStatus() == 201) {
+			String sigToVerify = postResponse.getHeaderString(SIGNATURE_HEADER_NAME);
+			String stringTS = postResponse.getHeaderString(TIME_STAMP_HEADER_NAME);
+			Certificate serverCert;
+			try {
+				serverCert = ks.getCertificate(ALIAS_FOR_SERVER_PUB_KEY);
+				PublicKey serverPubKey = Crypto.getPublicKeyFromCertificate(serverCert);
+				byte[] clientSideServerSig = Crypto.decode(sigToVerify);
+				verifyTS(stringTS);
+				if (!Crypto.verifyDigitalSignature(clientSideServerSig, sig.getBytes(), serverPubKey)) {
+					throw new InvalidSignatureException("Invalid Signature");
+				}
+
+			} catch (InvalidKeyException | KeyStoreException e) {
+				// TODO FAZER EXCEPTION
+				e.printStackTrace();
+			} catch (NoSuchAlgorithmException | ParseException e) {
+				// TODO FAZER EXCEPTION
+				e.printStackTrace();
+			} catch (SignatureException e) {
+				throw new InvalidSignatureException(e.getMessage());
+			}
+
 			System.out.println(SUCCESS_MSG);
 		} else if (postResponse.getStatus() == 400) {
 			System.out.println(BAD_REQUEST_MSG);
@@ -280,7 +314,8 @@ public class ClientLib {
 			return new String[] { stringPubKey, sig, stringTS, encodedDomain, encodedUsername };
 
 		} catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException | KeyStoreException
-				| UnrecoverableKeyException | NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException e) {
+				| UnrecoverableKeyException | NoSuchPaddingException | IllegalBlockSizeException
+				| BadPaddingException e) {
 			e.printStackTrace();
 			throw new RuntimeException(e.getMessage());
 		}
@@ -341,7 +376,8 @@ public class ClientLib {
 			byte[] cipheredHashReceived = Crypto.decode(encodedHashReceived);
 			String hashReceived = Crypto.decipherString(cipheredHashReceived, pubKeyClient);
 			if (!hashReceived.equals(new String(hashToVerify))) {
-				throw new InvalidReceivedPasswordException("Password received was different than the one sent to the server");
+				throw new InvalidReceivedPasswordException(
+						"Password received was different than the one sent to the server");
 			}
 
 			if (getResponse.getStatus() == 200) {
@@ -353,7 +389,8 @@ public class ClientLib {
 			}
 
 		} catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException | KeyStoreException
-				| UnrecoverableKeyException | ParseException | NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException e) {
+				| UnrecoverableKeyException | ParseException | NoSuchPaddingException | IllegalBlockSizeException
+				| BadPaddingException e) {
 			throw new BadRequestException(e.getMessage());
 		}
 	}
@@ -376,6 +413,12 @@ public class ClientLib {
 		}
 		if (cer1 == null || cer2 == null) {
 			throw new InvalidArgumentException(NULL_ARGUMENSTS_MSG);
+		}
+	}
+
+	public void verifyTS(String stringTS) throws ParseException {
+		if (!Crypto.validTS(stringTS)) {
+			throw new InvalidTimestampException("Invalid Timestamp");
 		}
 	}
 

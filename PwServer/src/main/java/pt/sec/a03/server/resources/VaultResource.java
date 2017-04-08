@@ -29,8 +29,10 @@ public class VaultResource {
 							@HeaderParam("timestamp") String timestamp,
 							@HeaderParam("hash-password") String hashPw, 
 							Triplet t, @Context UriInfo uriInfo) {
-		vaultService.put(publicKey, signature, timestamp, hashPw, t.getPassword(), t.getUsername(), t.getDomain());
+		String[] answer = vaultService.put(publicKey, signature, timestamp, hashPw, t.getPassword(), t.getUsername(), t.getDomain());
 		return Response.status(Status.CREATED)
+				.header("signature", answer[0])
+				.header("timestamp", answer[1])
 				.build();
 	}
 	

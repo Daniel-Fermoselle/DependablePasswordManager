@@ -183,7 +183,7 @@ public class SavePasswordTest extends AbstractClientLibTest {
 			String[] infoToSend = c1.prepareForSave(DOMAIN_3, USERNAME_3, PASSWORD_3);
 			infoToSend[1] = FAKE_SIGNATURE;
 			Response response = c1.sendSavePassword(infoToSend);
-			c1.processSavePassword(response);
+			c1.processSavePassword(response,infoToSend[7]);//added infoToSend[7] which contains the toSign string from the client side
 			fail("This test should fail with exception BadRequestException");
 		} catch (BadRequestException e) {
 
@@ -201,7 +201,7 @@ public class SavePasswordTest extends AbstractClientLibTest {
 			String[] infoToSend = c1.prepareForSave(DOMAIN_3, USERNAME_3, PASSWORD_3);
 			infoToSend[2] = genInvalidTS();
 			Response response = c1.sendSavePassword(infoToSend);
-			c1.processSavePassword(response);
+			c1.processSavePassword(response,infoToSend[7]);//added infoToSend[7] which contains the toSign string from the client side
 			fail("This test should fail with exception BadRequestException");
 		} catch (BadRequestException e) {
 
@@ -219,7 +219,7 @@ public class SavePasswordTest extends AbstractClientLibTest {
 			String[] infoToSend = c1.prepareForSave(DOMAIN_3, USERNAME_3, PASSWORD_3);
 			infoToSend[3] = FAKE_HASH;
 			Response response = c1.sendSavePassword(infoToSend);
-			c1.processSavePassword(response);
+			c1.processSavePassword(response,infoToSend[7]);//added infoToSend[7] which contains the toSign string from the client side
 			fail("This test should fail with exception BadRequestException");
 		} catch (BadRequestException e) {
 
@@ -237,7 +237,7 @@ public class SavePasswordTest extends AbstractClientLibTest {
 			String[] infoToSend = c1.prepareForSave(DOMAIN_3, USERNAME_3, PASSWORD_3);
 			infoToSend[5] = FAKE_DOMAIN;
 			Response response = c1.sendSavePassword(infoToSend);
-			c1.processSavePassword(response);
+			c1.processSavePassword(response,infoToSend[7]);//added infoToSend[7] which contains the toSign string from the client side
 			fail("This test should fail with exception BadRequestException");
 		} catch (BadRequestException e) {
 
