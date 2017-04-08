@@ -20,36 +20,49 @@ import pt.sec.a03.server.service.UserService;
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class UserResource {
-	
-	private UserService userService = new UserService();
-	
-	@GET
-	//TODO receive the pk correctly 
-	public User getUserByPK(@HeaderParam("public-key") String publicKey) {
-		return userService.getUserByPK(publicKey);
-	}
-	
-	@GET
-	@Path("/{userId}")
-	public User getUserByID(@PathParam("userId") String id) {
-		return userService.getUserByID(id);
-	}
-	
-	@POST
-	//TODO receive the pk correctly 
-	public Response addUser(@HeaderParam("public-key") String publicKey, @HeaderParam("signature") String signature,
-			@HeaderParam("timestamp") String timestamp) {
-		userService.addUser(publicKey, signature, timestamp);
-		return Response.status(Status.CREATED)
-					.build();
-	}
-	
-	@PUT//Depricated needs signature
-	@Path("/{userId}")
-	//TODO receive the pk correctly 
-	public Response updateUserWithID(@PathParam("userId") String id, @HeaderParam("public-key") String publicKey) {
-		userService.updateUserWithID(id, publicKey);
-		return Response.status(Status.OK)
-					.build();
-	}
+
+    private static final String USER_ID_HEADER_NAME = "userID";
+    private static final String PUBLIC_KEY_HEADER_NAME = "public-key";
+    private static final String SIGNATURE_HEADER_NAME = "signature";
+    private static final String NONCE_HEADER_NAME = "nonce-value";
+
+    private UserService userService = new UserService();
+
+    @POST
+    public Response addUser(@HeaderParam(PUBLIC_KEY_HEADER_NAME) String publicKey,
+                            @HeaderParam(SIGNATURE_HEADER_NAME) String signature,
+                            @HeaderParam(NONCE_HEADER_NAME) String nonce) {
+        userService.addUser(publicKey, signature, nonce);
+
+        return Response.status(Status.CREATED)
+                .build();
+    }
+
+    @GET
+    public Response getUserMetaInfo(@HeaderParam("public-key") String publicKey) {
+        String[] response = userService.getUserMetaInfo(publicKey);
+
+        return Response.status(Status.OK)
+                .header(NONCE_HEADER_NAME, response[0])
+                .header(SIGNATURE_HEADER_NAME, response[1])
+                .build();
+    }
+
+    @GET
+    @Path("/{userId}")
+    public User getUserByID(@PathParam("userId") String id) {
+
+        return userService.getUserByID(id);
+    }
+
+    @Deprecated //TODO Check if this is true
+    @PUT
+    @Path("/{userId}")
+    public Response updateUserWithID(@PathParam(USER_ID_HEADER_NAME) String id,
+                                     @HeaderParam(PUBLIC_KEY_HEADER_NAME) String publicKey) {
+        userService.updateUserWithID(id, publicKey);
+
+        return Response.status(Status.OK)
+                .build();
+    }
 }

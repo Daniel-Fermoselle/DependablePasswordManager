@@ -1,6 +1,6 @@
 package pt.sec.a03.server.exception;
 
-public class InvalidTimestampException extends RuntimeException {
+public class InvalidNonceException extends RuntimeException {
 
 	/**
 	 * 
@@ -8,7 +8,7 @@ public class InvalidTimestampException extends RuntimeException {
 	private static final long serialVersionUID = -979033759936970719L;
 
 	
-	public InvalidTimestampException(String message) {
+	public InvalidNonceException(String message) {
 		super(message);
 	}
 }

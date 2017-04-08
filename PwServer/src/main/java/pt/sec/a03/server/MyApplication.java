@@ -5,5 +5,5 @@ import javax.ws.rs.core.Application;
 
 @ApplicationPath("webapi")
 public class MyApplication extends Application{
-	
+
 }

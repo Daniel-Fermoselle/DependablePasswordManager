@@ -7,10 +7,10 @@ import javax.ws.rs.ext.Provider;
 import pt.sec.a03.server.domain.ErrorMessage;
 
 @Provider
-public class InvalidTimestampExceptionMapper implements ExceptionMapper<InvalidTimestampException> {
+public class InvalidNonceExceptionMapper implements ExceptionMapper<InvalidNonceException> {
 
 	@Override
-	public Response toResponse(InvalidTimestampException ex) {
+	public Response toResponse(InvalidNonceException ex) {
 		ErrorMessage errorMessage = new ErrorMessage(ex.getMessage(), 400, "https://github.com/Daniel-Fermoselle/DependablePasswordManager");
 		return Response.status(Status.BAD_REQUEST)
 				.entity(errorMessage)

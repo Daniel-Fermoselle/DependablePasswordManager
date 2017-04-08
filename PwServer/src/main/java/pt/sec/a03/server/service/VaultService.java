@@ -12,9 +12,6 @@ import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.security.spec.InvalidKeySpecException;
 
-import java.sql.Timestamp;
-import java.text.ParseException;
-
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
@@ -24,123 +21,152 @@ import pt.sec.a03.crypto.Crypto;
 import pt.sec.a03.server.domain.PasswordManager;
 import pt.sec.a03.server.domain.Triplet;
 import pt.sec.a03.server.exception.InvalidSignatureException;
-import pt.sec.a03.server.exception.InvalidTimestampException;
+import pt.sec.a03.server.exception.InvalidNonceException;
 
 public class VaultService {
 
-	private static final String ALIAS_FOR_SERVER = "server";
-	private static final String SERVER_KEY_STORE_PATH = "/Users/sigma/Desktop/Server1.jks";
-	private static final String SERVER_KEY_STORE_PASS = "insecure";
-	PrivateKey privKey;
-	KeyStore ksServ;
-	PasswordManager pwm;
+    private static final String ALIAS_FOR_SERVER = "server";
+    private static final String SERVER_KEY_STORE_PATH = "/Users/sigma/Desktop/Server1.jks";
+    private static final String SERVER_KEY_STORE_PASS = "insecure";
 
-	public VaultService() {
-		try {
-			this.ksServ = Crypto.readKeystoreFile(SERVER_KEY_STORE_PATH, SERVER_KEY_STORE_PASS.toCharArray());
-			this.privKey = Crypto.getPrivateKeyFromKeystore(ksServ, ALIAS_FOR_SERVER, SERVER_KEY_STORE_PASS);
-			this.pwm = new PasswordManager();
-		} catch (KeyStoreException | NoSuchAlgorithmException | CertificateException | IOException
-				| UnrecoverableKeyException e) {
-			e.printStackTrace();
-			throw new RuntimeException(e.getMessage());
-		} 
-	}
+    PrivateKey privKey;
+    KeyStore ksServ;
+    PasswordManager pwm;
 
-	public void put(String publicKey, String signature, String timestamp, String hashPw, String cipherPassword,
-			String cipheredHashUsername, String cipheredHashDomain) {
+    public VaultService() {
+        try {
+            this.ksServ = Crypto.readKeystoreFile(SERVER_KEY_STORE_PATH, SERVER_KEY_STORE_PASS.toCharArray());
+            this.privKey = Crypto.getPrivateKeyFromKeystore(ksServ, ALIAS_FOR_SERVER, SERVER_KEY_STORE_PASS);
+            this.pwm = new PasswordManager();
 
-		String[] userAndDom = null;
-		try {
-			// Verify freshness
-			verifyTS(timestamp);
+        } catch (KeyStoreException | NoSuchAlgorithmException
+                | CertificateException | IOException
+                | UnrecoverableKeyException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e.getMessage());
+        }
+    }
 
-			// Decipher
-			userAndDom = decipherUsernameAndDomain(cipheredHashDomain, cipheredHashUsername);
+    public void put(String publicKey, String signature, String nonce, String hashPw, String cipherPassword,
+                    String cipheredHashUsername, String cipheredHashDomain) {
+        // Verify nonce
+        verifyNonce(publicKey, Long.parseLong(nonce));
 
-			// Verify signature
-			String serverSideTosign = userAndDom[0] + userAndDom[1] + timestamp + hashPw + cipherPassword;
+        // Decipher
+        String[] userAndDom = decipherUsernameAndDomain(cipheredHashDomain, cipheredHashUsername);
 
-			byte[] serverSideSig = Crypto.decode(signature);
+        // Verify signature
+        String serverSideTosign = userAndDom[0] + userAndDom[1] + nonce + hashPw + cipherPassword;
+        verifySignature(publicKey, signature, serverSideTosign);
 
-			PublicKey pk = Crypto.getPubKeyFromByte(Crypto.decode(publicKey));
+        //Save Pass
+        Triplet t = pwm.saveTriplet(new Triplet(cipherPassword, userAndDom[0], userAndDom[1]), publicKey);
+        pwm.saveHash(t.getTripletID(), hashPw);
+    }
 
-			if (!Crypto.verifyDigitalSignature(serverSideSig, serverSideTosign.getBytes(), pk)) {
-				throw new InvalidSignatureException("Invalid Signature");
-			}
 
-			Triplet t = pwm.saveTriplet(new Triplet(cipherPassword, userAndDom[0], userAndDom[1]), publicKey);
-			pwm.saveHash(t.getTripletID(), hashPw);
+    public String[] get(String publicKey, String username, String domain, String nonce, String signature) {
 
-		} catch (NoSuchAlgorithmException |  ParseException | NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException e) {
-			throw new BadRequestException(e.getMessage());
-		} catch (SignatureException e ) {
-			throw new InvalidSignatureException(e.getMessage());
-		} catch (InvalidKeySpecException | InvalidKeyException e) {
-			throw new pt.sec.a03.server.exception.InvalidKeyException(e.getMessage());
-		}
-	}
+        // Verify nonce
+        verifyNonce(publicKey, Long.parseLong(nonce));
 
-	public String[] get(String publicKey, String username, String domain, String stringTS, String stringSig) {
-		String[] userAndDom = null;
+        // Decipher domain and username
+        String[] userAndDom = decipherUsernameAndDomain(domain, username);
 
-		try {
-			// Verify TimeStamp
-			verifyTS(stringTS);
+        // Verify Signature
+        String serverSideTosign = userAndDom[0] + userAndDom[1] + nonce;
+        verifySignature(publicKey, signature, serverSideTosign);
 
-			// Decipher domain and username
-			userAndDom = decipherUsernameAndDomain(domain, username);
+        //Get pass and hash
+        Triplet t = pwm.getTriplet(userAndDom[0], userAndDom[1], publicKey);
+        String pwHashFromDB = pwm.getHash(userAndDom[0], userAndDom[1], publicKey);
 
-			// Verify Signature
-			String verifySig = userAndDom[0] + userAndDom[1] + stringTS;
+        //Get new nonce
+        String[] nonceNormCiph = getNewNonceForUser(publicKey);
 
-			PublicKey cliPublicKey = Crypto.getPubKeyFromByte(Crypto.decode(publicKey));
+        //Make signature
+        String toSign = nonceNormCiph[0] + pwHashFromDB + t.getPassword();
+        String sign = signString(toSign);
 
-			if (!Crypto.verifyDigitalSignature(Crypto.decode(stringSig), verifySig.getBytes(), cliPublicKey)) {
-				throw new InvalidSignatureException("Invalid Signature");
-			}
+        return new String[]{nonceNormCiph[1], sign, pwHashFromDB, t.getPassword()};
+    }
 
-			Triplet t = pwm.getTriplet(userAndDom[0], userAndDom[1], publicKey);
+    public String[] getNewNonceForUser(String publicKey) {
+        try {
+            PublicKey cliPublicKey = Crypto.getPubKeyFromByte(Crypto.decode(publicKey));
 
-			String pwHashFromDB = pwm.getHash(userAndDom[0], userAndDom[1], publicKey);
+            //Get new nonce
+            String nonceToSend = pwm.getNewNonceForUser(publicKey);
 
-			Timestamp timestamp = new Timestamp(System.currentTimeMillis());
-			stringTS = timestamp.toString();
+            //Cipher nonce
+            byte[] cipherNonce = Crypto.cipherString(nonceToSend, cliPublicKey);
+            String encodedNonce = Crypto.encode(cipherNonce);
 
-			String toSign = stringTS + pwHashFromDB + t.getPassword();
+            return new String[]{nonceToSend, encodedNonce};
+        } catch (NoSuchAlgorithmException | NoSuchPaddingException
+                | IllegalBlockSizeException | BadPaddingException e) {
+            throw new BadRequestException(e.getMessage());
+        } catch (InvalidKeySpecException | InvalidKeyException e) {
+            throw new pt.sec.a03.server.exception.InvalidKeyException(e.getMessage());
+        }
+    }
 
-			String sign = Crypto.encode(Crypto.makeDigitalSignature(toSign.getBytes(), this.privKey));
+    public void verifyNonce(String publicKey, long nonce) {
+        if (!pwm.validateNonceForUer(publicKey, nonce)) {
+            throw new InvalidNonceException("Invalid Nonce");
+        }
+    }
 
-			return new String[] { stringTS, sign, pwHashFromDB, t.getPassword() };
+    public String[] decipherUsernameAndDomain(String domain, String username) {
+        try {
+            byte[] byteDomain = Crypto.decode(domain);
+            byte[] byteUsername = Crypto.decode(username);
 
-		} catch (NoSuchAlgorithmException |  ParseException | NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException e) {
-			throw new BadRequestException(e.getMessage());
-		} catch (SignatureException e ) {
-			throw new InvalidSignatureException(e.getMessage());
-		} catch (InvalidKeySpecException | InvalidKeyException e) {
-			throw new pt.sec.a03.server.exception.InvalidKeyException(e.getMessage());
-		}
-	}
+            String hashedDomain = null;
+            String hashedUsername = null;
 
-	public void verifyTS(String stringTS) throws ParseException {
-		if (!Crypto.validTS(stringTS)) {
-			throw new InvalidTimestampException("Invalid Timestamp");
-		}
-	}
+            hashedDomain = Crypto.decipherString(byteDomain, this.privKey);
 
-	public String[] decipherUsernameAndDomain(String domain, String username) 
-			throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException {
-		byte[] byteDomain = Crypto.decode(domain);
-		byte[] byteUsername = Crypto.decode(username);
+            hashedUsername = Crypto.decipherString(byteUsername, this.privKey);
 
-		String hashedDomain = null;
-		String hashedUsername = null;
+            return new String[]{hashedUsername, hashedDomain};
+        } catch (InvalidKeyException e) {
+            throw new pt.sec.a03.server.exception.InvalidKeyException(e.getMessage());
+        } catch (BadPaddingException | NoSuchAlgorithmException
+                | IllegalBlockSizeException | NoSuchPaddingException e) {
+            throw new BadRequestException(e.getMessage());
+        }
+    }
 
-		hashedDomain = Crypto.decipherString(byteDomain, this.privKey);
+    private String signString(String toSign) {
+        try {
+            return Crypto.encode(Crypto.makeDigitalSignature(toSign.getBytes(), this.privKey));
+        } catch (NoSuchAlgorithmException e) {
+            throw new BadRequestException(e.getMessage());
+        } catch (SignatureException e) {
+            throw new InvalidSignatureException(e.getMessage());
+        } catch (InvalidKeyException e) {
+            throw new pt.sec.a03.server.exception.InvalidKeyException(e.getMessage());
+        }
+    }
 
-		hashedUsername = Crypto.decipherString(byteUsername, this.privKey);
+    public void verifySignature(String publicKey, String signature, String serverSideTosign) {
+        try {
+            byte[] serverSideSig = Crypto.decode(signature);
 
-		return new String[] { hashedUsername, hashedDomain };
-	}
+            PublicKey pk = Crypto.getPubKeyFromByte(Crypto.decode(publicKey));
+
+            if (!Crypto.verifyDigitalSignature(serverSideSig, serverSideTosign.getBytes(), pk)) {
+                throw new InvalidSignatureException("Invalid Signature");
+            }
+        } catch (InvalidKeySpecException | InvalidKeyException e) {
+            throw new pt.sec.a03.server.exception.InvalidKeyException(e.getMessage());
+        } catch (SignatureException e) {
+            throw new InvalidSignatureException(e.getMessage());
+        } catch (NoSuchAlgorithmException e) {
+            throw new BadRequestException(e.getMessage());
+        }
+    }
+
 
 }

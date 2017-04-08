@@ -38,9 +38,10 @@ public class Database {
 	public User getUserByPK(String publicKey) throws SQLException {
 		String publicKeyDB = "";
 		long userID = 0;
+		long nonce = 0;
 
 		// Step 1: Execute a SQL SELECT query, the query result
-		String strSelect = "select userID, publicKey from Users where publicKey = '" + publicKey + "'";
+		String strSelect = "select userID, publicKey, nonce from Users where publicKey = '" + publicKey + "'";
 
 		// Step 2: Process the ResultSet by scrolling the cursor forward via
 		ResultSet rset = stmt.executeQuery(strSelect);
@@ -48,21 +49,24 @@ public class Database {
 		while (rset.next()) { // Move the cursor to the next row
 			userID = rset.getLong("userID");
 			publicKeyDB = rset.getString("publicKey");
+			nonce = rset.getLong("nonce");
 			++rowCount;
 		}
 		if (rowCount == 0) {
 			return null;
 		} else {
-			return new User(userID, publicKeyDB);
+			return new User(userID, publicKeyDB, nonce);
 		}
 	}
 
 	public User getUserByID(String id) throws SQLException {
 		String publicKeyDB = "";
 		long userID = 0;
+		long nonce = 0;
+
 
 		// Step 1: Execute a SQL SELECT query, the query result
-		String strSelect = "select userID, publicKey from Users where userID = '" + id + "'";
+		String strSelect = "select userID, publicKey, nonce from Users where userID = '" + id + "'";
 
 		// Step 2: Process the ResultSet by scrolling the cursor forward via
 		ResultSet rset = stmt.executeQuery(strSelect);
@@ -70,12 +74,13 @@ public class Database {
 		while (rset.next()) { // Move the cursor to the next row
 			userID = rset.getLong("userID");
 			publicKeyDB = rset.getString("publicKey");
+			nonce = rset.getLong("nonce");
 			++rowCount;
 		}
 		if (rowCount == 0) {
 			return null;
 		} else {
-			return new User(userID, publicKeyDB);
+			return new User(userID, publicKeyDB, nonce);
 		}
 	}
 
@@ -86,6 +91,11 @@ public class Database {
 
 	public void updateUser(String id, String publicKey) throws SQLException {
 		String strUpdate = "update Users set publicKey='" + publicKey + "' where userID='" + id + "';";
+		stmt.executeUpdate(strUpdate);
+	}
+
+	public void updateUserNonce(String id, long nonce) throws SQLException {
+		String strUpdate = "update Users set nonce='" + nonce + "' where userID='" + id + "';";
 		stmt.executeUpdate(strUpdate);
 	}
 

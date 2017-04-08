@@ -70,6 +70,7 @@ public class ClientLib {
 	private KeyStore ks;
 	private String aliasForPubPrivKeys;
 	private String keyStorePw;
+	private int nonce;
 
 	private Client client = ClientBuilder.newClient();
 	private WebTarget baseTarget = client.target(BASE_TARGET_URI);
@@ -84,6 +85,7 @@ public class ClientLib {
 		this.aliasForPubPrivKeys = aliasForPubPrivKey;
 		this.keyStorePw = keyStorePw;
 		checkArguments();
+		getMetaInfo();
 	}
 
 	public void register_user() {
@@ -377,6 +379,10 @@ public class ClientLib {
 		if (cer1 == null || cer2 == null) {
 			throw new InvalidArgumentException(NULL_ARGUMENSTS_MSG);
 		}
+	}
+
+	private void getMetaInfo() {
+
 	}
 
 }
