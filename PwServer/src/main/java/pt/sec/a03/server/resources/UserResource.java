@@ -16,7 +16,7 @@ import pt.sec.a03.server.domain.User;
 import pt.sec.a03.server.service.UserService;
 
 
-@Path("users")
+@Path("/PwServer/users")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class UserResource {

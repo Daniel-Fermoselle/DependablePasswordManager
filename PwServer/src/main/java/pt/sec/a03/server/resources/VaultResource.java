@@ -16,7 +16,7 @@ import pt.sec.a03.common_classes.CommonTriplet;
 import pt.sec.a03.server.domain.Triplet;
 import pt.sec.a03.server.service.VaultService;
 
-@Path("/vault")
+@Path("/PwServer/vault")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class VaultResource {

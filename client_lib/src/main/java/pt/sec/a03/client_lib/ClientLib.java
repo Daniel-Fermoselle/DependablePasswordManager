@@ -77,7 +77,7 @@ public class ClientLib {
 	
 	public ClientLib(String host){
 		client = ClientBuilder.newClient();
-		baseTarget = client.target("http://"+ host + "/");
+		baseTarget = client.target("http://"+ host + "/PwServer/");
 		vaultTarget = baseTarget.path(VAULT_URI);
 		userTarget = baseTarget.path(USERS_URI);
 	}
