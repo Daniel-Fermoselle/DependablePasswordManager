@@ -3,9 +3,6 @@ package pt.sec.a03.client_lib.test;
 import static org.junit.Assert.fail;
 
 import java.security.KeyStore;
-import java.sql.Timestamp;
-import java.util.Calendar;
-import java.util.Date;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.core.Response;

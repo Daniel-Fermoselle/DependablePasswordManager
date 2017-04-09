@@ -4,6 +4,8 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -150,6 +152,16 @@ public class Database {
 	}
 
 	public void runScript() throws SQLException, FileNotFoundException {
+		PrintStream originalStream = System.out;
+
+		PrintStream dummyStream = new PrintStream(new OutputStream() {
+			public void write(int b) {
+				// NO-OP
+			}
+		});
+
+		System.setOut(dummyStream);
+		
 		// Initialize object for ScripRunner
 		ScriptRunner sr = new ScriptRunner(conn);
 
@@ -158,6 +170,8 @@ public class Database {
 
 		// Exctute script
 		sr.runScript(reader);
+		
+		System.setOut(originalStream);
 	}
 
 }
