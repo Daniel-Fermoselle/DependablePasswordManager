@@ -20,7 +20,6 @@ import pt.sec.a03.server.service.UserService;
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class UserResource {
-
     private static final String USER_ID_HEADER_NAME = "userID";
     private static final String PUBLIC_KEY_HEADER_NAME = "public-key";
     private static final String SIGNATURE_HEADER_NAME = "signature";
@@ -32,9 +31,12 @@ public class UserResource {
     public Response addUser(@HeaderParam(PUBLIC_KEY_HEADER_NAME) String publicKey,
                             @HeaderParam(SIGNATURE_HEADER_NAME) String signature,
                             @HeaderParam(NONCE_HEADER_NAME) String nonce) {
-        userService.addUser(publicKey, signature, nonce);
+
+        String [] response = userService.addUser(publicKey, signature, nonce);
 
         return Response.status(Status.CREATED)
+                .header(SIGNATURE_HEADER_NAME, response[0])
+                .header(NONCE_HEADER_NAME, response[1])
                 .build();
     }
 

@@ -68,14 +68,5 @@ public abstract class AbstractClientLibTest {
 	protected abstract void populate(); // each test adds its own data
 
 	protected abstract void after();
-	
-	public String genInvalidTS(){
-		Calendar calendar = Calendar.getInstance();
-	    calendar.setTime(new Date());
-	    calendar.add(Calendar.HOUR, 3);
-	    Timestamp timestamp = new Timestamp(calendar.getTimeInMillis());		    
-		return timestamp.toString();
-	}
-
 
 }

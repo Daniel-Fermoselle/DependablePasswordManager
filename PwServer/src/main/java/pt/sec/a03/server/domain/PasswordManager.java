@@ -168,8 +168,8 @@ public class PasswordManager {
             User user = getUserByPK(publicKey);
 
             long nonce = user.getNonce();
-            nonce = nonce++;
-
+            nonce = nonce + 1;
+            
             Database database = new Database();
             database.updateUserNonce(user.getUserID() + "", nonce);
             return nonce+"";

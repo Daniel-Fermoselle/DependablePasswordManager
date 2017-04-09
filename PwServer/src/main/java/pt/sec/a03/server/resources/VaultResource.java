@@ -38,9 +38,11 @@ public class VaultResource {
                                 @HeaderParam(HASH_PASSWORD_HEADER_NAME) String hashPw,
                                 Triplet t, @Context UriInfo uriInfo) {
 
-        vaultService.put(publicKey, signature, nonce, hashPw, t.getPassword(), t.getUsername(), t.getDomain());
+		String[] response = vaultService.put(publicKey, signature, nonce, hashPw, t.getPassword(), t.getUsername(), t.getDomain());
 
         return Response.status(Status.CREATED)
+				.header(SIGNATURE_HEADER_NAME, response[0])
+				.header(NONCE_HEADER_NAME, response[1])
                 .build();
     }
 
@@ -51,14 +53,14 @@ public class VaultResource {
                                 @HeaderParam(DOMAIN_HEADER_NAME) String domain,
                                 @HeaderParam(USERNAME_HEADER_NAME) String username) {
 
-        String[] content = vaultService.get(publicKey, username, domain, nonce, stringSig);
+        String[] response = vaultService.get(publicKey, username, domain, nonce, stringSig);
         CommonTriplet triplet = new CommonTriplet();
-        triplet.setPassword(content[3]);
+        triplet.setPassword(response[3]);
 
         return Response.status(Status.OK)
-                .header(SIGNATURE_HEADER_NAME, content[1])
-                .header(NONCE_HEADER_NAME, content[0])
-                .header(HASH_PASSWORD_HEADER_NAME, content[2])
+                .header(SIGNATURE_HEADER_NAME, response[1])
+                .header(NONCE_HEADER_NAME, response[0])
+                .header(HASH_PASSWORD_HEADER_NAME, response[2])
                 .entity(triplet)
                 .build();
     }

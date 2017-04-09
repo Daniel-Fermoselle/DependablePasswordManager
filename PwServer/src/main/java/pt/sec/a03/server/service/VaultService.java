@@ -28,53 +28,65 @@ public class VaultService {
     private static final String ALIAS_FOR_SERVER = "server";
     private static final String SERVER_KEY_STORE_PATH = "/Users/sigma/Desktop/Server1.jks";
     private static final String SERVER_KEY_STORE_PASS = "insecure";
+	PrivateKey privKey;
+	KeyStore ksServ;
+	PasswordManager pwm;
 
-    PrivateKey privKey;
-    KeyStore ksServ;
-    PasswordManager pwm;
+	public VaultService() {
+		try {
+			this.ksServ = Crypto.readKeystoreFile(SERVER_KEY_STORE_PATH, SERVER_KEY_STORE_PASS.toCharArray());
+			this.privKey = Crypto.getPrivateKeyFromKeystore(ksServ, ALIAS_FOR_SERVER, SERVER_KEY_STORE_PASS);
+			this.pwm = new PasswordManager();
 
-    public VaultService() {
-        try {
-            this.ksServ = Crypto.readKeystoreFile(SERVER_KEY_STORE_PATH, SERVER_KEY_STORE_PASS.toCharArray());
-            this.privKey = Crypto.getPrivateKeyFromKeystore(ksServ, ALIAS_FOR_SERVER, SERVER_KEY_STORE_PASS);
-            this.pwm = new PasswordManager();
+		} catch (KeyStoreException | NoSuchAlgorithmException | CertificateException | IOException
+				| UnrecoverableKeyException e) {
+			e.printStackTrace();
+			throw new RuntimeException(e.getMessage());
+		} 
+	}
 
-        } catch (KeyStoreException | NoSuchAlgorithmException
-                | CertificateException | IOException
-                | UnrecoverableKeyException e) {
-            e.printStackTrace();
-            throw new RuntimeException(e.getMessage());
-        }
-    }
-
-    public void put(String publicKey, String signature, String nonce, String hashPw, String cipherPassword,
+    public String[] put(String publicKey, String signature, String nonce, String hashPw, String cipherPassword,
                     String cipheredHashUsername, String cipheredHashDomain) {
+
+        String stringNonce = decipherAndDecode(nonce);
+
         // Verify nonce
-        verifyNonce(publicKey, Long.parseLong(nonce));
+        verifyNonce(publicKey, Long.parseLong(stringNonce));
 
         // Decipher
         String[] userAndDom = decipherUsernameAndDomain(cipheredHashDomain, cipheredHashUsername);
 
         // Verify signature
-        String serverSideTosign = userAndDom[0] + userAndDom[1] + nonce + hashPw + cipherPassword;
+        String serverSideTosign = userAndDom[0] + userAndDom[1] + stringNonce + hashPw + cipherPassword;
         verifySignature(publicKey, signature, serverSideTosign);
 
         //Save Pass
         Triplet t = pwm.saveTriplet(new Triplet(cipherPassword, userAndDom[0], userAndDom[1]), publicKey);
         pwm.saveHash(t.getTripletID(), hashPw);
+
+        //Get new nonce
+        String[] nonceNormCiph = getNewNonceForUser(publicKey);
+
+        //Make signature
+        String toSign = nonceNormCiph[0];
+        String sign = signString(toSign);
+
+        return new String[] { sign, nonceNormCiph[1]};
     }
 
 
     public String[] get(String publicKey, String username, String domain, String nonce, String signature) {
 
+        String stringNonce = decipherAndDecode(nonce);
+
         // Verify nonce
-        verifyNonce(publicKey, Long.parseLong(nonce));
+        verifyNonce(publicKey, Long.parseLong(stringNonce));
 
         // Decipher domain and username
         String[] userAndDom = decipherUsernameAndDomain(domain, username);
 
         // Verify Signature
-        String serverSideTosign = userAndDom[0] + userAndDom[1] + nonce;
+        String serverSideTosign = userAndDom[0] + userAndDom[1] + stringNonce;
         verifySignature(publicKey, signature, serverSideTosign);
 
         //Get pass and hash
@@ -168,5 +180,12 @@ public class VaultService {
         }
     }
 
-
+    private String decipherAndDecode(String toDecipher) {
+        try {
+            return Crypto.decipherString(Crypto.decode(toDecipher), this.privKey);
+        } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException
+                | IllegalBlockSizeException |  BadPaddingException e) {
+            throw new BadRequestException(e.getMessage());
+        }
+    }
 }
