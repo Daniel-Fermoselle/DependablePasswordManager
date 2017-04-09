@@ -127,7 +127,6 @@ public class RetrivePasswordTest extends AbstractClientLibTest {
 	 */
 	@Test
 	public void test04_retrivePassword() {
-		System.out.println("AQUIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII");
 		c1.save_password(DOMAIN_1, USERNAME_1, PASSWORD_2);
 		assertEquals(PASSWORD_2, c1.retrive_password(DOMAIN_1, USERNAME_1));
 	}
