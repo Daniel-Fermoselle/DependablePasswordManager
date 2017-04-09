@@ -2,6 +2,8 @@ package pt.sec.a03.client_lib.test;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.io.Reader;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -51,6 +53,16 @@ public abstract class AbstractClientLibTest {
 
 	@AfterClass
 	public static void restore() throws Exception {
+		PrintStream originalStream = System.out;
+		
+		PrintStream dummyStream    = new PrintStream(new OutputStream(){
+		    public void write(int b) {
+		        //NO-OP
+		    }
+		});
+		
+		System.setOut(dummyStream);
+		
 		// database connection
 		Connection jdbcConnection = DriverManager.getConnection("jdbc:mysql://localhost:3306/experiments?useSSL=false",
 				MYSQL_ID, MYSQL_PASSWORD);
@@ -63,6 +75,7 @@ public abstract class AbstractClientLibTest {
 
 		// Exctute script
 		sr.runScript(reader);
+		System.setOut(originalStream);
 	}
 
 	protected abstract void populate(); // each test adds its own data

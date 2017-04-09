@@ -346,6 +346,7 @@ public class ClientLib {
 			byte[] hashToVerify = Crypto.hashString(password);
 			byte[] cipheredHashReceived = Crypto.decode(encodedHashReceived);
 			String hashReceived = Crypto.decipherString(cipheredHashReceived, pubKeyClient);
+			System.out.println(hashReceived + "------------------------------------------" + new String(hashToVerify));
 			if (!hashReceived.equals(new String(hashToVerify))) {
 				throw new InvalidReceivedPasswordException("Password received was different than the one sent to the server");
 			}
