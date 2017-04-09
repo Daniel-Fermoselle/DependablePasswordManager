@@ -22,17 +22,9 @@ public class Database {
 	public static final String SQL_SCRIPT_PATH = "database.sql";
 	public static final String MY_SQL_DB = "jdbc:mysql://localhost:3306/experiments?useSSL=false";
 
-	private Connection conn;
-	private Statement stmt;
+
 
 	public Database() {
-		try {
-			conn = DriverManager.getConnection(MY_SQL_DB, MYSQL_ID, MYSQL_PASSWORD);
-			stmt = conn.createStatement();
-		} catch (SQLException e) {
-			e.printStackTrace();
-			throw new RuntimeException(e.getMessage());
-		}
 	}
 
 	public User getUserByPK(String publicKey) throws SQLException {
@@ -40,6 +32,9 @@ public class Database {
 		long userID = 0;
 		long nonce = 0;
 
+		Connection conn = DriverManager.getConnection(MY_SQL_DB, MYSQL_ID, MYSQL_PASSWORD);
+		Statement stmt = conn.createStatement();
+		
 		// Step 1: Execute a SQL SELECT query, the query result
 		String strSelect = "select userID, publicKey, nonce from Users where publicKey = '" + publicKey + "'";
 
@@ -52,6 +47,7 @@ public class Database {
 			nonce = rset.getLong("nonce");
 			++rowCount;
 		}
+		conn.close();
 		if (rowCount == 0) {
 			return null;
 		} else {
@@ -64,6 +60,8 @@ public class Database {
 		long userID = 0;
 		long nonce = 0;
 
+		Connection conn = DriverManager.getConnection(MY_SQL_DB, MYSQL_ID, MYSQL_PASSWORD);
+		Statement stmt = conn.createStatement();
 
 		// Step 1: Execute a SQL SELECT query, the query result
 		String strSelect = "select userID, publicKey, nonce from Users where userID = '" + id + "'";
@@ -77,6 +75,7 @@ public class Database {
 			nonce = rset.getLong("nonce");
 			++rowCount;
 		}
+		conn.close();
 		if (rowCount == 0) {
 			return null;
 		} else {
@@ -85,24 +84,36 @@ public class Database {
 	}
 
 	public void saveUser(String publicKey) throws SQLException {
+		Connection conn = DriverManager.getConnection(MY_SQL_DB, MYSQL_ID, MYSQL_PASSWORD);
+		Statement stmt = conn.createStatement();
 		String sqlInsert = "insert into Users(publicKey) values ('" + publicKey + "');";
 		stmt.execute(sqlInsert);
+		conn.close();
 	}
 
 	public void updateUser(String id, String publicKey) throws SQLException {
+		Connection conn = DriverManager.getConnection(MY_SQL_DB, MYSQL_ID, MYSQL_PASSWORD);
+		Statement stmt = conn.createStatement();
 		String strUpdate = "update Users set publicKey='" + publicKey + "' where userID='" + id + "';";
 		stmt.executeUpdate(strUpdate);
+		conn.close();
 	}
 
 	public void updateUserNonce(String id, long nonce) throws SQLException {
+		Connection conn = DriverManager.getConnection(MY_SQL_DB, MYSQL_ID, MYSQL_PASSWORD);
+		Statement stmt = conn.createStatement();
 		String strUpdate = "update Users set nonce='" + nonce + "' where userID='" + id + "';";
 		stmt.executeUpdate(strUpdate);
+		conn.close();
 	}
 
 	public Triplet getTriplet(String username, String domain) throws SQLException {
 		String password = "", usernameDB = "", domainDB = "", pwHash = "";
 		long tripletID = 0, userID = 0;
 
+		Connection conn = DriverManager.getConnection(MY_SQL_DB, MYSQL_ID, MYSQL_PASSWORD);
+		Statement stmt = conn.createStatement();
+		
 		// Step 1: Execute a SQL SELECT query, the query result
 		String strSelect = "select tripletID, userID, pw, username, domain, pwHash from Vault where domain = '" + domain
 				+ "' and username = '" + username + "';";
@@ -119,6 +130,7 @@ public class Database {
 			pwHash = rset.getString("pwHash");
 			++rowCount;
 		}
+		conn.close();
 		if (rowCount == 0) {
 			return null;
 		} else {
@@ -127,23 +139,34 @@ public class Database {
 	}
 
 	public void saveTriplet(Triplet t, long userID) throws SQLException {
+		Connection conn = DriverManager.getConnection(MY_SQL_DB, MYSQL_ID, MYSQL_PASSWORD);
+		Statement stmt = conn.createStatement();
 		String sqlInsert = "insert into Vault(userID, pw, username, domain) values (" + userID + ", '" + t.getPassword()
 				+ "', '" + t.getUsername() + "', '" + t.getDomain() + "');";
 		stmt.execute(sqlInsert);
+		conn.close();
 	}
 
 	public void updateTriplet(Triplet t) throws SQLException {
+		Connection conn = DriverManager.getConnection(MY_SQL_DB, MYSQL_ID, MYSQL_PASSWORD);
+		Statement stmt = conn.createStatement();
 		String strUpdate = "update Vault set pw='" + t.getPassword() + "' where domain='" + t.getDomain()
 				+ "' and username='" + t.getUsername() + "';";
 		stmt.executeUpdate(strUpdate);
+		conn.close();
 	}
 
 	public void updateHash(long tripletID, String hashPw) throws SQLException {
+		Connection conn = DriverManager.getConnection(MY_SQL_DB, MYSQL_ID, MYSQL_PASSWORD);
+		Statement stmt = conn.createStatement();
 		String strUpdate = "update Vault set pwHash='" + hashPw + "' where tripletID='" + tripletID + "';";
 		stmt.executeUpdate(strUpdate);
+		conn.close();
 	}
-
+	
 	public void runScript() throws SQLException, FileNotFoundException {
+		Connection conn = DriverManager.getConnection(MY_SQL_DB, MYSQL_ID, MYSQL_PASSWORD);
+		Statement stmt = conn.createStatement();
 		// Initialize object for ScripRunner
 		ScriptRunner sr = new ScriptRunner(conn);
 
@@ -152,6 +175,7 @@ public class Database {
 
 		// Exctute script
 		sr.runScript(reader);
+		conn.close();
 	}
 
 }

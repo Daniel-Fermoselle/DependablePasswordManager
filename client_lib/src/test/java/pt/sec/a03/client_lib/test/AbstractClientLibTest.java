@@ -63,6 +63,8 @@ public abstract class AbstractClientLibTest {
 
 		// Exctute script
 		sr.runScript(reader);
+		
+		jdbcConnection.close();
 	}
 
 	protected abstract void populate(); // each test adds its own data
