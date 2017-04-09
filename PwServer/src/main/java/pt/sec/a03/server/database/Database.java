@@ -27,11 +27,13 @@ public class Database {
 	public static final String MYSQL_PASSWORD = "rootroot";
 	public static final String SQL_SCRIPT_PATH = "database.sql";
 	public static final String MY_SQL_DB_DEFAULT = "jdbc:mysql://localhost:3306/experiments?useSSL=false";
-
-	private Connection conn;
-	private Statement stmt;
+	
+	Connection conn;
 
 	public Database() {
+	}
+	
+	private void getConnection(){
 		String mysqlDB = MY_SQL_DB_DEFAULT;
 		String mysqlID = MYSQL_ID;
 		String mysqlPW = MYSQL_PASSWORD;
@@ -45,7 +47,6 @@ public class Database {
 		} finally{
 			try {
 				this.conn = DriverManager.getConnection(mysqlDB, mysqlID, mysqlPW);
-				this.stmt = conn.createStatement();
 			} catch (SQLException e) {
 				e.printStackTrace();
 				throw new RuntimeException(e.getMessage());
@@ -54,6 +55,10 @@ public class Database {
 	}
 
 	public User getUserByPK(String publicKey) throws SQLException {
+		//Get mysql conneciton
+		getConnection();
+		Statement stmt = this.conn.createStatement();
+		
 		String publicKeyDB = "";
 		long userID = 0;
 
@@ -67,7 +72,10 @@ public class Database {
 			userID = rset.getLong("userID");
 			publicKeyDB = rset.getString("publicKey");
 			++rowCount;
-		}
+		}	
+		
+		this.conn.close();
+		
 		if (rowCount == 0) {
 			return null;
 		} else {
@@ -76,6 +84,10 @@ public class Database {
 	}
 
 	public User getUserByID(String id) throws SQLException {
+		//Get mysql conneciton
+		getConnection();
+		Statement stmt = this.conn.createStatement();
+		
 		String publicKeyDB = "";
 		long userID = 0;
 
@@ -90,6 +102,9 @@ public class Database {
 			publicKeyDB = rset.getString("publicKey");
 			++rowCount;
 		}
+		
+		this.conn.close();
+		
 		if (rowCount == 0) {
 			return null;
 		} else {
@@ -98,16 +113,32 @@ public class Database {
 	}
 
 	public void saveUser(String publicKey) throws SQLException {
+		//Get mysql conneciton
+		getConnection();
+		Statement stmt = this.conn.createStatement();
+		
 		String sqlInsert = "insert into Users(publicKey) values ('" + publicKey + "');";
 		stmt.execute(sqlInsert);
+		
+		this.conn.close();
 	}
 
 	public void updateUser(String id, String publicKey) throws SQLException {
+		//Get mysql conneciton
+		getConnection();
+		Statement stmt = this.conn.createStatement();
+		
 		String strUpdate = "update Users set publicKey='" + publicKey + "' where userID='" + id + "';";
 		stmt.executeUpdate(strUpdate);
+		
+		this.conn.close();
 	}
 
 	public Triplet getTriplet(String username, String domain) throws SQLException {
+		//Get mysql conneciton
+		getConnection();
+		Statement stmt = this.conn.createStatement();
+		
 		String password = "", usernameDB = "", domainDB = "", pwHash = "";
 		long tripletID = 0, userID = 0;
 
@@ -127,6 +158,9 @@ public class Database {
 			pwHash = rset.getString("pwHash");
 			++rowCount;
 		}
+		
+		this.conn.close();
+		
 		if (rowCount == 0) {
 			return null;
 		} else {
@@ -135,28 +169,48 @@ public class Database {
 	}
 
 	public void saveTriplet(Triplet t, long userID) throws SQLException {
+		//Get mysql conneciton
+		getConnection();
+		Statement stmt = this.conn.createStatement();
+		
 		String sqlInsert = "insert into Vault(userID, pw, username, domain) values (" + userID + ", '" + t.getPassword()
 				+ "', '" + t.getUsername() + "', '" + t.getDomain() + "');";
 		stmt.execute(sqlInsert);
+		
+		this.conn.close();
 	}
 
 	public void updateTriplet(Triplet t) throws SQLException {
+		//Get mysql conneciton
+		getConnection();
+		Statement stmt = this.conn.createStatement();
+		
 		String strUpdate = "update Vault set pw='" + t.getPassword() + "' where domain='" + t.getDomain()
 				+ "' and username='" + t.getUsername() + "';";
 		stmt.executeUpdate(strUpdate);
+		
+		this.conn.close();
 	}
 
 	public void updateHash(long tripletID, String hashPw) throws SQLException {
+		//Get mysql conneciton
+		getConnection();
+		Statement stmt = this.conn.createStatement();
+		
 		String strUpdate = "update Vault set pwHash='" + hashPw + "' where tripletID='" + tripletID + "';";
 		stmt.executeUpdate(strUpdate);
+		
+		this.conn.close();
 	}
 
 	public void runScript() throws SQLException, FileNotFoundException {
+		//Get mysql conneciton
+		getConnection();
+		
 		PrintStream originalStream = System.out;
 
 		PrintStream dummyStream = new PrintStream(new OutputStream() {
 			public void write(int b) {
-				// NO-OP
 			}
 		});
 
@@ -172,6 +226,8 @@ public class Database {
 		sr.runScript(reader);
 		
 		System.setOut(originalStream);
+		
+		conn.close();
 	}
 
 }

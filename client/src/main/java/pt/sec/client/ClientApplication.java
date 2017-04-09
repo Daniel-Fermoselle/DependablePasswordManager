@@ -12,7 +12,7 @@ public class ClientApplication {
 
 	public static void main(String args[]) throws Exception {
 
-		ClientLib cl = new ClientLib(args[0]);
+		ClientLib cl = new ClientLib(args);
 
 		Console console = System.console();
 		if (console == null) {

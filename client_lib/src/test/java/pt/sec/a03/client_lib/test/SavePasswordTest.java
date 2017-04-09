@@ -48,8 +48,9 @@ public class SavePasswordTest extends AbstractClientLibTest {
 
 	public SavePasswordTest() {
 		super();
-		c1 = new ClientLib("localhost:5555");
-		c2 = new ClientLib("localhost:5555");
+		String[] host = {"localhost:5555"};
+		c1 = new ClientLib(host);
+		c2 = new ClientLib(host);
 		try {
 			ks1 = Crypto.readKeystoreFile(KEY_STORE_1, KEY_STORE_PASSWORD_1.toCharArray());
 			ks2 = Crypto.readKeystoreFile(KEY_STORE_2, KEY_STORE_PASSWORD_2.toCharArray());

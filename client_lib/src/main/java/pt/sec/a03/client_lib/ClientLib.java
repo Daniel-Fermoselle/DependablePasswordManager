@@ -12,6 +12,7 @@ import java.security.UnrecoverableKeyException;
 import java.security.cert.Certificate;
 import java.sql.Timestamp;
 import java.text.ParseException;
+import java.util.Random;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
@@ -69,15 +70,17 @@ public class ClientLib {
 	private KeyStore ks;
 	private String aliasForPubPrivKeys;
 	private String keyStorePw;
+	private String[] servers;
 
 	private Client client;
 	private WebTarget baseTarget;
 	private WebTarget vaultTarget;
 	private WebTarget userTarget ;
 	
-	public ClientLib(String host){
+	public ClientLib(String[] hosts){
+		this.servers = hosts;
 		client = ClientBuilder.newClient();
-		baseTarget = client.target("http://"+ host + "/PwServer/");
+		baseTarget = client.target("http://"+ getRandomServer() + "/PwServer/");
 		vaultTarget = baseTarget.path(VAULT_URI);
 		userTarget = baseTarget.path(USERS_URI);
 	}
@@ -96,6 +99,7 @@ public class ClientLib {
 		String[] infoToSend = prepareForRegisterUser();
 		Response response = sendRegisterUser(infoToSend);
 		processRegisterUser(response);
+		baseTarget = client.target("http://"+ getRandomServer() + "/PwServer/");
 	}
 
 	public String[] prepareForRegisterUser() {
@@ -160,6 +164,7 @@ public class ClientLib {
 		String[] infoToSend = prepareForSave(domain, username, password);
 		Response response = sendSavePassword(infoToSend);
 		processSavePassword(response);
+		baseTarget = client.target("http://"+ getRandomServer() + "/PwServer/");
 	}
 
 	public String[] prepareForSave(String domain, String username, String password) {
@@ -249,7 +254,9 @@ public class ClientLib {
 		}
 		String[] infoToSend = prepareForRetrivePassword(domain, username);
 		Response response = sendRetrivePassword(infoToSend);
-		return processRetrivePassword(response);
+		String password = processRetrivePassword(response);
+		baseTarget = client.target("http://"+ getRandomServer() + "/PwServer/");
+		return password;
 	}
 
 	public String[] prepareForRetrivePassword(String domain, String username) {
@@ -383,6 +390,12 @@ public class ClientLib {
 		if (cer1 == null || cer2 == null) {
 			throw new InvalidArgumentException(NULL_ARGUMENSTS_MSG);
 		}
+	}
+	
+	private String getRandomServer(){
+		Random r = new Random();
+		int i = r.nextInt(this.servers.length);
+		return this.servers[i];
 	}
 
 }
