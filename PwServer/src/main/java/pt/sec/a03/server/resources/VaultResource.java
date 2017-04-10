@@ -13,6 +13,7 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
 import pt.sec.a03.common_classes.CommonTriplet;
+import pt.sec.a03.server.MyApplication;
 import pt.sec.a03.server.domain.Triplet;
 import pt.sec.a03.server.service.VaultService;
 
@@ -37,6 +38,7 @@ public class VaultResource {
                                 @HeaderParam(HASH_PASSWORD_HEADER_NAME) String hashPw,
                                 Triplet t, @Context UriInfo uriInfo) {
 
+        System.out.println("Received Post packet addPassword");
 		String[] response = vaultService.put(publicKey, signature, nonce, hashPw, t.getPassword(), t.getUsername(), t.getDomain());
 
         return Response.status(Status.CREATED)
@@ -52,6 +54,7 @@ public class VaultResource {
                                 @HeaderParam(DOMAIN_HEADER_NAME) String domain,
                                 @HeaderParam(USERNAME_HEADER_NAME) String username) {
 
+        System.out.println("Received Get packet getPassword");
         String[] response = vaultService.get(publicKey, username, domain, nonce, stringSig);
         CommonTriplet triplet = new CommonTriplet();
         triplet.setPassword(response[3]);

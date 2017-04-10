@@ -18,6 +18,7 @@ import java.sql.Statement;
 
 import org.apache.ibatis.jdbc.ScriptRunner;
 
+import pt.sec.a03.server.MyApplication;
 import pt.sec.a03.server.domain.User;
 import pt.sec.a03.server.domain.Triplet;
 
@@ -27,28 +28,27 @@ public class Database {
 	public static final String MYSQL_PASSWORD = "rootroot";
 	public static final String SQL_SCRIPT_PATH = "database.sql";
 	public static final String MY_SQL_DB_DEFAULT = "jdbc:mysql://localhost:3306/experiments?useSSL=false";
-	
+
+	private static final String DATABASE_URI = "jdbc:mysql://localhost:3306/%s?useSSL=false";
+
 	private Connection conn;
-	private String id;
-	
+
 	public Database(){
 		
-	}
-
-	public Database(String id) {
-		this.id = id;
 	}
 	
 	private void getConnection(){
 		String mysqlDB = MY_SQL_DB_DEFAULT;
 		String mysqlID = MYSQL_ID;
 		String mysqlPW = MYSQL_PASSWORD;
-		try {			
-			String fileString = new String(Files.readAllBytes(Paths.get("metadata.in")), StandardCharsets.UTF_8);
-			String[] args = fileString.split(",");
-			mysqlDB = args[0].replace("\n", "");		
-			mysqlID = args[1].replace("\n", "");	
-			mysqlPW = args[2].replaceAll("\n", "");
+		try {
+			if(MyApplication.PORT == null){
+				throw new IOException("Port variable is null");
+			}
+			String[] args = getDBParams(MyApplication.PORT);
+			mysqlDB = String.format(DATABASE_URI, args[1]);
+			mysqlID = args[2];
+			mysqlPW = args[3].replaceAll("\n", "");
 		} catch (IOException e) {
 		} finally{
 			try {
@@ -215,6 +215,18 @@ public class Database {
 		System.setOut(originalStream);
 
 		this.conn.close();
+	}
+
+	public String[] getDBParams(String port) throws IOException {
+		String fileString = new String(Files.readAllBytes(Paths.get("metadata/metadata.in")), StandardCharsets.UTF_8);
+		String[] args = fileString.split("\n");
+		for (String arg : args) {
+			if(arg.startsWith(port)){
+				String[] split = arg.split(",");
+				return split;
+			}
+		}
+		throw new RuntimeException("No matching database to port");
 	}
 
 }

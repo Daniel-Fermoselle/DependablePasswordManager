@@ -70,15 +70,11 @@ public class ClientLib {
 	private Map<String, PublicKey> serversPubKey;
 	private Map<String, Long> nonces;
 	private Map<String, String> servers;
-	private Map<String, WebTarget> serversTargets;
+	private Client client;
 
 	public ClientLib(Map<String, String> hosts) {
 		this.servers = hosts;
-		this.serversTargets = new HashMap<String,WebTarget>();
-		for (String s : hosts.keySet()) {
-			Client client = ClientBuilder.newClient();
-			serversTargets.put(s, client.target("http://" + hosts.get(s) + "/PwServer/"));
-		}
+		client = ClientBuilder.newClient();
 	}
 
 	public void init(KeyStore ks, String aliasForPubPrivKey, String keyStorePw) {
@@ -468,6 +464,6 @@ public class ClientLib {
 	}
 
 	private WebTarget getWebTargetToResource(String alias, String resource) {
-		return serversTargets.get(alias).path(resource);
+		return 	client.target("http://" + servers.get(alias) + "/PwServer/").path(resource);
 	}
 }

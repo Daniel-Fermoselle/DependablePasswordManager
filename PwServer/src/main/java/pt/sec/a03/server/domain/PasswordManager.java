@@ -15,10 +15,6 @@ public class PasswordManager {
 	public PasswordManager(){
 		this.db = new Database();
 	}
-	
-	public PasswordManager(String id){
-		this.db = new Database(id);
-	}
 
     public void addUser(String publicKey) {
         if (publicKey == null) {

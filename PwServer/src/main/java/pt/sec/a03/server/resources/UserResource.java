@@ -29,6 +29,7 @@ public class UserResource {
                             @HeaderParam(SIGNATURE_HEADER_NAME) String signature,
                             @HeaderParam(NONCE_HEADER_NAME) String nonce) {
 
+        System.out.println("Received Post packet addUser");
         String [] response = userService.addUser(publicKey, signature, nonce);
 
         return Response.status(Status.CREATED)
@@ -39,8 +40,9 @@ public class UserResource {
 
     @GET
     public Response getUserMetaInfo(@HeaderParam("public-key") String publicKey) {
-        String[] response = userService.getUserMetaInfo(publicKey);
+        System.out.println("Received Get packet getMetainfo");
 
+        String[] response = userService.getUserMetaInfo(publicKey);
         return Response.status(Status.OK)
                 .header(NONCE_HEADER_NAME, response[0])
                 .header(SIGNATURE_HEADER_NAME, response[1])
