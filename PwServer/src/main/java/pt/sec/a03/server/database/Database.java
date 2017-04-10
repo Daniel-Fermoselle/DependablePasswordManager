@@ -28,9 +28,15 @@ public class Database {
 	public static final String SQL_SCRIPT_PATH = "database.sql";
 	public static final String MY_SQL_DB_DEFAULT = "jdbc:mysql://localhost:3306/experiments?useSSL=false";
 	
-	Connection conn;
+	private Connection conn;
+	private String id;
+	
+	public Database(){
+		
+	}
 
-	public Database() {
+	public Database(String id) {
+		this.id = id;
 	}
 	
 	private void getConnection(){
@@ -83,35 +89,6 @@ public class Database {
 		}
 	}
 
-	public User getUserByID(String id) throws SQLException {
-		//Get mysql conneciton
-		getConnection();
-		Statement stmt = this.conn.createStatement();
-		
-		String publicKeyDB = "";
-		long userID = 0;
-
-		// Step 1: Execute a SQL SELECT query, the query result
-		String strSelect = "select userID, publicKey from Users where userID = '" + id + "'";
-
-		// Step 2: Process the ResultSet by scrolling the cursor forward via
-		ResultSet rset = stmt.executeQuery(strSelect);
-		int rowCount = 0;
-		while (rset.next()) { // Move the cursor to the next row
-			userID = rset.getLong("userID");
-			publicKeyDB = rset.getString("publicKey");
-			++rowCount;
-		}
-		
-		this.conn.close();
-		
-		if (rowCount == 0) {
-			return null;
-		} else {
-			return new User(userID, publicKeyDB);
-		}
-	}
-
 	public void saveUser(String publicKey) throws SQLException {
 		//Get mysql conneciton
 		getConnection();
@@ -119,17 +96,6 @@ public class Database {
 		
 		String sqlInsert = "insert into Users(publicKey) values ('" + publicKey + "');";
 		stmt.execute(sqlInsert);
-		
-		this.conn.close();
-	}
-
-	public void updateUser(String id, String publicKey) throws SQLException {
-		//Get mysql conneciton
-		getConnection();
-		Statement stmt = this.conn.createStatement();
-		
-		String strUpdate = "update Users set publicKey='" + publicKey + "' where userID='" + id + "';";
-		stmt.executeUpdate(strUpdate);
 		
 		this.conn.close();
 	}

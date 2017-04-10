@@ -14,13 +14,6 @@ import pt.sec.a03.server.exception.InvalidSignatureException;
 public class UserService {
 
 	private PasswordManager pwm = new PasswordManager();
-	public User getUserByID(String id) {
-		return pwm.getUserByID(id);
-	}
-
-	public User getUserByPK(String publicKey) {
-		return pwm.getUserByPK(publicKey);
-	}
 
 	public void addUser(String publicKey, String signature, String timestamp) {
 		try {
@@ -40,9 +33,5 @@ public class UserService {
 		} catch (SignatureException e) {
 			throw new InvalidSignatureException("Invalid Signature");
 		}
-	}
-
-	public void updateUserWithID(String id, String publicKey) {
-		pwm.updateUserWithID(id, publicKey);
 	}
 }
