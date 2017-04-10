@@ -1,6 +1,9 @@
 package pt.sec.a03.server.service;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.security.InvalidKeyException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -18,6 +21,7 @@ import javax.crypto.NoSuchPaddingException;
 import javax.ws.rs.BadRequestException;
 
 import pt.sec.a03.crypto.Crypto;
+import pt.sec.a03.server.MyApplication;
 import pt.sec.a03.server.domain.PasswordManager;
 import pt.sec.a03.server.domain.Triplet;
 import pt.sec.a03.server.exception.InvalidSignatureException;
@@ -25,17 +29,17 @@ import pt.sec.a03.server.exception.InvalidNonceException;
 
 public class VaultService {
 
-	private static final String ALIAS_FOR_SERVER = "server";
-	private static final String SERVER_KEY_STORE_PATH = "ks/Server1.jks";
 	private static final String SERVER_KEY_STORE_PASS = "insecure";
+
 	PrivateKey privKey;
 	KeyStore ksServ;
 	PasswordManager pwm;
 
 	public VaultService() {
 		try {
-			this.ksServ = Crypto.readKeystoreFile(SERVER_KEY_STORE_PATH, SERVER_KEY_STORE_PASS.toCharArray());
-			this.privKey = Crypto.getPrivateKeyFromKeystore(ksServ, ALIAS_FOR_SERVER, SERVER_KEY_STORE_PASS);
+            String paramForKeys = getAlias(MyApplication.PORT);
+            this.ksServ = Crypto.readKeystoreFile("ks/" + paramForKeys + ".jks", SERVER_KEY_STORE_PASS.toCharArray());
+			this.privKey = Crypto.getPrivateKeyFromKeystore(ksServ, paramForKeys, SERVER_KEY_STORE_PASS);
 			this.pwm = new PasswordManager();
 
 		} catch (KeyStoreException | NoSuchAlgorithmException | CertificateException | IOException
@@ -188,4 +192,21 @@ public class VaultService {
             throw new BadRequestException(e.getMessage());
         }
     }
+
+    private String getAlias(String port) {
+        try {
+            String fileString = new String(Files.readAllBytes(Paths.get("metadata/metadata.in")), StandardCharsets.UTF_8);
+            String[] args = fileString.split("\n");
+            for (String arg : args) {
+                if (arg.startsWith(port)) {
+                    String[] split = arg.split(",");
+                    return split[4];
+                }
+            }
+            throw new RuntimeException("No matching alias to port");
+        } catch (IOException e) {
+            throw new RuntimeException(e.getMessage());
+        }
+    }
+
 }

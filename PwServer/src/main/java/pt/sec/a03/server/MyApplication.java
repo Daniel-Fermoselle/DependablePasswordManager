@@ -1,8 +1,6 @@
 package pt.sec.a03.server;
 
 import java.io.Closeable;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 
 import com.sun.jersey.api.core.PackagesResourceConfig;
 import com.sun.jersey.api.core.ResourceConfig;

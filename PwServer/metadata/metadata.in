@@ -1,5 +1,5 @@
-localhost:5555,PWM_1,root,rootroot
-localhost:6666,PWM_2,root,rootroot
-localhost:7777,PWM_3,root,rootroot
-localhost:5444,PWM_4,root,rootroot
-localhost:6555,PWM_5,root,rootroot
+localhost:5555,PWM_1,root,rootroot,server1
+localhost:6666,PWM_2,root,rootroot,server2
+localhost:7777,PWM_3,root,rootroot,server3
+localhost:5444,PWM_4,root,rootroot,server4
+localhost:6555,PWM_5,root,rootroot,server5
