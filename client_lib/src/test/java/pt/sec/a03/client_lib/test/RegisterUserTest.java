@@ -3,6 +3,10 @@ package pt.sec.a03.client_lib.test;
 import static org.junit.Assert.fail;
 
 import java.security.KeyStore;
+import java.security.PublicKey;
+import java.security.cert.Certificate;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.core.Response;
@@ -24,6 +28,7 @@ public class RegisterUserTest extends AbstractClientLibTest {
 
 	private ClientLib c1;
 	private KeyStore ks1;
+	private String alias;
 
 	public RegisterUserTest() {
 		super();
@@ -31,8 +36,10 @@ public class RegisterUserTest extends AbstractClientLibTest {
 
 	@Override
 	protected void populate() {
-		String[] host = {"localhost:5555"};
-		c1 = new ClientLib(host);
+		alias = "server";
+		Map<String, String> m = new HashMap<String, String>();
+		m.put(alias, "localhost:5555");
+		c1 = new ClientLib(m);
 		try {
 			ks1 = Crypto.readKeystoreFile(KEY_STORE_1, KEY_STORE_PASSWORD_1.toCharArray());
 			c1.init(ks1, KEY_STORE_ALIAS_FOR_PUB_PRIV_1, KEY_STORE_PASSWORD_1);
@@ -75,10 +82,10 @@ public class RegisterUserTest extends AbstractClientLibTest {
 	@Test
 	public void test03_registerUser() {
 		try {
-			String[] infoToSend = c1.prepareForRegisterUser();
+			String[] infoToSend = c1.prepareForRegisterUser(alias);
 			infoToSend[0] ="pohsdadwqdwdwdqwdqwdqws";
-			Response postReponse = c1.sendRegisterUser(infoToSend);
-			c1.processRegisterUser(postReponse);
+			Response postReponse = c1.sendRegisterUser(infoToSend, alias);
+			c1.processRegisterUser(postReponse, alias);
 			fail("This test should fail with exception BadRequestException");
 		} catch (BadRequestException e) {
 
@@ -93,10 +100,10 @@ public class RegisterUserTest extends AbstractClientLibTest {
 	@Test
 	public void test04_registerUser() {
 		try {
-			String[] infoToSend = c1.prepareForRegisterUser();
+			String[] infoToSend = c1.prepareForRegisterUser(alias);
 			infoToSend[1] ="pohsdadwqdwdwdqwdqwdqws";
-			Response postReponse = c1.sendRegisterUser(infoToSend);
-			c1.processRegisterUser(postReponse);
+			Response postReponse = c1.sendRegisterUser(infoToSend, alias);
+			c1.processRegisterUser(postReponse, alias);
 			fail("This test should fail with exception BadRequestException");
 		} catch (BadRequestException e) {
 
@@ -111,10 +118,14 @@ public class RegisterUserTest extends AbstractClientLibTest {
 	@Test
 	public void test05_registerUser() {
 		try {
-			String[] infoToSend = c1.prepareForRegisterUser();
-			infoToSend[2] = genInvalidTS();
-			Response postReponse = c1.sendRegisterUser(infoToSend);
-			c1.processRegisterUser(postReponse);
+			String[] infoToSend = c1.prepareForRegisterUser(alias);
+			Certificate cert2 = ks1.getCertificate(alias);
+			PublicKey serverPub = Crypto.getPublicKeyFromCertificate(cert2);
+			String stringNonce = 31321 + "";
+			byte[] cipheredNonce = Crypto.cipherString(stringNonce, serverPub);
+			infoToSend[2] = Crypto.encode(cipheredNonce);
+			Response postReponse = c1.sendRegisterUser(infoToSend, alias);
+			c1.processRegisterUser(postReponse, alias);
 			fail("This test should fail with exception BadRequestException");
 		} catch (BadRequestException e) {
 

@@ -1,7 +1,13 @@
 package pt.sec.client;
 
 import java.io.Console;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.security.KeyStore;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -11,8 +17,10 @@ import pt.sec.a03.crypto.Crypto;
 public class ClientApplication {
 
 	public static void main(String args[]) throws Exception {
-
-		ClientLib cl = new ClientLib(args);
+		
+		Map<String,String> m = fileParser(args[0]);
+		
+		ClientLib cl = new ClientLib(m);
 
 		Console console = System.console();
 		if (console == null) {
@@ -46,7 +54,7 @@ public class ClientApplication {
 				} else if ("3".equals(input)) {
 					String domain = readNormal(console, "Domain: ");
 					String username = readNormal(console, "Username: ");
-					console.printf("The password is: " + cl.retrive_password(domain, username) + "\n");
+					console.printf("The password is: " + cl.retrieve_password(domain, username) + "\n");
 				} else {
 					console.printf("Try again! ^_^\n");
 				}
@@ -88,6 +96,19 @@ public class ClientApplication {
 			b = m.find();
 		}
 		return passwordString;
+	}
+	
+	public static Map<String, String> fileParser(String path) throws IOException{
+		String fileString = new String(Files.readAllBytes(Paths.get(path)), StandardCharsets.UTF_8);
+		Map<String,String> m = new HashMap<String, String>();
+		String[] serverData = fileString.split("\n");
+		
+		for(String p : serverData){
+			String[] pair = p.split(",");
+			m.put(pair[1], pair[0]);
+		}
+		
+		return m;
 	}
 
 }

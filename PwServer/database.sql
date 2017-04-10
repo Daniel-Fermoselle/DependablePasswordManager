@@ -8,6 +8,7 @@ drop table if exists Users;
 create table Users (
    userID bigint AUTO_INCREMENT,
    publicKey TEXT,
+   nonce bigint,
    primary key (userID));
 
 create table Vault (

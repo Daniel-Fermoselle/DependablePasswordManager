@@ -20,35 +20,48 @@ import pt.sec.a03.server.service.VaultService;
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class VaultResource {
-	
-	private VaultService vaultService = new VaultService();
-	
-	@POST
-	public Response addPassword(@HeaderParam("public-key") String publicKey,
-							@HeaderParam("signature") String signature,
-							@HeaderParam("timestamp") String timestamp,
-							@HeaderParam("hash-password") String hashPw, 
-							Triplet t, @Context UriInfo uriInfo) {
-		vaultService.put(publicKey, signature, timestamp, hashPw, t.getPassword(), t.getUsername(), t.getDomain());
-		return Response.status(Status.CREATED)
-				.build();
-	}
-	
-	@GET
-	public Response getPassword(@HeaderParam("public-key") String publicKey, 
-							@HeaderParam("signature") String stringSig,
-							@HeaderParam("timestamp") String stringTS,
-							@HeaderParam("domain") 	  String domain, 
-							@HeaderParam("username")  String username) {
-		String[] content = vaultService.get(publicKey, username, domain, stringTS, stringSig);
-		CommonTriplet triplet = new CommonTriplet();
-		triplet.setPassword(content[3]);
-		return Response.status(Status.OK)
-				.header("signature", content[1])
-				.header("timestamp", content[0])
-				.header("hash-password", content[2])
-				.entity(triplet)
-				.build();
-	}
-	
+
+    private static final String PUBLIC_KEY_HEADER_NAME = "public-key";
+    private static final String SIGNATURE_HEADER_NAME = "signature";
+    private static final String NONCE_HEADER_NAME = "nonce-value";
+    private static final String HASH_PASSWORD_HEADER_NAME = "hash-password";
+    private static final String DOMAIN_HEADER_NAME = "domain";
+    private static final String USERNAME_HEADER_NAME = "username";
+
+    private VaultService vaultService = new VaultService();
+
+    @POST
+    public Response addPassword(@HeaderParam(PUBLIC_KEY_HEADER_NAME) String publicKey,
+                                @HeaderParam(SIGNATURE_HEADER_NAME) String signature,
+                                @HeaderParam(NONCE_HEADER_NAME) String nonce,
+                                @HeaderParam(HASH_PASSWORD_HEADER_NAME) String hashPw,
+                                Triplet t, @Context UriInfo uriInfo) {
+
+		String[] response = vaultService.put(publicKey, signature, nonce, hashPw, t.getPassword(), t.getUsername(), t.getDomain());
+
+        return Response.status(Status.CREATED)
+				.header(SIGNATURE_HEADER_NAME, response[0])
+				.header(NONCE_HEADER_NAME, response[1])
+                .build();
+    }
+
+    @GET
+    public Response getPassword(@HeaderParam(PUBLIC_KEY_HEADER_NAME) String publicKey,
+                                @HeaderParam(SIGNATURE_HEADER_NAME) String stringSig,
+                                @HeaderParam(NONCE_HEADER_NAME) String nonce,
+                                @HeaderParam(DOMAIN_HEADER_NAME) String domain,
+                                @HeaderParam(USERNAME_HEADER_NAME) String username) {
+
+        String[] response = vaultService.get(publicKey, username, domain, nonce, stringSig);
+        CommonTriplet triplet = new CommonTriplet();
+        triplet.setPassword(response[3]);
+
+        return Response.status(Status.OK)
+                .header(SIGNATURE_HEADER_NAME, response[1])
+                .header(NONCE_HEADER_NAME, response[0])
+                .header(HASH_PASSWORD_HEADER_NAME, response[2])
+                .entity(triplet)
+                .build();
+    }
+
 }

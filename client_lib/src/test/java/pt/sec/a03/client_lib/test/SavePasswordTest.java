@@ -4,6 +4,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import java.security.KeyStore;
+import java.security.PublicKey;
+import java.security.cert.Certificate;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.core.Response;
@@ -45,12 +49,15 @@ public class SavePasswordTest extends AbstractClientLibTest {
 	private KeyStore ks2;
 	private ClientLib c1;
 	private ClientLib c2;
+	private String alias;
 
 	public SavePasswordTest() {
 		super();
-		String[] host = {"localhost:5555"};
-		c1 = new ClientLib(host);
-		c2 = new ClientLib(host);
+		alias = "server";
+		Map<String, String> m = new HashMap<String, String>();
+		m.put(alias, "localhost:5555");
+		c1 = new ClientLib(m);
+		c2 = new ClientLib(m);
 		try {
 			ks1 = Crypto.readKeystoreFile(KEY_STORE_1, KEY_STORE_PASSWORD_1.toCharArray());
 			ks2 = Crypto.readKeystoreFile(KEY_STORE_2, KEY_STORE_PASSWORD_2.toCharArray());
@@ -85,7 +92,7 @@ public class SavePasswordTest extends AbstractClientLibTest {
 	@Test
 	public void test01_savePassword() {
 		c1.save_password(DOMAIN_1, USERNAME_1, PASSWORD_1);
-		assertEquals(PASSWORD_1, c1.retrive_password(DOMAIN_1, USERNAME_1));
+		assertEquals(PASSWORD_1, c1.retrieve_password(DOMAIN_1, USERNAME_1));
 	}
 
 	/**
@@ -140,7 +147,7 @@ public class SavePasswordTest extends AbstractClientLibTest {
 	public void test05_savePassword() {
 		c1.save_password(DOMAIN_1, USERNAME_1, PASSWORD_1);
 		c1.save_password(DOMAIN_1, USERNAME_1, PASSWORD_2);
-		assertEquals(PASSWORD_2, c1.retrive_password(DOMAIN_1, USERNAME_1));
+		assertEquals(PASSWORD_2, c1.retrieve_password(DOMAIN_1, USERNAME_1));
 	}
 
 	/**
@@ -181,10 +188,10 @@ public class SavePasswordTest extends AbstractClientLibTest {
 	@Test
 	public void test08_savePassword() {
 		try {
-			String[] infoToSend = c1.prepareForSave(DOMAIN_3, USERNAME_3, PASSWORD_3);
+			String[] infoToSend = c1.prepareForSave(DOMAIN_3, USERNAME_3, PASSWORD_3, alias);
 			infoToSend[1] = FAKE_SIGNATURE;
-			Response response = c1.sendSavePassword(infoToSend);
-			c1.processSavePassword(response);
+			Response response = c1.sendSavePassword(infoToSend, alias);
+			c1.processSavePassword(response, alias);
 			fail("This test should fail with exception BadRequestException");
 		} catch (BadRequestException e) {
 
@@ -199,10 +206,16 @@ public class SavePasswordTest extends AbstractClientLibTest {
 	@Test
 	public void test09_savePassword() {
 		try {
-			String[] infoToSend = c1.prepareForSave(DOMAIN_3, USERNAME_3, PASSWORD_3);
-			infoToSend[2] = genInvalidTS();
-			Response response = c1.sendSavePassword(infoToSend);
-			c1.processSavePassword(response);
+			String[] infoToSend = c1.prepareForSave(DOMAIN_3, USERNAME_3, PASSWORD_3, alias);
+
+			Certificate cert2 = ks1.getCertificate(alias);
+			PublicKey serverPub = Crypto.getPublicKeyFromCertificate(cert2);
+			String stringNonce = 31321 + "";
+			byte[] cipheredNonce = Crypto.cipherString(stringNonce, serverPub);
+			infoToSend[2] = Crypto.encode(cipheredNonce);
+
+			Response response = c1.sendSavePassword(infoToSend, alias);
+			c1.processSavePassword(response, alias);
 			fail("This test should fail with exception BadRequestException");
 		} catch (BadRequestException e) {
 
@@ -217,10 +230,10 @@ public class SavePasswordTest extends AbstractClientLibTest {
 	@Test
 	public void test10_savePassword() {
 		try {
-			String[] infoToSend = c1.prepareForSave(DOMAIN_3, USERNAME_3, PASSWORD_3);
+			String[] infoToSend = c1.prepareForSave(DOMAIN_3, USERNAME_3, PASSWORD_3, alias);
 			infoToSend[3] = FAKE_HASH;
-			Response response = c1.sendSavePassword(infoToSend);
-			c1.processSavePassword(response);
+			Response response = c1.sendSavePassword(infoToSend, alias);
+			c1.processSavePassword(response, alias);
 			fail("This test should fail with exception BadRequestException");
 		} catch (BadRequestException e) {
 
@@ -235,10 +248,10 @@ public class SavePasswordTest extends AbstractClientLibTest {
 	@Test
 	public void test11_savePassword() {
 		try {
-			String[] infoToSend = c1.prepareForSave(DOMAIN_3, USERNAME_3, PASSWORD_3);
+			String[] infoToSend = c1.prepareForSave(DOMAIN_3, USERNAME_3, PASSWORD_3, alias);
 			infoToSend[5] = FAKE_DOMAIN;
-			Response response = c1.sendSavePassword(infoToSend);
-			c1.processSavePassword(response);
+			Response response = c1.sendSavePassword(infoToSend, alias);
+			c1.processSavePassword(response, alias);
 			fail("This test should fail with exception BadRequestException");
 		} catch (BadRequestException e) {
 

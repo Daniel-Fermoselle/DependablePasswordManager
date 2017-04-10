@@ -4,6 +4,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import java.security.KeyStore;
+import java.security.PublicKey;
+import java.security.cert.Certificate;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.core.Response;
@@ -21,7 +25,7 @@ import pt.sec.a03.client_lib.exception.InvalidTimestampException;
 import pt.sec.a03.crypto.Crypto;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public class RetrivePasswordTest extends AbstractClientLibTest {
+public class RetrievePasswordTest extends AbstractClientLibTest {
 
 	private static final String KEY_STORE_1 = "ks/Client1.jks";
 	private static final String KEY_STORE_PASSWORD_1 = "insecure";
@@ -41,7 +45,7 @@ public class RetrivePasswordTest extends AbstractClientLibTest {
 	private static final String FAKE_SIGNATURE = "fewvrwrwrgkwrgkwewkge";
 	
 	private static final String SIGNATURE_HEADER_NAME = "signature";
-	private static final String TIME_STAMP_HEADER_NAME = "timestamp";
+	private static final String NONCE_HEADER_NAME = "nonce-value";
 
 	private static final String FAKE_HASH = "WFEFERGGREGegerge";
 	
@@ -49,12 +53,17 @@ public class RetrivePasswordTest extends AbstractClientLibTest {
 	private KeyStore ks2;
 	private ClientLib c1;
 	private ClientLib c2;
+	private String alias;
 
-	public RetrivePasswordTest() {
+
+	public RetrievePasswordTest() {
 		super();
-		String[] host = {"localhost:5555"};
-		c1 = new ClientLib(host);
-		c2 = new ClientLib(host);
+		alias = "server";
+		Map<String, String> m = new HashMap<String, String>();
+		m.put(alias, "localhost:5555");
+		c1 = new ClientLib(m);
+		c2 = new ClientLib(m);
+		
 		try {
 			ks1 = Crypto.readKeystoreFile(KEY_STORE_1, KEY_STORE_PASSWORD_1.toCharArray());
 			ks2 = Crypto.readKeystoreFile(KEY_STORE_2, KEY_STORE_PASSWORD_2.toCharArray());
@@ -90,7 +99,7 @@ public class RetrivePasswordTest extends AbstractClientLibTest {
 	 */
 	@Test
 	public void test01_retrivePassword() {
-		assertEquals(PASSWORD_1, c1.retrive_password(DOMAIN_1, USERNAME_1));
+		assertEquals(PASSWORD_1, c1.retrieve_password(DOMAIN_1, USERNAME_1));
 	}
 
 	/**
@@ -99,7 +108,7 @@ public class RetrivePasswordTest extends AbstractClientLibTest {
 	@Test
 	public void test02_retrivePassword() {
 		try {
-			c1.retrive_password(null, USERNAME_1);
+			c1.retrieve_password(null, USERNAME_1);
 			fail("This test should fail with exception InvalidArgumentException");
 		} catch (InvalidArgumentException e) {
 
@@ -114,7 +123,7 @@ public class RetrivePasswordTest extends AbstractClientLibTest {
 	@Test
 	public void test03_retrivePassword() {
 		try {
-			c1.retrive_password(DOMAIN_1, null);
+			c1.retrieve_password(DOMAIN_1, null);
 			fail("This test should fail with exception InvalidArgumentException");
 		} catch (InvalidArgumentException e) {
 
@@ -129,7 +138,7 @@ public class RetrivePasswordTest extends AbstractClientLibTest {
 	@Test
 	public void test04_retrivePassword() {
 		c1.save_password(DOMAIN_1, USERNAME_1, PASSWORD_2);
-		assertEquals(PASSWORD_2, c1.retrive_password(DOMAIN_1, USERNAME_1));
+		assertEquals(PASSWORD_2, c1.retrieve_password(DOMAIN_1, USERNAME_1));
 	}
 
 	/**
@@ -138,7 +147,7 @@ public class RetrivePasswordTest extends AbstractClientLibTest {
 	@Test
 	public void test05_retrivePassword() {
 		try {
-			c2.retrive_password(DOMAIN_1, USERNAME_1);
+			c2.retrieve_password(DOMAIN_1, USERNAME_1);
 			fail("This test should fail with exception DataNotFoundException");
 		} catch (DataNotFoundException e) {
 
@@ -154,7 +163,7 @@ public class RetrivePasswordTest extends AbstractClientLibTest {
 	public void test06_retrivePassword() {
 		try {
 			c2.register_user();
-			c2.retrive_password(DOMAIN_1, USERNAME_1);
+			c2.retrieve_password(DOMAIN_1, USERNAME_1);
 			fail("This test should fail with exception IllegalAccessExistException");
 		} catch (IllegalAccessExistException e) {
 
@@ -169,7 +178,7 @@ public class RetrivePasswordTest extends AbstractClientLibTest {
 	@Test
 	public void test07_retrivePassword() {
 		try {
-			c1.retrive_password(DOMAIN_1, USERNAME_2);
+			c1.retrieve_password(DOMAIN_1, USERNAME_2);
 			fail("This test should fail with exception DataNotFoundException");
 		} catch (DataNotFoundException e) {
 
@@ -184,7 +193,7 @@ public class RetrivePasswordTest extends AbstractClientLibTest {
 	@Test
 	public void test08_retrivePassword() {
 		try {
-			c1.retrive_password(DOMAIN_2, USERNAME_1);
+			c1.retrieve_password(DOMAIN_2, USERNAME_1);
 			fail("This test should fail with exception DataNotFoundException");
 		} catch (DataNotFoundException e) {
 
@@ -200,10 +209,10 @@ public class RetrivePasswordTest extends AbstractClientLibTest {
 	@Test
 	public void test09_retrivePassword() {
 		try {
-			String[] infoToSend = c1.prepareForRetrivePassword(DOMAIN_1, USERNAME_1);
+			String[] infoToSend = c1.prepareForRetrievePassword(DOMAIN_1, USERNAME_1, alias);
 			infoToSend[1] = FAKE_SIGNATURE;
-			Response response = c1.sendRetrivePassword(infoToSend);
-			c1.processRetrivePassword(response);
+			Response response = c1.sendRetrievePassword(infoToSend, alias);
+			c1.processRetrievePassword(response, alias);
 			fail("This test should fail with exception BadRequestException");
 		} catch (BadRequestException e) {
 
@@ -218,10 +227,16 @@ public class RetrivePasswordTest extends AbstractClientLibTest {
 	@Test
 	public void test10_retrivePassword() {
 		try {
-			String[] infoToSend = c1.prepareForRetrivePassword(DOMAIN_1, USERNAME_1);
-			infoToSend[2] = genInvalidTS();
-			Response response = c1.sendRetrivePassword(infoToSend);
-			c1.processRetrivePassword(response);
+			String[] infoToSend = c1.prepareForRetrievePassword(DOMAIN_1, USERNAME_1, alias);
+
+			Certificate cert2 = ks1.getCertificate(alias);
+			PublicKey serverPub = Crypto.getPublicKeyFromCertificate(cert2);
+			String stringNonce = 31321 + "";
+			byte[] cipheredNonce = Crypto.cipherString(stringNonce, serverPub);
+			infoToSend[2] = Crypto.encode(cipheredNonce);
+
+			Response response = c1.sendRetrievePassword(infoToSend, alias);
+			c1.processRetrievePassword(response, alias);
 			fail("This test should fail with exception BadRequestException");
 		} catch (BadRequestException e) {
 
@@ -236,10 +251,10 @@ public class RetrivePasswordTest extends AbstractClientLibTest {
 	@Test
 	public void test11_retrivePassword() {
 		try {
-			String[] infoToSend = c1.prepareForRetrivePassword(DOMAIN_1, USERNAME_1);
-			Response response = c1.sendRetrivePassword(infoToSend);
+			String[] infoToSend = c1.prepareForRetrievePassword(DOMAIN_1, USERNAME_1, alias);
+			Response response = c1.sendRetrievePassword(infoToSend, alias);
 			response.getHeaders().putSingle(SIGNATURE_HEADER_NAME, FAKE_SIGNATURE);
-			c1.processRetrivePassword(response);
+			c1.processRetrievePassword(response, alias);
 			fail("This test should fail with exception InvalidSignatureException");
 		} catch (InvalidSignatureException e) {
 
@@ -254,15 +269,23 @@ public class RetrivePasswordTest extends AbstractClientLibTest {
 	@Test
 	public void test12_retrivePassword() {
 		try {
-			String[] infoToSend = c1.prepareForRetrivePassword(DOMAIN_1, USERNAME_1);
-			Response response = c1.sendRetrivePassword(infoToSend);
-			response.getHeaders().putSingle(TIME_STAMP_HEADER_NAME, genInvalidTS());
-			c1.processRetrivePassword(response);
+			String[] infoToSend = c1.prepareForRetrievePassword(DOMAIN_1, USERNAME_1, alias);
+			Response response = c1.sendRetrievePassword(infoToSend, alias);
+
+			Certificate cert2 = ks1.getCertificate(KEY_STORE_ALIAS_FOR_PUB_PRIV_1);
+			PublicKey clientPub = Crypto.getPublicKeyFromCertificate(cert2);
+			
+			String stringNonce = 0 + "";
+			byte[] cipheredNonce = Crypto.cipherString(stringNonce, clientPub);
+			String invalidNonce = Crypto.encode(cipheredNonce);
+
+			response.getHeaders().putSingle(NONCE_HEADER_NAME, invalidNonce);
+			c1.processRetrievePassword(response, alias);
 			fail("This test should fail with exception InvalidTimestampException");
 		} catch (InvalidTimestampException e) {
 
 		} catch (Exception e) {
-			fail("This test should fail with exception InvalidTimestampException");
+			fail("This test should fail with exception InvalidTimestampException: " + e.getClass().getName());
 		}
 	}
 	
@@ -272,10 +295,10 @@ public class RetrivePasswordTest extends AbstractClientLibTest {
 	@Test
 	public void test13_retrivePassword() {
 		try {
-			String[] infoToSend = c1.prepareForRetrivePassword(DOMAIN_1, USERNAME_1);
+			String[] infoToSend = c1.prepareForRetrievePassword(DOMAIN_1, USERNAME_1, alias);
 			infoToSend[3] = FAKE_HASH;
-			Response response = c1.sendRetrivePassword(infoToSend);
-			c1.processRetrivePassword(response);
+			Response response = c1.sendRetrievePassword(infoToSend, alias);
+			c1.processRetrievePassword(response, alias);
 			fail("This test should fail with exception BadRequestException");
 		} catch (BadRequestException e) {
 

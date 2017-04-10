@@ -3,6 +3,8 @@ package pt.sec.a03.client_lib.test;
 import static org.junit.Assert.fail;
 
 import java.security.KeyStore;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.junit.Test;
 
@@ -32,8 +34,9 @@ public class InitTest extends AbstractClientLibTest {
 	
 	@Override
 	protected void populate() {
-		String[] host = {"localhost:5555"};
-		c1 = new ClientLib(host);
+		Map<String, String> m = new HashMap<String, String>();
+		m.put("server", "localhost:5555");
+		c1 = new ClientLib(m);
 		try {
 			ks1 = Crypto.readKeystoreFile(KEY_STORE_1, KEY_STORE_PASSWORD_1.toCharArray());
 			ks2 = Crypto.readKeystoreFile(KEY_STORE_2, KEY_STORE_PASSWORD_2.toCharArray());

@@ -67,9 +67,10 @@ public class Database {
 		
 		String publicKeyDB = "";
 		long userID = 0;
-
+		long nonce = 0;
+		
 		// Step 1: Execute a SQL SELECT query, the query result
-		String strSelect = "select userID, publicKey from Users where publicKey = '" + publicKey + "'";
+		String strSelect = "select userID, publicKey, nonce from Users where publicKey = '" + publicKey + "'";
 
 		// Step 2: Process the ResultSet by scrolling the cursor forward via
 		ResultSet rset = stmt.executeQuery(strSelect);
@@ -77,15 +78,14 @@ public class Database {
 		while (rset.next()) { // Move the cursor to the next row
 			userID = rset.getLong("userID");
 			publicKeyDB = rset.getString("publicKey");
+			nonce = rset.getLong("nonce");
 			++rowCount;
-		}	
-		
+		}
 		this.conn.close();
-		
 		if (rowCount == 0) {
 			return null;
 		} else {
-			return new User(userID, publicKeyDB);
+			return new User(userID, publicKeyDB, nonce);
 		}
 	}
 
@@ -100,6 +100,28 @@ public class Database {
 		this.conn.close();
 	}
 
+	public void updateUser(String id, String publicKey) throws SQLException {
+		//Get mysql conneciton
+		getConnection();
+		Statement stmt = this.conn.createStatement();
+		
+		String strUpdate = "update Users set publicKey='" + publicKey + "' where userID='" + id + "';";
+		stmt.executeUpdate(strUpdate);
+		
+		this.conn.close();
+	}
+
+	public void updateUserNonce(String id, long nonce) throws SQLException {
+		//Get mysql conneciton
+		getConnection();
+		Statement stmt = this.conn.createStatement();
+		
+		String strUpdate = "update Users set nonce='" + nonce + "' where userID='" + id + "';";
+		stmt.executeUpdate(strUpdate);
+
+		this.conn.close();
+	}
+
 	public Triplet getTriplet(String username, String domain) throws SQLException {
 		//Get mysql conneciton
 		getConnection();
@@ -107,7 +129,7 @@ public class Database {
 		
 		String password = "", usernameDB = "", domainDB = "", pwHash = "";
 		long tripletID = 0, userID = 0;
-
+		
 		// Step 1: Execute a SQL SELECT query, the query result
 		String strSelect = "select tripletID, userID, pw, username, domain, pwHash from Vault where domain = '" + domain
 				+ "' and username = '" + username + "';";
@@ -126,7 +148,6 @@ public class Database {
 		}
 		
 		this.conn.close();
-		
 		if (rowCount == 0) {
 			return null;
 		} else {
@@ -168,7 +189,7 @@ public class Database {
 		
 		this.conn.close();
 	}
-
+	
 	public void runScript() throws SQLException, FileNotFoundException {
 		//Get mysql conneciton
 		getConnection();
@@ -192,8 +213,8 @@ public class Database {
 		sr.runScript(reader);
 		
 		System.setOut(originalStream);
-		
-		conn.close();
+
+		this.conn.close();
 	}
 
 }

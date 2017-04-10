@@ -6,8 +6,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class User {
 
 	private long userID;
-	//TODO PublicKey instead of String
 	private String publicKey;
+	private long nonce;
 	
 	public User(){}
 	
@@ -16,6 +16,12 @@ public class User {
 		this.publicKey = publicKey;
 	}
 
+	public User(long userID, String publicKey, long nonce) {
+		this.userID = userID;
+		this.publicKey = publicKey;
+		this.nonce = nonce;
+	}
+	
 	public long getUserID() {
 		return userID;
 	}
@@ -24,12 +30,20 @@ public class User {
 		this.userID = userID;
 	}
 	
+	public void setUserNonce(long nonce) {
+		this.nonce = nonce;
+	}
+	
 	public String getPublicKey() {
 		return publicKey;
 	}
 	
 	public void setPublicKey(String publicKey) {
 		this.publicKey = publicKey;
+	}
+
+	public long getNonce() {
+		return this.nonce;
 	}
 	
 }

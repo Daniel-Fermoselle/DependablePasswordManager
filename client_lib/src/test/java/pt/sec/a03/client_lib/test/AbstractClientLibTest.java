@@ -7,9 +7,6 @@ import java.io.PrintStream;
 import java.io.Reader;
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.Timestamp;
-import java.util.Calendar;
-import java.util.Date;
 
 import org.apache.ibatis.jdbc.ScriptRunner;
 import org.junit.After;
@@ -17,14 +14,12 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 
-
-
 public abstract class AbstractClientLibTest {
 
 	public static final String MYSQL_ID = "root";
 	public static final String MYSQL_PASSWORD = "rootroot";
 	public static final String SQL_SCRIPT_PATH = "../PwServer/database.sql";
-	
+
 	public AbstractClientLibTest() {
 
 	}
@@ -75,21 +70,14 @@ public abstract class AbstractClientLibTest {
 
 		// Exctute script
 		sr.runScript(reader);
-		
+
 		System.setOut(originalStream);
+
+		jdbcConnection.close();
 	}
 
 	protected abstract void populate(); // each test adds its own data
 
 	protected abstract void after();
-	
-	public String genInvalidTS(){
-		Calendar calendar = Calendar.getInstance();
-	    calendar.setTime(new Date());
-	    calendar.add(Calendar.HOUR, 3);
-	    Timestamp timestamp = new Timestamp(calendar.getTimeInMillis());		    
-		return timestamp.toString();
-	}
-
 
 }
