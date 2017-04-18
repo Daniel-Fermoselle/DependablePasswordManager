@@ -40,7 +40,7 @@ public class UserResource {
                     .header(NONCE_HEADER_NAME, response[1])
                     .build();
             System.out.println("dnjasodnasno: " + res.toString());
-            asyncResponse.resume("POG");
+            asyncResponse.resume(res);
         } catch (Exception e ){
             e.printStackTrace();
         }
