@@ -13,6 +13,8 @@ import java.security.cert.Certificate;
 import java.util.Set;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
@@ -91,8 +93,13 @@ public class ClientLib {
 	public void register_user() {
 		for (String alias : serversPubKey.keySet()) {
 			String[] infoToSend = prepareForRegisterUser(alias);
-			Response response = sendRegisterUser(infoToSend, alias);
-			processRegisterUser(response, alias);
+			Future<Response> response = sendRegisterUser(infoToSend, alias);
+			try {
+				processRegisterUser(response.get(), alias);
+			} catch (InterruptedException | ExecutionException e) {
+				e.printStackTrace();
+				throw new RuntimeException(e.getMessage());
+			}
 		}
 	}
 
@@ -119,10 +126,22 @@ public class ClientLib {
 		}
 	}
 
-	public Response sendRegisterUser(String[] infoToSend, String alias) {
+	public Future<Response> sendRegisterUser(String[] infoToSend, String alias) {
 		return getWebTargetToResource(alias, USERS_URI).request().header(SIGNATURE_HEADER_NAME, infoToSend[0])
-				.header(PUBLIC_KEY_HEADER_NAME, infoToSend[1]).header(NONCE_HEADER_NAME, infoToSend[2])
-				.post(Entity.json(null));
+				.header(PUBLIC_KEY_HEADER_NAME, infoToSend[1]).header(NONCE_HEADER_NAME, infoToSend[2]).async()
+				.post(Entity.json(null), new InvocationCallback<Response>() {
+					@Override
+					public void completed(Response response) {
+						System.out.println("Response status code "
+								+ response.getStatus() + " received.");
+					}
+
+					@Override
+					public void failed(Throwable throwable) {
+						System.out.println("Invocation failed.");
+						throwable.printStackTrace();
+					}
+				});
 	}
 
 	public void processRegisterUser(Response postResponse, String alias) {

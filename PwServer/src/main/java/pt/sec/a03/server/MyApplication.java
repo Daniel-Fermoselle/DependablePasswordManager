@@ -10,7 +10,6 @@ public class MyApplication{
 	
 	public static String PORT;
 
-
 	public static void main(String[] args) throws Exception{
 		Closeable server = null;
 	    try {
@@ -29,7 +28,7 @@ public class MyApplication{
 	                server.close();
 	            }
 	        } finally {
-	            ;
+
 	        }
 	    }
 	}
