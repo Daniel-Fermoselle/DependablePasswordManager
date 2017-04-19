@@ -7,6 +7,7 @@ import java.security.PublicKey;
 import java.security.cert.Certificate;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Future;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.core.Response;
@@ -84,8 +85,8 @@ public class RegisterUserTest extends AbstractClientLibTest {
 		try {
 			String[] infoToSend = c1.prepareForRegisterUser(alias);
 			infoToSend[0] ="pohsdadwqdwdwdqwdqwdqws";
-			Response postReponse = c1.sendRegisterUser(infoToSend, alias);
-			c1.processRegisterUser(postReponse, alias);
+			Future<Response> postReponse = c1.sendRegisterUser(infoToSend, alias);
+			c1.processRegisterUser(postReponse.get(), alias);
 			fail("This test should fail with exception BadRequestException");
 		} catch (BadRequestException e) {
 
@@ -102,8 +103,8 @@ public class RegisterUserTest extends AbstractClientLibTest {
 		try {
 			String[] infoToSend = c1.prepareForRegisterUser(alias);
 			infoToSend[1] ="pohsdadwqdwdwdqwdqwdqws";
-			Response postReponse = c1.sendRegisterUser(infoToSend, alias);
-			c1.processRegisterUser(postReponse, alias);
+			Future<Response> postReponse = c1.sendRegisterUser(infoToSend, alias);
+			c1.processRegisterUser(postReponse.get(), alias);
 			fail("This test should fail with exception BadRequestException");
 		} catch (BadRequestException e) {
 
@@ -124,8 +125,8 @@ public class RegisterUserTest extends AbstractClientLibTest {
 			String stringNonce = 31321 + "";
 			byte[] cipheredNonce = Crypto.cipherString(stringNonce, serverPub);
 			infoToSend[2] = Crypto.encode(cipheredNonce);
-			Response postReponse = c1.sendRegisterUser(infoToSend, alias);
-			c1.processRegisterUser(postReponse, alias);
+			Future<Response> postReponse = c1.sendRegisterUser(infoToSend, alias);
+			c1.processRegisterUser(postReponse.get(), alias);
 			fail("This test should fail with exception BadRequestException");
 		} catch (BadRequestException e) {
 

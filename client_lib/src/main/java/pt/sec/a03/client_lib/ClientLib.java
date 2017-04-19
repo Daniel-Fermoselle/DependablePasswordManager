@@ -127,9 +127,11 @@ public class ClientLib {
 	}
 
 	public Future<Response> sendRegisterUser(String[] infoToSend, String alias) {
-		return getWebTargetToResource(alias, USERS_URI).request().header(SIGNATURE_HEADER_NAME, infoToSend[0])
-				.header(PUBLIC_KEY_HEADER_NAME, infoToSend[1]).header(NONCE_HEADER_NAME, infoToSend[2]).async()
-				.post(Entity.json(null), new InvocationCallback<Response>() {
+		return getWebTargetToResource(alias, USERS_URI).request()
+				.header(SIGNATURE_HEADER_NAME, infoToSend[0])
+				.header(PUBLIC_KEY_HEADER_NAME, infoToSend[1])
+				.header(NONCE_HEADER_NAME, infoToSend[2])
+				.async().post(Entity.json(null), new InvocationCallback<Response>() {
 					@Override
 					public void completed(Response response) {
 						System.out.println("Response status code "
@@ -387,11 +389,10 @@ public class ClientLib {
 		}
 	}
 
-	public void close() {
-	}
+	public void close() {}
 
 	private void readKeysFromKeyStore(KeyStore ks, String keyStorePw, String aliasForPubPrivKey,
-			Set<String> aliasForServers) {
+									  Set<String> aliasForServers) {
 		try {
 
 			Certificate cert = ks.getCertificate(aliasForPubPrivKey);
@@ -419,8 +420,28 @@ public class ClientLib {
 		try {
 			String stringPubKey = Crypto.encode(cliPubKey.getEncoded());
 
-			Response response = getWebTargetToResource(alias, USERS_URI).request()
-					.header(PUBLIC_KEY_HEADER_NAME, stringPubKey).get();
+			Future<Response> responses = getWebTargetToResource(alias, USERS_URI).request()
+					.header(PUBLIC_KEY_HEADER_NAME, stringPubKey).async().get(new InvocationCallback<Response>() {
+						@Override
+						public void completed(Response response) {
+							System.out.println("Response status code "
+									+ response.getStatus() + " received.");
+						}
+
+						@Override
+						public void failed(Throwable throwable) {
+							System.out.println("Invocation failed.");
+							throwable.printStackTrace();
+						}
+					});
+
+			Response response = null;
+			try {
+				response = responses.get();
+			} catch (InterruptedException | ExecutionException e) {
+				e.printStackTrace();
+				throw new RuntimeException(e.getMessage());
+			}
 
 			String stringNonceCiph = response.getHeaderString(NONCE_HEADER_NAME);
 			String stringSig = response.getHeaderString(SIGNATURE_HEADER_NAME);

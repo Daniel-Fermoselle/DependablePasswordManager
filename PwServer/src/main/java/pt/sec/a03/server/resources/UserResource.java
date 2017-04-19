@@ -29,32 +29,31 @@ public class UserResource {
 
     @POST
     @ManagedAsync
-    public void addUser(@Suspended final AsyncResponse asyncResponse, @HeaderParam(PUBLIC_KEY_HEADER_NAME) String publicKey,
+    public void addUser(@Suspended final AsyncResponse asyncResponse,
+                        @HeaderParam(PUBLIC_KEY_HEADER_NAME) String publicKey,
                         @HeaderParam(SIGNATURE_HEADER_NAME) String signature,
                         @HeaderParam(NONCE_HEADER_NAME) String nonce) {
-        try {
-            System.out.println("Received Post packet addUser");
-            String[] response = userService.addUser(publicKey, signature, nonce);
-            Response res = Response.status(Status.CREATED)
-                    .header(SIGNATURE_HEADER_NAME, response[0])
-                    .header(NONCE_HEADER_NAME, response[1])
-                    .build();
-            System.out.println("dnjasodnasno: " + res.toString());
-            asyncResponse.resume(res);
-        } catch (Exception e ){
-            e.printStackTrace();
-        }
+        System.out.println("Received Post packet addUser");
+
+        String[] response = userService.addUser(publicKey, signature, nonce);
+        asyncResponse.resume(Response.status(Status.CREATED)
+                .header(SIGNATURE_HEADER_NAME, response[0])
+                .header(NONCE_HEADER_NAME, response[1])
+                .build());
+
     }
 
     @GET
-    public Response getUserMetaInfo(@HeaderParam("public-key") String publicKey) {
+    @ManagedAsync
+    public void getUserMetaInfo(@Suspended final AsyncResponse asyncResponse,
+                                @HeaderParam("public-key") String publicKey) {
         System.out.println("Received Get packet getMetainfo");
 
         String[] response = userService.getUserMetaInfo(publicKey);
-        return Response.status(Status.OK)
+         asyncResponse.resume(Response.status(Status.OK)
                 .header(NONCE_HEADER_NAME, response[0])
                 .header(SIGNATURE_HEADER_NAME, response[1])
-                .build();
+                .build());
     }
 
 }
