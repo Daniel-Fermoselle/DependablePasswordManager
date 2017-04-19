@@ -6,12 +6,15 @@ import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.container.AsyncResponse;
+import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
+import org.glassfish.jersey.server.ManagedAsync;
 import pt.sec.a03.common_classes.CommonTriplet;
 import pt.sec.a03.server.MyApplication;
 import pt.sec.a03.server.domain.Triplet;
@@ -32,23 +35,27 @@ public class VaultResource {
     private VaultService vaultService = new VaultService();
 
     @POST
-    public Response addPassword(@HeaderParam(PUBLIC_KEY_HEADER_NAME) String publicKey,
-                                @HeaderParam(SIGNATURE_HEADER_NAME) String signature,
-                                @HeaderParam(NONCE_HEADER_NAME) String nonce,
-                                @HeaderParam(HASH_PASSWORD_HEADER_NAME) String hashPw,
-                                Triplet t, @Context UriInfo uriInfo) {
+    @ManagedAsync
+    public void addPassword(@Suspended final AsyncResponse asyncResponse,
+                            @HeaderParam(PUBLIC_KEY_HEADER_NAME) String publicKey,
+                            @HeaderParam(SIGNATURE_HEADER_NAME) String signature,
+                            @HeaderParam(NONCE_HEADER_NAME) String nonce,
+                            @HeaderParam(HASH_PASSWORD_HEADER_NAME) String hashPw,
+                            Triplet t, @Context UriInfo uriInfo) {
 
         System.out.println("Received Post packet addPassword");
-		String[] response = vaultService.put(publicKey, signature, nonce, hashPw, t.getPassword(), t.getUsername(), t.getDomain());
+        String[] response = vaultService.put(publicKey, signature, nonce, hashPw, t.getPassword(), t.getUsername(), t.getDomain());
 
-        return Response.status(Status.CREATED)
-				.header(SIGNATURE_HEADER_NAME, response[0])
-				.header(NONCE_HEADER_NAME, response[1])
-                .build();
+        asyncResponse.resume(Response.status(Status.CREATED)
+                .header(SIGNATURE_HEADER_NAME, response[0])
+                .header(NONCE_HEADER_NAME, response[1])
+                .build());
     }
 
     @GET
-    public Response getPassword(@HeaderParam(PUBLIC_KEY_HEADER_NAME) String publicKey,
+    @ManagedAsync
+    public void getPassword(@Suspended final AsyncResponse asyncResponse,
+                                @HeaderParam(PUBLIC_KEY_HEADER_NAME) String publicKey,
                                 @HeaderParam(SIGNATURE_HEADER_NAME) String stringSig,
                                 @HeaderParam(NONCE_HEADER_NAME) String nonce,
                                 @HeaderParam(DOMAIN_HEADER_NAME) String domain,
@@ -59,12 +66,11 @@ public class VaultResource {
         CommonTriplet triplet = new CommonTriplet();
         triplet.setPassword(response[3]);
 
-        return Response.status(Status.OK)
+        asyncResponse.resume(Response.status(Status.OK)
                 .header(SIGNATURE_HEADER_NAME, response[1])
                 .header(NONCE_HEADER_NAME, response[0])
                 .header(HASH_PASSWORD_HEADER_NAME, response[2])
                 .entity(triplet)
-                .build();
+                .build());
     }
-
 }

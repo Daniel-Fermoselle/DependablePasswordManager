@@ -8,6 +8,7 @@ import java.security.PublicKey;
 import java.security.cert.Certificate;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Future;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.core.Response;
@@ -190,8 +191,8 @@ public class SavePasswordTest extends AbstractClientLibTest {
 		try {
 			String[] infoToSend = c1.prepareForSave(DOMAIN_3, USERNAME_3, PASSWORD_3, alias);
 			infoToSend[1] = FAKE_SIGNATURE;
-			Response response = c1.sendSavePassword(infoToSend, alias);
-			c1.processSavePassword(response, alias);
+			Future<Response> response = c1.sendSavePassword(infoToSend, alias);
+			c1.processSavePassword(response.get(), alias);
 			fail("This test should fail with exception BadRequestException");
 		} catch (BadRequestException e) {
 
@@ -214,8 +215,8 @@ public class SavePasswordTest extends AbstractClientLibTest {
 			byte[] cipheredNonce = Crypto.cipherString(stringNonce, serverPub);
 			infoToSend[2] = Crypto.encode(cipheredNonce);
 
-			Response response = c1.sendSavePassword(infoToSend, alias);
-			c1.processSavePassword(response, alias);
+			Future<Response> response = c1.sendSavePassword(infoToSend, alias);
+			c1.processSavePassword(response.get(), alias);
 			fail("This test should fail with exception BadRequestException");
 		} catch (BadRequestException e) {
 
@@ -232,8 +233,8 @@ public class SavePasswordTest extends AbstractClientLibTest {
 		try {
 			String[] infoToSend = c1.prepareForSave(DOMAIN_3, USERNAME_3, PASSWORD_3, alias);
 			infoToSend[3] = FAKE_HASH;
-			Response response = c1.sendSavePassword(infoToSend, alias);
-			c1.processSavePassword(response, alias);
+			Future<Response> response = c1.sendSavePassword(infoToSend, alias);
+			c1.processSavePassword(response.get(), alias);
 			fail("This test should fail with exception BadRequestException");
 		} catch (BadRequestException e) {
 
@@ -250,8 +251,8 @@ public class SavePasswordTest extends AbstractClientLibTest {
 		try {
 			String[] infoToSend = c1.prepareForSave(DOMAIN_3, USERNAME_3, PASSWORD_3, alias);
 			infoToSend[5] = FAKE_DOMAIN;
-			Response response = c1.sendSavePassword(infoToSend, alias);
-			c1.processSavePassword(response, alias);
+			Future<Response> response = c1.sendSavePassword(infoToSend, alias);
+			c1.processSavePassword(response.get(), alias);
 			fail("This test should fail with exception BadRequestException");
 		} catch (BadRequestException e) {
 

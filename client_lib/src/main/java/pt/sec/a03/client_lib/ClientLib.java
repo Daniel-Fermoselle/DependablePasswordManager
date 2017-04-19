@@ -134,13 +134,13 @@ public class ClientLib {
 				.async().post(Entity.json(null), new InvocationCallback<Response>() {
 					@Override
 					public void completed(Response response) {
-						System.out.println("Response status code "
+						System.out.println("Response of register user status code "
 								+ response.getStatus() + " received.");
 					}
 
 					@Override
 					public void failed(Throwable throwable) {
-						System.out.println("Invocation failed.");
+						System.out.println("Invocation failed in resgister user.");
 						throwable.printStackTrace();
 					}
 				});
@@ -190,8 +190,13 @@ public class ClientLib {
 
 		for (String alias : serversPubKey.keySet()) {
 			String[] infoToSend = prepareForSave(domain, username, password, alias);
-			Response response = sendSavePassword(infoToSend, alias);
-			processSavePassword(response, alias);
+			Future<Response> response = sendSavePassword(infoToSend, alias);
+			try {
+				processSavePassword(response.get(), alias);
+			} catch (InterruptedException | ExecutionException e) {
+				e.printStackTrace();
+				throw new RuntimeException(e.getMessage());
+			}
 		}
 	}
 
@@ -242,11 +247,26 @@ public class ClientLib {
 		}
 	}
 
-	public Response sendSavePassword(String[] infoToSend, String alias) {
+	public Future<Response> sendSavePassword(String[] infoToSend, String alias) {
 		CommonTriplet commonTriplet = new CommonTriplet(infoToSend[4], infoToSend[5], infoToSend[6]);
-		return getWebTargetToResource(alias, VAULT_URI).request().header(PUBLIC_KEY_HEADER_NAME, infoToSend[0])
-				.header(SIGNATURE_HEADER_NAME, infoToSend[1]).header(NONCE_HEADER_NAME, infoToSend[2])
-				.header(HASH_PASSWORD_HEADER_NAME, infoToSend[3]).post(Entity.json(commonTriplet));
+		return getWebTargetToResource(alias, VAULT_URI).request()
+				.header(PUBLIC_KEY_HEADER_NAME, infoToSend[0])
+				.header(SIGNATURE_HEADER_NAME, infoToSend[1])
+				.header(NONCE_HEADER_NAME, infoToSend[2])
+				.header(HASH_PASSWORD_HEADER_NAME, infoToSend[3])
+				.async().post(Entity.json(commonTriplet), new InvocationCallback<Response>() {
+					@Override
+					public void completed(Response response) {
+						System.out.println("Response of save password status code "
+								+ response.getStatus() + " received.");
+					}
+
+					@Override
+					public void failed(Throwable throwable) {
+						System.out.println("Invocation failed in save password.");
+						throwable.printStackTrace();
+					}
+				});
 	}
 
 	public void processSavePassword(Response postResponse, String alias) {
@@ -291,8 +311,13 @@ public class ClientLib {
 		}
 		for (String alias : serversPubKey.keySet()) {
 			String[] infoToSend = prepareForRetrievePassword(domain, username, alias);
-			Response response = sendRetrievePassword(infoToSend, alias);
-			return processRetrievePassword(response, alias);
+			Future<Response> response = sendRetrievePassword(infoToSend, alias);
+			try {
+				return processRetrievePassword(response.get(), alias);
+			} catch (InterruptedException | ExecutionException e) {
+				e.printStackTrace();
+				throw new RuntimeException(e.getMessage());
+			}
 		}
 		throw new RuntimeException("Error throw reached in retrive_password");
 	}
@@ -331,11 +356,27 @@ public class ClientLib {
 		}
 	}
 
-	public Response sendRetrievePassword(String[] infoToSend, String alias) {
+	public Future<Response> sendRetrievePassword(String[] infoToSend, String alias) {
 
-		return getWebTargetToResource(alias, VAULT_URI).request().header(PUBLIC_KEY_HEADER_NAME, infoToSend[0])
-				.header(SIGNATURE_HEADER_NAME, infoToSend[1]).header(NONCE_HEADER_NAME, infoToSend[2])
-				.header(DOMAIN_HEADER_NAME, infoToSend[3]).header(USERNAME_HEADER_NAME, infoToSend[4]).get();
+		return getWebTargetToResource(alias, VAULT_URI).request()
+				.header(PUBLIC_KEY_HEADER_NAME, infoToSend[0])
+				.header(SIGNATURE_HEADER_NAME, infoToSend[1])
+				.header(NONCE_HEADER_NAME, infoToSend[2])
+				.header(DOMAIN_HEADER_NAME, infoToSend[3])
+				.header(USERNAME_HEADER_NAME, infoToSend[4])
+				.async().get(new InvocationCallback<Response>() {
+					@Override
+					public void completed(Response response) {
+						System.out.println("Response of retrieve password status code "
+								+ response.getStatus() + " received.");
+					}
+
+					@Override
+					public void failed(Throwable throwable) {
+						System.out.println("Invocation failed in retrieve password.");
+						throwable.printStackTrace();
+					}
+				});
 	}
 
 	public String processRetrievePassword(Response getResponse, String alias) {
