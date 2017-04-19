@@ -44,22 +44,15 @@
 			<artifactId>ibatis-sqlmap</artifactId>
 			<version>3.0-beta-10</version>
 		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.glassfish.jersey.containers/jersey-container-grizzly2-http -->
 		<dependency>
-			<groupId>com.sun.jersey</groupId>
-			<artifactId>jersey-core</artifactId>
-			<version>1.10</version>
+			<groupId>org.glassfish.jersey.containers</groupId>
+			<artifactId>jersey-container-grizzly2-http</artifactId>
+			<version>2.25</version>
 		</dependency>
-		<dependency>
-			<groupId>com.sun.jersey</groupId>
-			<artifactId>jersey-grizzly2</artifactId>
-			<version>1.10</version>
-		</dependency>
-		<!-- https://mvnrepository.com/artifact/com.sun.jersey.contribs/jersey-simple-server -->
-		<dependency>
-			<groupId>com.sun.jersey.contribs</groupId>
-			<artifactId>jersey-simple-server</artifactId>
-			<version>1.9.1</version>
-		</dependency>
+
+
+
 
 	</dependencies>
 

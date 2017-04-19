@@ -8,6 +8,7 @@ import java.security.PublicKey;
 import java.security.cert.Certificate;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Future;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.core.Response;
@@ -211,8 +212,8 @@ public class RetrievePasswordTest extends AbstractClientLibTest {
 		try {
 			String[] infoToSend = c1.prepareForRetrievePassword(DOMAIN_1, USERNAME_1, alias);
 			infoToSend[1] = FAKE_SIGNATURE;
-			Response response = c1.sendRetrievePassword(infoToSend, alias);
-			c1.processRetrievePassword(response, alias);
+			Future<Response> response = c1.sendRetrievePassword(infoToSend, alias);
+			c1.processRetrievePassword(response.get(), alias);
 			fail("This test should fail with exception BadRequestException");
 		} catch (BadRequestException e) {
 
@@ -235,8 +236,8 @@ public class RetrievePasswordTest extends AbstractClientLibTest {
 			byte[] cipheredNonce = Crypto.cipherString(stringNonce, serverPub);
 			infoToSend[2] = Crypto.encode(cipheredNonce);
 
-			Response response = c1.sendRetrievePassword(infoToSend, alias);
-			c1.processRetrievePassword(response, alias);
+			Future<Response> response = c1.sendRetrievePassword(infoToSend, alias);
+			c1.processRetrievePassword(response.get(), alias);
 			fail("This test should fail with exception BadRequestException");
 		} catch (BadRequestException e) {
 
@@ -252,9 +253,10 @@ public class RetrievePasswordTest extends AbstractClientLibTest {
 	public void test11_retrivePassword() {
 		try {
 			String[] infoToSend = c1.prepareForRetrievePassword(DOMAIN_1, USERNAME_1, alias);
-			Response response = c1.sendRetrievePassword(infoToSend, alias);
-			response.getHeaders().putSingle(SIGNATURE_HEADER_NAME, FAKE_SIGNATURE);
-			c1.processRetrievePassword(response, alias);
+			Future<Response> response = c1.sendRetrievePassword(infoToSend, alias);
+			Response res = response.get();
+			res.getHeaders().putSingle(SIGNATURE_HEADER_NAME, FAKE_SIGNATURE);
+			c1.processRetrievePassword(res, alias);
 			fail("This test should fail with exception InvalidSignatureException");
 		} catch (InvalidSignatureException e) {
 
@@ -270,7 +272,8 @@ public class RetrievePasswordTest extends AbstractClientLibTest {
 	public void test12_retrivePassword() {
 		try {
 			String[] infoToSend = c1.prepareForRetrievePassword(DOMAIN_1, USERNAME_1, alias);
-			Response response = c1.sendRetrievePassword(infoToSend, alias);
+			Future<Response> response = c1.sendRetrievePassword(infoToSend, alias);
+			Response res = response.get();
 
 			Certificate cert2 = ks1.getCertificate(KEY_STORE_ALIAS_FOR_PUB_PRIV_1);
 			PublicKey clientPub = Crypto.getPublicKeyFromCertificate(cert2);
@@ -279,8 +282,8 @@ public class RetrievePasswordTest extends AbstractClientLibTest {
 			byte[] cipheredNonce = Crypto.cipherString(stringNonce, clientPub);
 			String invalidNonce = Crypto.encode(cipheredNonce);
 
-			response.getHeaders().putSingle(NONCE_HEADER_NAME, invalidNonce);
-			c1.processRetrievePassword(response, alias);
+			res.getHeaders().putSingle(NONCE_HEADER_NAME, invalidNonce);
+			c1.processRetrievePassword(res, alias);
 			fail("This test should fail with exception InvalidTimestampException");
 		} catch (InvalidTimestampException e) {
 
@@ -297,8 +300,8 @@ public class RetrievePasswordTest extends AbstractClientLibTest {
 		try {
 			String[] infoToSend = c1.prepareForRetrievePassword(DOMAIN_1, USERNAME_1, alias);
 			infoToSend[3] = FAKE_HASH;
-			Response response = c1.sendRetrievePassword(infoToSend, alias);
-			c1.processRetrievePassword(response, alias);
+			Future<Response> response = c1.sendRetrievePassword(infoToSend, alias);
+			c1.processRetrievePassword(response.get(), alias);
 			fail("This test should fail with exception BadRequestException");
 		} catch (BadRequestException e) {
 

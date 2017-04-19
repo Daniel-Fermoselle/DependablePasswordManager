@@ -13,6 +13,8 @@ import java.security.cert.Certificate;
 import java.util.Set;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
@@ -91,8 +93,13 @@ public class ClientLib {
 	public void register_user() {
 		for (String alias : serversPubKey.keySet()) {
 			String[] infoToSend = prepareForRegisterUser(alias);
-			Response response = sendRegisterUser(infoToSend, alias);
-			processRegisterUser(response, alias);
+			Future<Response> response = sendRegisterUser(infoToSend, alias);
+			try {
+				processRegisterUser(response.get(), alias);
+			} catch (InterruptedException | ExecutionException e) {
+				e.printStackTrace();
+				throw new RuntimeException(e.getMessage());
+			}
 		}
 	}
 
@@ -119,10 +126,24 @@ public class ClientLib {
 		}
 	}
 
-	public Response sendRegisterUser(String[] infoToSend, String alias) {
-		return getWebTargetToResource(alias, USERS_URI).request().header(SIGNATURE_HEADER_NAME, infoToSend[0])
-				.header(PUBLIC_KEY_HEADER_NAME, infoToSend[1]).header(NONCE_HEADER_NAME, infoToSend[2])
-				.post(Entity.json(null));
+	public Future<Response> sendRegisterUser(String[] infoToSend, String alias) {
+		return getWebTargetToResource(alias, USERS_URI).request()
+				.header(SIGNATURE_HEADER_NAME, infoToSend[0])
+				.header(PUBLIC_KEY_HEADER_NAME, infoToSend[1])
+				.header(NONCE_HEADER_NAME, infoToSend[2])
+				.async().post(Entity.json(null), new InvocationCallback<Response>() {
+					@Override
+					public void completed(Response response) {
+						System.out.println("Response of register user status code "
+								+ response.getStatus() + " received.");
+					}
+
+					@Override
+					public void failed(Throwable throwable) {
+						System.out.println("Invocation failed in resgister user.");
+						throwable.printStackTrace();
+					}
+				});
 	}
 
 	public void processRegisterUser(Response postResponse, String alias) {
@@ -169,8 +190,13 @@ public class ClientLib {
 
 		for (String alias : serversPubKey.keySet()) {
 			String[] infoToSend = prepareForSave(domain, username, password, alias);
-			Response response = sendSavePassword(infoToSend, alias);
-			processSavePassword(response, alias);
+			Future<Response> response = sendSavePassword(infoToSend, alias);
+			try {
+				processSavePassword(response.get(), alias);
+			} catch (InterruptedException | ExecutionException e) {
+				e.printStackTrace();
+				throw new RuntimeException(e.getMessage());
+			}
 		}
 	}
 
@@ -221,11 +247,26 @@ public class ClientLib {
 		}
 	}
 
-	public Response sendSavePassword(String[] infoToSend, String alias) {
+	public Future<Response> sendSavePassword(String[] infoToSend, String alias) {
 		CommonTriplet commonTriplet = new CommonTriplet(infoToSend[4], infoToSend[5], infoToSend[6]);
-		return getWebTargetToResource(alias, VAULT_URI).request().header(PUBLIC_KEY_HEADER_NAME, infoToSend[0])
-				.header(SIGNATURE_HEADER_NAME, infoToSend[1]).header(NONCE_HEADER_NAME, infoToSend[2])
-				.header(HASH_PASSWORD_HEADER_NAME, infoToSend[3]).post(Entity.json(commonTriplet));
+		return getWebTargetToResource(alias, VAULT_URI).request()
+				.header(PUBLIC_KEY_HEADER_NAME, infoToSend[0])
+				.header(SIGNATURE_HEADER_NAME, infoToSend[1])
+				.header(NONCE_HEADER_NAME, infoToSend[2])
+				.header(HASH_PASSWORD_HEADER_NAME, infoToSend[3])
+				.async().post(Entity.json(commonTriplet), new InvocationCallback<Response>() {
+					@Override
+					public void completed(Response response) {
+						System.out.println("Response of save password status code "
+								+ response.getStatus() + " received.");
+					}
+
+					@Override
+					public void failed(Throwable throwable) {
+						System.out.println("Invocation failed in save password.");
+						throwable.printStackTrace();
+					}
+				});
 	}
 
 	public void processSavePassword(Response postResponse, String alias) {
@@ -270,8 +311,13 @@ public class ClientLib {
 		}
 		for (String alias : serversPubKey.keySet()) {
 			String[] infoToSend = prepareForRetrievePassword(domain, username, alias);
-			Response response = sendRetrievePassword(infoToSend, alias);
-			return processRetrievePassword(response, alias);
+			Future<Response> response = sendRetrievePassword(infoToSend, alias);
+			try {
+				return processRetrievePassword(response.get(), alias);
+			} catch (InterruptedException | ExecutionException e) {
+				e.printStackTrace();
+				throw new RuntimeException(e.getMessage());
+			}
 		}
 		throw new RuntimeException("Error throw reached in retrive_password");
 	}
@@ -310,11 +356,27 @@ public class ClientLib {
 		}
 	}
 
-	public Response sendRetrievePassword(String[] infoToSend, String alias) {
+	public Future<Response> sendRetrievePassword(String[] infoToSend, String alias) {
 
-		return getWebTargetToResource(alias, VAULT_URI).request().header(PUBLIC_KEY_HEADER_NAME, infoToSend[0])
-				.header(SIGNATURE_HEADER_NAME, infoToSend[1]).header(NONCE_HEADER_NAME, infoToSend[2])
-				.header(DOMAIN_HEADER_NAME, infoToSend[3]).header(USERNAME_HEADER_NAME, infoToSend[4]).get();
+		return getWebTargetToResource(alias, VAULT_URI).request()
+				.header(PUBLIC_KEY_HEADER_NAME, infoToSend[0])
+				.header(SIGNATURE_HEADER_NAME, infoToSend[1])
+				.header(NONCE_HEADER_NAME, infoToSend[2])
+				.header(DOMAIN_HEADER_NAME, infoToSend[3])
+				.header(USERNAME_HEADER_NAME, infoToSend[4])
+				.async().get(new InvocationCallback<Response>() {
+					@Override
+					public void completed(Response response) {
+						System.out.println("Response of retrieve password status code "
+								+ response.getStatus() + " received.");
+					}
+
+					@Override
+					public void failed(Throwable throwable) {
+						System.out.println("Invocation failed in retrieve password.");
+						throwable.printStackTrace();
+					}
+				});
 	}
 
 	public String processRetrievePassword(Response getResponse, String alias) {
@@ -368,11 +430,10 @@ public class ClientLib {
 		}
 	}
 
-	public void close() {
-	}
+	public void close() {}
 
 	private void readKeysFromKeyStore(KeyStore ks, String keyStorePw, String aliasForPubPrivKey,
-			Set<String> aliasForServers) {
+									  Set<String> aliasForServers) {
 		try {
 
 			Certificate cert = ks.getCertificate(aliasForPubPrivKey);
@@ -400,8 +461,28 @@ public class ClientLib {
 		try {
 			String stringPubKey = Crypto.encode(cliPubKey.getEncoded());
 
-			Response response = getWebTargetToResource(alias, USERS_URI).request()
-					.header(PUBLIC_KEY_HEADER_NAME, stringPubKey).get();
+			Future<Response> responses = getWebTargetToResource(alias, USERS_URI).request()
+					.header(PUBLIC_KEY_HEADER_NAME, stringPubKey).async().get(new InvocationCallback<Response>() {
+						@Override
+						public void completed(Response response) {
+							System.out.println("Response status code "
+									+ response.getStatus() + " received.");
+						}
+
+						@Override
+						public void failed(Throwable throwable) {
+							System.out.println("Invocation failed.");
+							throwable.printStackTrace();
+						}
+					});
+
+			Response response = null;
+			try {
+				response = responses.get();
+			} catch (InterruptedException | ExecutionException e) {
+				e.printStackTrace();
+				throw new RuntimeException(e.getMessage());
+			}
 
 			String stringNonceCiph = response.getHeaderString(NONCE_HEADER_NAME);
 			String stringSig = response.getHeaderString(SIGNATURE_HEADER_NAME);
