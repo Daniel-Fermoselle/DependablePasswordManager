@@ -50,7 +50,7 @@ public class VaultService {
 	}
 
     public String[] put(String publicKey, String signature, String nonce, String hashPw, String cipherPassword,
-                    String cipheredHashUsername, String cipheredHashDomain) {
+                        String cipheredHashUsername, String cipheredHashDomain) {
 
         String stringNonce = decipherAndDecode(nonce);
 

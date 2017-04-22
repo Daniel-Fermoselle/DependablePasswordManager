@@ -12,12 +12,14 @@ public class CommonTriplet {
 	private String password;
 	private String username;
 	private String domain;
+	private String hashPassword;
 
-	public CommonTriplet(String password, String username, String domain) {
+	public CommonTriplet(String password, String username, String domain, String hashPassword) {
 		super();
 		this.password = password;
 		this.username = username;
 		this.domain = domain;
+		this.hashPassword = hashPassword;
 	}
 
 	public String getPassword() {
@@ -44,4 +46,7 @@ public class CommonTriplet {
 		this.domain = domain;
 	}
 
+	public String getHashPassword() { return hashPassword; }
+
+	public void setHashPassword(String hashPassword) { this.hashPassword = hashPassword; }
 }
