@@ -33,6 +33,7 @@ import pt.sec.a03.client_lib.exception.InvalidSignatureException;
 import pt.sec.a03.client_lib.exception.InvalidTimestampException;
 import pt.sec.a03.client_lib.exception.UnexpectedErrorExeception;
 import pt.sec.a03.client_lib.exception.UsernameAndDomainAlreadyExistException;
+import pt.sec.a03.common_classes.Bonrr;
 import pt.sec.a03.common_classes.CommonTriplet;
 import pt.sec.a03.crypto.Crypto;
 
@@ -65,6 +66,10 @@ public class ClientLib {
 	private static final String INTERNAL_SERVER_FAILURE_EXCEPTION_MSG = "There were an problem with the server";
 	private static final String UNEXPECTED_ERROR_EXCEPTION_MSG = "There was an unexpected error";
 	private static final String INVALID_ARGUMENSTS_MSG = "One of the arguments was invalid";
+	private static final String HASH_DOMAIN_IN_MAP = "domain";
+	private static final String HASH_USERNAME_IN_MAP = "username";
+	private static final String PASSWORD_IN_MAP = "password";
+	private static final String HASH_PASSWORD_IN_MAP = "hash-password";
 
 	// Attributes
 	private PublicKey cliPubKey;
@@ -73,6 +78,7 @@ public class ClientLib {
 	private Map<String, Long> nonces;
 	private Map<String, String> servers;
 	private Client client;
+	private Bonrr bonrr;
 
 	public ClientLib(Map<String, String> hosts) {
 		this.servers = hosts;
@@ -88,8 +94,13 @@ public class ClientLib {
 		for (String alias : serversPubKey.keySet()) {
 			getMetaInfo(alias);
 		}
+
+		//TODO should use value form getMetaInfo
+		bonrr = new Bonrr(cliPubKey, cliPrivKey, servers, serversPubKey, 0);
+
 	}
 
+	//TODO make majority
 	public void register_user() {
 		for (String alias : serversPubKey.keySet()) {
 			String[] infoToSend = prepareForRegisterUser(alias);
@@ -188,120 +199,36 @@ public class ClientLib {
 			throw new InvalidArgumentException(OVERSIZE_PASSWORD_MSG);
 		}
 
-		for (String alias : serversPubKey.keySet()) {
-			String[] infoToSend = prepareForSave(domain, username, password, alias);
-			Future<Response> response = sendSavePassword(infoToSend, alias);
-			try {
-				processSavePassword(response.get(), alias);
-			} catch (InterruptedException | ExecutionException e) {
-				e.printStackTrace();
-				throw new RuntimeException(e.getMessage());
-			}
-		}
+		HashMap<String, byte[]> infoToSend = prepareForSave(domain, username, password);
+		bonrr.write(infoToSend);
 	}
 
-	public String[] prepareForSave(String domain, String username, String password, String alias) {
+	public HashMap prepareForSave(String domain, String username, String password) {
 		try {
 			// --------Initial hashs and timestamp
 			byte[] hashDomain = Crypto.hashString(domain);
 			byte[] hashUsername = Crypto.hashString(username);
 			byte[] hashPassword = Crypto.hashString(password);
-			String stringNonce = nonces.get(alias) + "";
 			// --------
 
-			// ---------Creation of the string used to make the signature to use
-			// in the header
-			String stringHashDomain = new String(hashDomain);
-			String stringHashUsername = new String(hashUsername);
-
 			// --------Ciphered hashs and string conversion for them
-			byte[] cipherDomain = Crypto.cipherString(stringHashDomain, serversPubKey.get(alias));
-			byte[] cipherUsername = Crypto.cipherString(stringHashUsername, serversPubKey.get(alias));
 			byte[] cipherPassword = Crypto.cipherString(password, cliPubKey);
 			byte[] cipherHashPassword = Crypto.cipherString(new String(hashPassword), cliPrivKey);
-			byte[] cipherStringNonce = Crypto.cipherString(stringNonce, serversPubKey.get(alias));
-
-			String StringCipheredDomain = Crypto.encode(cipherDomain);
-			String StringCipheredUsername = Crypto.encode(cipherUsername);
-			String StringCipheredPassword = Crypto.encode(cipherPassword);
-			String headerHashPassword = Crypto.encode(cipherHashPassword);
-			String encodedNonce = Crypto.encode(cipherStringNonce);
 			// ---------
 
-			String dataToSign = stringHashUsername + stringHashDomain + stringNonce + headerHashPassword
-					+ StringCipheredPassword;
+			HashMap<String, byte[]> stringHashMap = new HashMap<String, byte[]>();
 
-			String sig = Crypto.encode(Crypto.makeDigitalSignature(dataToSign.getBytes(), cliPrivKey));
-			// ---------
+			stringHashMap.put(HASH_DOMAIN_IN_MAP, hashDomain);
+			stringHashMap.put(HASH_USERNAME_IN_MAP, hashUsername);
+			stringHashMap.put(PASSWORD_IN_MAP, cipherPassword);
+			stringHashMap.put(HASH_PASSWORD_IN_MAP, cipherHashPassword);
 
-			// -------
-			String stringPubKey = Crypto.encode(cliPubKey.getEncoded());
+			return stringHashMap;
 
-			return new String[] { stringPubKey, sig, encodedNonce, headerHashPassword, StringCipheredPassword,
-					StringCipheredUsername, StringCipheredDomain };
-
-		} catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException | NoSuchPaddingException
+		} catch (NoSuchAlgorithmException | InvalidKeyException  | NoSuchPaddingException
 				| IllegalBlockSizeException | BadPaddingException e) {
 			e.printStackTrace();
 			throw new RuntimeException(e.getMessage());
-		}
-	}
-
-	public Future<Response> sendSavePassword(String[] infoToSend, String alias) {
-		CommonTriplet commonTriplet = new CommonTriplet(infoToSend[4], infoToSend[5], infoToSend[6]);
-		return getWebTargetToResource(alias, VAULT_URI).request()
-				.header(PUBLIC_KEY_HEADER_NAME, infoToSend[0])
-				.header(SIGNATURE_HEADER_NAME, infoToSend[1])
-				.header(NONCE_HEADER_NAME, infoToSend[2])
-				.header(HASH_PASSWORD_HEADER_NAME, infoToSend[3])
-				.async().post(Entity.json(commonTriplet), new InvocationCallback<Response>() {
-					@Override
-					public void completed(Response response) {
-						System.out.println("Response of save password status code "
-								+ response.getStatus() + " received.");
-					}
-
-					@Override
-					public void failed(Throwable throwable) {
-						System.out.println("Invocation failed in save password.");
-						throwable.printStackTrace();
-					}
-				});
-	}
-
-	public void processSavePassword(Response postResponse, String alias) {
-		if (postResponse.getStatus() == 201) {
-			String sigToVerify = postResponse.getHeaderString(SIGNATURE_HEADER_NAME);
-			String encodedNonce = postResponse.getHeaderString(NONCE_HEADER_NAME);
-			try {
-
-				String stringNonce = Crypto.decipherString(Crypto.decode(encodedNonce), cliPrivKey);
-				verifyNonce(stringNonce, alias);
-
-				String sig = stringNonce;
-				verifySignature(serversPubKey.get(alias), sigToVerify, sig);
-
-			} catch (NoSuchAlgorithmException | InvalidKeyException | NoSuchPaddingException | IllegalBlockSizeException
-					| BadPaddingException e) {
-				throw new BadRequestException(e.getMessage());
-			}
-			System.out.println(SUCCESS_MSG);
-
-		} else if (postResponse.getStatus() == 400) {
-			System.out.println(BAD_REQUEST_MSG);
-			throw new BadRequestException(BAD_REQUEST_EXCEPTION_MSG);
-		} else if (postResponse.getStatus() == 403) {
-			System.out.println(FORBIDEN_MSG);
-			throw new UsernameAndDomainAlreadyExistException("This combination of username and domain already exists");
-		} else if (postResponse.getStatus() == 404) {
-			System.out.println(DATA_NOT_FOUND_MSG);
-			throw new DataNotFoundException("This public key is not registered in the server");
-		} else if (postResponse.getStatus() == 500) {
-			System.out.println(SERVER_ERROR_MSG);
-			throw new InternalServerErrorException(INTERNAL_SERVER_FAILURE_EXCEPTION_MSG);
-		} else {
-			System.out.println(ELSE_MSG);
-			throw new UnexpectedErrorExeception(UNEXPECTED_ERROR_EXCEPTION_MSG);
 		}
 	}
 
@@ -309,124 +236,27 @@ public class ClientLib {
 		if (domain == null || username == null) {
 			throw new InvalidArgumentException(NULL_ARGUMENSTS_MSG);
 		}
-		for (String alias : serversPubKey.keySet()) {
-			String[] infoToSend = prepareForRetrievePassword(domain, username, alias);
-			Future<Response> response = sendRetrievePassword(infoToSend, alias);
-			try {
-				return processRetrievePassword(response.get(), alias);
-			} catch (InterruptedException | ExecutionException e) {
-				e.printStackTrace();
-				throw new RuntimeException(e.getMessage());
-			}
-		}
-		throw new RuntimeException("Error throw reached in retrive_password");
+		HashMap<String, byte[]> infoToSend = prepareForRetrievePassword(domain, username);
+		String pass = bonrr.read(infoToSend);
+		return pass;
 	}
 
-	public String[] prepareForRetrievePassword(String domain, String username, String alias) {
+	public HashMap prepareForRetrievePassword(String domain, String username) {
 		try {
 			// Hash domain and username
 			byte[] hashDomain = Crypto.hashString(domain);
 			byte[] hashUsername = Crypto.hashString(username);
-			String stringHashDomain = new String(hashDomain);
-			String stringHashUsername = new String(hashUsername);
 
-			// Generate timestamp
-			String stringNonce = nonces.get(alias) + "";
+			HashMap<String, byte[]> stringHashMap = new HashMap<String, byte[]>();
 
-			// Cipher domain and username hash with server public key
-			byte[] cipheredDomain = Crypto.cipherString(stringHashDomain, serversPubKey.get(alias));
-			byte[] cipheredUsername = Crypto.cipherString(stringHashUsername, serversPubKey.get(alias));
-			byte[] cipheredNonce = Crypto.cipherString(stringNonce, serversPubKey.get(alias));
-			String encodedDomain = Crypto.encode(cipheredDomain);
-			String encodedUsername = Crypto.encode(cipheredUsername);
-			String encodeNonce = Crypto.encode(cipheredNonce);
+			stringHashMap.put(HASH_DOMAIN_IN_MAP, hashDomain);
+			stringHashMap.put(HASH_USERNAME_IN_MAP, hashUsername);
 
-			// Generate signature
-			String tosign = stringHashUsername + stringHashDomain + stringNonce;
-			String sig = Crypto.encode(Crypto.makeDigitalSignature(tosign.getBytes(), cliPrivKey));
+			return stringHashMap;
 
-			String stringPubKey = Crypto.encode(cliPubKey.getEncoded());
-
-			return new String[] { stringPubKey, sig, encodeNonce, encodedDomain, encodedUsername };
-
-		} catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException | NoSuchPaddingException
-				| IllegalBlockSizeException | BadPaddingException e) {
+		} catch (NoSuchAlgorithmException e) {
 			e.printStackTrace();
 			throw new RuntimeException(e.getMessage());
-		}
-	}
-
-	public Future<Response> sendRetrievePassword(String[] infoToSend, String alias) {
-
-		return getWebTargetToResource(alias, VAULT_URI).request()
-				.header(PUBLIC_KEY_HEADER_NAME, infoToSend[0])
-				.header(SIGNATURE_HEADER_NAME, infoToSend[1])
-				.header(NONCE_HEADER_NAME, infoToSend[2])
-				.header(DOMAIN_HEADER_NAME, infoToSend[3])
-				.header(USERNAME_HEADER_NAME, infoToSend[4])
-				.async().get(new InvocationCallback<Response>() {
-					@Override
-					public void completed(Response response) {
-						System.out.println("Response of retrieve password status code "
-								+ response.getStatus() + " received.");
-					}
-
-					@Override
-					public void failed(Throwable throwable) {
-						System.out.println("Invocation failed in retrieve password.");
-						throwable.printStackTrace();
-					}
-				});
-	}
-
-	public String processRetrievePassword(Response getResponse, String alias) {
-		try {
-
-			if (getResponse.getStatus() == 400) {
-				System.out.println(BAD_REQUEST_MSG);
-				throw new BadRequestException(BAD_REQUEST_EXCEPTION_MSG);
-			} else if (getResponse.getStatus() == 403) {
-				System.out.println(FORBIDEN_MSG);
-				throw new IllegalAccessExistException("This combination of username and domain already exists");
-			} else if (getResponse.getStatus() == 404) {
-				System.out.println(DATA_NOT_FOUND_MSG);
-				throw new DataNotFoundException("This public key is not registered in the server");
-			} else if (getResponse.getStatus() == 500) {
-				System.out.println(SERVER_ERROR_MSG);
-				throw new InternalServerErrorException(INTERNAL_SERVER_FAILURE_EXCEPTION_MSG);
-			}
-
-			// Decipher password
-			String passwordReceived = getResponse.readEntity(CommonTriplet.class).getPassword();
-			String password = Crypto.decipherString(Crypto.decode(passwordReceived), cliPrivKey);
-
-			// Get headers info
-			String sigToVerify = getResponse.getHeaderString(SIGNATURE_HEADER_NAME);
-			String stringNonceCiph = getResponse.getHeaderString(NONCE_HEADER_NAME);
-			String encodedHashReceived = getResponse.getHeaderString(HASH_PASSWORD_HEADER_NAME);
-
-			// Check nonce freshness
-			String stringNonce = Crypto.decipherString(Crypto.decode(stringNonceCiph), cliPrivKey);
-			verifyNonce(stringNonce, alias);
-
-			// Verify signature
-			String sig = stringNonce + encodedHashReceived + passwordReceived;
-			verifySignature(serversPubKey.get(alias), sigToVerify, sig);
-
-			// Verify if password's hash is correct
-			verifyPassHash(password, encodedHashReceived, cliPubKey);
-
-			if (getResponse.getStatus() == 200) {
-				System.out.println(SUCCESS_MSG);
-				return password;
-			} else {
-				System.out.println(ELSE_MSG);
-				throw new UnexpectedErrorExeception(UNEXPECTED_ERROR_EXCEPTION_MSG);
-			}
-
-		} catch (NoSuchAlgorithmException | InvalidKeyException | NoSuchPaddingException | IllegalBlockSizeException
-				| BadPaddingException e) {
-			throw new BadRequestException(e.getMessage());
 		}
 	}
 
@@ -492,16 +322,9 @@ public class ClientLib {
 
 			nonces.put(alias, Long.parseLong(stringNonce));
 
-		} catch (NoSuchAlgorithmException e) {
+		} catch (NoSuchAlgorithmException | InvalidKeyException | NoSuchPaddingException | BadPaddingException | IllegalBlockSizeException e) {
 			e.printStackTrace();
-		} catch (InvalidKeyException e) {
-			e.printStackTrace();
-		} catch (NoSuchPaddingException e) {
-			e.printStackTrace();
-		} catch (BadPaddingException e) {
-			e.printStackTrace();
-		} catch (IllegalBlockSizeException e) {
-			e.printStackTrace();
+			throw new RuntimeException(e.getMessage());
 		}
 
 	}

@@ -23,6 +23,7 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -204,22 +205,6 @@ public class Crypto {
 		return decodedCipheredSms;
 	}
 
-	public static boolean validTS(String stringTS) throws ParseException {
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-		Date ts = sdf.parse(stringTS);
-
-		// Generate current date plus and less one minute
-		Calendar date = Calendar.getInstance();
-		long t = date.getTimeInMillis();
-		Date afterAddingOneMin = new Date(t + (MINUTE_IN_MILLIS));
-		Date afterReducingOneMin = new Date(t - (MINUTE_IN_MILLIS));
-
-		if (ts.before(afterAddingOneMin) && ts.after(afterReducingOneMin))
-			return true;
-		else
-			return false;
-	}
-	
 	public static byte[] hashString(String toHash) throws NoSuchAlgorithmException{
         MessageDigest md = MessageDigest.getInstance("SHA-256");
         md.update(toHash.getBytes());
@@ -227,4 +212,17 @@ public class Crypto {
         return md.digest();
 	}
 
+    public static ArrayList<byte[]> cipher(String[] strings, Key key) {
+		ArrayList<byte[]> dataCiphered = new ArrayList<byte[]>();
+		for (String string : strings) {
+			try {
+				dataCiphered.add(cipherString(string, key));
+			} catch (NoSuchAlgorithmException | NoSuchPaddingException | IllegalBlockSizeException
+					| BadPaddingException | InvalidKeyException e) {
+				e.printStackTrace();
+				throw new RuntimeException(e.getMessage());
+			}
+		}
+		return dataCiphered;
+	}
 }
