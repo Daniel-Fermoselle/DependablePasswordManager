@@ -23,6 +23,7 @@ public class AuthLink {
     private static final String USERNAME_HEADER_NAME = "username";
     private static final String AUTH_LINK_SIG = "auth-signature";
     private static final String ACK_HEADER_NAME = "ack";
+    private static final String BONRR_HEADER_NAME = "bonrr";
 
     private Bonrr bonrr;
 
@@ -33,7 +34,7 @@ public class AuthLink {
     public AuthLink() {
     }
 
-    public void send(PrivateKey cliPrivKey, PublicKey cliPubKey, String uriToSend, PublicKey publicKey, byte[] sig, int wts, HashMap<String, byte[]> infoToSend) {
+    public void send(PrivateKey cliPrivKey, PublicKey cliPubKey, String uriToSend, PublicKey publicKey, byte[] sig, int wts, HashMap<String, byte[]> infoToSend, String bonrr) {
         CommonTriplet commonTriplet = new CommonTriplet(Crypto.encode(infoToSend.get(PASSWORD_IN_MAP)),
                 Crypto.encode(infoToSend.get(HASH_USERNAME_IN_MAP)), Crypto.encode(infoToSend.get(HASH_DOMAIN_IN_MAP)),
                 Crypto.encode(infoToSend.get(HASH_PASSWORD_IN_MAP)));
@@ -54,6 +55,7 @@ public class AuthLink {
                 .header(PUBLIC_KEY_HEADER_NAME, Crypto.encode(cliPubKey.getEncoded()))
                 .header(SIGNATURE_HEADER_NAME, Crypto.encode(sig))
                 .header(NONCE_HEADER_NAME, wts + "")
+                .header(BONRR_HEADER_NAME, bonrr)
                 .async().post(Entity.json(commonTriplet), new InvocationCallback<Response>() {
             @Override
             public void completed(Response response) {
@@ -65,7 +67,7 @@ public class AuthLink {
                 //Verify signature
                 verifySignature(publicKey, response.getHeaderString(AUTH_LINK_SIG), toVerify);
 
-                bonrr.addToAckList(response.getHeaderString(ACK_HEADER_NAME),
+                AuthLink.this.bonrr.addToAckList(response.getHeaderString(ACK_HEADER_NAME),
                         Integer.parseInt(response.getHeaderString(NONCE_HEADER_NAME)));
             }
 

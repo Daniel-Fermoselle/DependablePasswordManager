@@ -20,6 +20,7 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.ws.rs.BadRequestException;
 
+import pt.sec.a03.common_classes.Bonrr;
 import pt.sec.a03.crypto.Crypto;
 import pt.sec.a03.server.MyApplication;
 import pt.sec.a03.server.domain.PasswordManager;
@@ -35,6 +36,12 @@ public class VaultService {
 	KeyStore ksServ;
 	PasswordManager pwm;
 
+	//Ver se bonrr existe se nao cria-lo
+
+    //Instacia-lo com args
+
+    //Passar msg ao bonrr
+
 	public VaultService() {
 		try {
             String paramForKeys = getAlias(MyApplication.PORT);
@@ -49,13 +56,14 @@ public class VaultService {
 		} 
 	}
 
-    public String[] put(String publicKey, String signature, String nonce, String hashPw, String cipherPassword,
-                        String cipheredHashUsername, String cipheredHashDomain) {
+    public String[] put(String publicKey, String signature, String wts, String hashPw, String cipherPassword,
+                        String cipheredHashUsername, String cipheredHashDomain, String bonrr) {
 
-        String stringNonce = decipherAndDecode(nonce);
+	    Bonrr bonrrInstance = pwm.verifyBonrr(bonrr);
 
-        // Verify nonce
-        verifyNonce(publicKey, Long.parseLong(stringNonce));
+	    if(!bonrrInstance.deliver(wts)){
+            throw new InvalidNonceException("wts with wrong value");
+        }
 
         // Decipher
         String[] userAndDom = decipherUsernameAndDomain(cipheredHashDomain, cipheredHashUsername);
@@ -63,6 +71,8 @@ public class VaultService {
         // Verify signature
         String serverSideTosign = userAndDom[0] + userAndDom[1] + stringNonce + hashPw + cipherPassword;
         verifySignature(publicKey, signature, serverSideTosign);
+
+        pwm.saveBonrr(bonrr, wts, cipheredHashDomain, cipheredHashUsername, cipherPassword, hashPw);
 
         //Save Pass
         Triplet t = pwm.saveTriplet(new Triplet(cipherPassword, userAndDom[0], userAndDom[1]), publicKey);

@@ -18,7 +18,6 @@ public class Bonrr {
     private PrivateKey cliPrivKey;
     private Map<String, String> servers;
     private Map<String, PublicKey> serversPubKey;
-    private int counter;
     private String bonrr;
     private int wts;
     private ArrayList<String> acklist;
@@ -27,25 +26,17 @@ public class Bonrr {
     private AuthLink authLink;
 
 
-
-    public Bonrr(PublicKey cliPubKey, PrivateKey cliPrivKey, Map<String, String> servers, Map<String, PublicKey> serversPubKey, int counter){
+    public Bonrr(PublicKey cliPubKey, PrivateKey cliPrivKey, Map<String, String> servers, Map<String, PublicKey> serversPubKey, String bonrr) {
         this.cliPubKey = cliPubKey;
         this.cliPrivKey = cliPrivKey;
         this.servers = servers;
         this.serversPubKey = serversPubKey;
-        this.counter = counter;
         this.wts = 0;
         acklist = new ArrayList<String>();
         this.rid = 0;
         readlist = new ArrayList<String>();
         authLink = new AuthLink(this);
-
-        try {
-            this.bonrr = Crypto.encode(Crypto.hashString(Crypto.encode(cliPubKey.getEncoded()) + counter));
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-            throw new RuntimeException(e.getMessage());
-        }
+        this.bonrr = bonrr;
     }
 
     public void write(HashMap<String, byte[]> infoToSend) {
@@ -54,8 +45,8 @@ public class Bonrr {
         for (String s : servers.keySet()) {
 
             //Cipher domain and username
-            ArrayList<byte[]> dataCiphered = Crypto.cipher(new String[] { new String(infoToSend.get(HASH_DOMAIN_IN_MAP)),
-                    new String(infoToSend.get(HASH_USERNAME_IN_MAP))},
+            ArrayList<byte[]> dataCiphered = Crypto.cipher(new String[]{new String(infoToSend.get(HASH_DOMAIN_IN_MAP)),
+                            new String(infoToSend.get(HASH_USERNAME_IN_MAP))},
                     serversPubKey.get(s));
 
             //Make signature
@@ -66,7 +57,7 @@ public class Bonrr {
             infoToSend.put(HASH_USERNAME_IN_MAP, dataCiphered.get(1));
 
             //Send
-            authLink.send(cliPrivKey, cliPubKey, servers.get(s),serversPubKey.get(s), sig, wts, infoToSend);
+            authLink.send(cliPrivKey, cliPubKey, servers.get(s), serversPubKey.get(s), sig, wts, infoToSend, bonrr);
         }
     }
 
@@ -74,8 +65,15 @@ public class Bonrr {
         return null;
     }
 
-    public synchronized void addToAckList(String ack, int wts){
-        if(wts == this.wts)
+    public boolean deliver(String wts) {
+        if (Integer.parseInt(wts) > this.wts) {
+            return true;
+        }
+        return false;
+    }
+
+    public synchronized void addToAckList(String ack, int wts) {
+        if (wts == this.wts)
             acklist.add(ack);
     }
 

@@ -2,6 +2,7 @@ package pt.sec.a03.server.domain;
 
 import java.sql.SQLException;
 
+import pt.sec.a03.common_classes.Bonrr;
 import pt.sec.a03.server.database.Database;
 import pt.sec.a03.server.exception.AlreadyExistsException;
 import pt.sec.a03.server.exception.DataNotFoundException;
@@ -151,5 +152,16 @@ public class PasswordManager {
 
     public boolean validateNonceForUer(String publicKey, long nonceToValidate) {
         return Long.parseLong(getUserMetaInfo(publicKey)) == nonceToValidate;
+    }
+
+    public Bonrr verifyBonrr(String bonrr) {
+        Bonrr bonrrInstance = this.db.existsBonrr(bonrr);
+	    if(bonrrInstance != null){
+	        return bonrrInstance;
+        }
+        else{
+	        bonrrInstance = this.db.create(bonrr);
+	        return bonrrInstance;
+        }
     }
 }

@@ -18,6 +18,7 @@ import java.sql.Statement;
 
 import org.apache.ibatis.jdbc.ScriptRunner;
 
+import pt.sec.a03.common_classes.Bonrr;
 import pt.sec.a03.server.MyApplication;
 import pt.sec.a03.server.domain.User;
 import pt.sec.a03.server.domain.Triplet;
@@ -229,4 +230,9 @@ public class Database {
 		throw new RuntimeException("No matching database to port");
 	}
 
+    public Bonrr existsBonrr(String bonrr) {
+    }
+
+	public Bonrr create(String bonrr) {
+	}
 }
