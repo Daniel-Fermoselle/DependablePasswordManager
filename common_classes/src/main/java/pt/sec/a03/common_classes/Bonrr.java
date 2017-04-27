@@ -79,7 +79,37 @@ public class Bonrr {
     }
 
     public String read(HashMap<String, byte[]> infoToSend) {
-        return null;
+    	rid = rid++;
+    	readlist = new ArrayList<String>();
+    	
+        HashMap<String, byte[]> infoToSendTemp = new HashMap<>();
+
+        for (String s : infoToSend.keySet()) {
+            infoToSendTemp.put(s, infoToSend.get(s));
+        }
+
+        for (String s : servers.keySet()) {
+
+            //Cipher domain and username
+            ArrayList<byte[]> dataCiphered = Crypto.cipher(new String[]{new String(infoToSend.get(HASH_DOMAIN_IN_MAP)),
+                            new String(infoToSend.get(HASH_USERNAME_IN_MAP))}, serversPubKey.get(s));
+
+            //Update values to send
+            infoToSendTemp.put(HASH_DOMAIN_IN_MAP, dataCiphered.get(0));
+            infoToSendTemp.put(HASH_USERNAME_IN_MAP, dataCiphered.get(1));
+
+            //Send
+            authLink.send(cliPrivKey, cliPubKey, servers.get(s), wts, infoToSendTemp, bonrr);
+        }
+
+        //TODO verify sign here
+        
+        while (readlist.size() <= ((servers.keySet().size() + FAULT_NUMBER) / 2)){
+
+        }
+        String password = highestVal(readlist);
+        readlist = new ArrayList<String>();
+        return password;
     }
 
     public boolean deliver(String wts) {
@@ -92,6 +122,12 @@ public class Bonrr {
     public synchronized void addToAckList(String ack, long wts) {
         if (wts == this.wts) {
             acklist.add(ack);
+        }
+    }
+    
+    public synchronized void addToReadList(String password, long readid) {
+        if (readid == this.rid) {
+            readlist.add(password);
         }
     }
 
@@ -107,5 +143,30 @@ public class Bonrr {
             e.printStackTrace();
             throw new RuntimeException(e.getMessage());
         }
+    }
+    
+    private String highestVal(ArrayList<String> readlist){
+    	HashMap<String, Integer> ocurrencies = new HashMap<String, Integer>();
+    	String password = "Hehe xD";
+    	int max = 0;
+    	
+    	for(String ocurrency : readlist){
+    		if(!ocurrencies.containsKey(ocurrency)){
+    			ocurrencies.put(ocurrency, 1);
+    			if(max < 1){
+    				max = 1;
+    				password = ocurrency;
+    			}
+    		}
+    		else{
+    			int i = ocurrencies.get(ocurrency);
+    			ocurrencies.put(ocurrency, ++i);
+    			if(max < i){
+    				max = i;
+    				password = ocurrency;
+    			}
+    		}
+    	}
+    	return password;
     }
 }
