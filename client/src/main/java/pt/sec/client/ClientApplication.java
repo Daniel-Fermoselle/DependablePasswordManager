@@ -40,6 +40,7 @@ public class ClientApplication {
 				String input = console.readLine();
 
 				if ("Exit".equals(input)) {
+					cl.close();
 					console.printf("CY@!\n");
 					System.exit(0);
 				} else if ("1".equals(input)) {

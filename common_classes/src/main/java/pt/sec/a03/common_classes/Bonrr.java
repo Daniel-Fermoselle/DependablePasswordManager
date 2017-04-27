@@ -13,7 +13,7 @@ public class Bonrr {
     private static final String HASH_USERNAME_IN_MAP = "username";
     private static final String PASSWORD_IN_MAP = "password";
     private static final String HASH_PASSWORD_IN_MAP = "hash-password";
-    private static final int FAULT_NUMBER = 1;
+    public static final int FAULT_NUMBER = 1;
 
     private PublicKey cliPubKey;
     private PrivateKey cliPrivKey;
@@ -107,5 +107,9 @@ public class Bonrr {
             e.printStackTrace();
             throw new RuntimeException(e.getMessage());
         }
+    }
+
+    public String getBonrrID() {
+        return bonrr;
     }
 }

@@ -69,9 +69,10 @@ public class Database {
 		String publicKeyDB = "";
 		long userID = 0;
 		long nonce = 0;
+		long bonrrID = 0;
 		
 		// Step 1: Execute a SQL SELECT query, the query result
-		String strSelect = "select userID, publicKey, nonce from Users where publicKey = '" + publicKey + "'";
+		String strSelect = "select userID, publicKey, nonce, bonrrID from Users where publicKey = '" + publicKey + "'";
 
 		// Step 2: Process the ResultSet by scrolling the cursor forward via
 		ResultSet rset = stmt.executeQuery(strSelect);
@@ -80,13 +81,14 @@ public class Database {
 			userID = rset.getLong("userID");
 			publicKeyDB = rset.getString("publicKey");
 			nonce = rset.getLong("nonce");
+			bonrrID = rset.getLong("bonrrID");
 			++rowCount;
 		}
 		this.conn.close();
 		if (rowCount == 0) {
 			return null;
 		} else {
-			return new User(userID, publicKeyDB, nonce);
+			return new User(userID, publicKeyDB, nonce, bonrrID);
 		}
 	}
 
@@ -95,7 +97,7 @@ public class Database {
 		getConnection();
 		Statement stmt = this.conn.createStatement();
 		
-		String sqlInsert = "insert into Users(publicKey) values ('" + publicKey + "');";
+		String sqlInsert = "insert into Users(publicKey, nonce, bonrrID) values ('" + publicKey + "'," + 0 + "," + 0 + ");";
 		stmt.execute(sqlInsert);
 		
 		this.conn.close();
@@ -118,6 +120,17 @@ public class Database {
 		Statement stmt = this.conn.createStatement();
 		
 		String strUpdate = "update Users set nonce='" + nonce + "' where userID='" + id + "';";
+		stmt.executeUpdate(strUpdate);
+
+		this.conn.close();
+	}
+
+	public void updateUserBonrrID(String id, long bonrrID) throws SQLException{
+		//Get mysql conneciton
+		getConnection();
+		Statement stmt = this.conn.createStatement();
+
+		String strUpdate = "update Users set bonrrID='" + bonrrID + "' where userID='" + id + "';";
 		stmt.executeUpdate(strUpdate);
 
 		this.conn.close();
@@ -270,4 +283,6 @@ public class Database {
 
 		this.conn.close();
 	}
+
+
 }

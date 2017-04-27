@@ -185,4 +185,30 @@ public class UserService {
 			throw new RuntimeException(e.getMessage());
 		}
 	}
+
+	public String[] getBonrrID(String publicKey, String signature, String nonce) {
+		String stringNonce = decipherAndDecode(nonce);
+
+		//verify nonce
+		verifyNonce(publicKey, Long.parseLong(stringNonce));
+
+
+		//verify Signature
+		String toVerify = stringNonce + publicKey;
+		verifySignature(publicKey, signature, toVerify);
+
+		//--prepare answer--//
+		//Get new nonce
+		PasswordManager pwm = new PasswordManager();
+		String bonrrID = pwm.getNewBonrrID(publicKey);
+		String[] nonceNormCiph = getNewNonceForUser(publicKey);
+
+		System.out.println("Get burrito: " + bonrrID + " pog: " + nonceNormCiph[0]);
+
+		//Make signature
+		String toSign = nonceNormCiph[0] + bonrrID;
+		String sign = signString(toSign);
+
+		return new String[]{sign, nonceNormCiph[1], bonrrID};
+	}
 }

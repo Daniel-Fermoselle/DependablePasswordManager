@@ -10,6 +10,7 @@ create table Users (
    userID bigint AUTO_INCREMENT,
    publicKey TEXT,
    nonce bigint,
+   bonrrID bigint,
    primary key (userID));
 
 create table Vault (
@@ -44,6 +45,7 @@ create table Users (
    userID bigint AUTO_INCREMENT,
    publicKey TEXT,
    nonce bigint,
+   bonrrID bigint,
    primary key (userID));
 
 create table Vault (
@@ -78,6 +80,7 @@ create table Users (
    userID bigint AUTO_INCREMENT,
    publicKey TEXT,
    nonce bigint,
+   bonrrID bigint,
    primary key (userID));
 
 create table Vault (
@@ -112,6 +115,7 @@ create table Users (
    userID bigint AUTO_INCREMENT,
    publicKey TEXT,
    nonce bigint,
+   bonrrID bigint,
    primary key (userID));
 
 create table Vault (
@@ -146,6 +150,7 @@ create table Users (
    userID bigint AUTO_INCREMENT,
    publicKey TEXT,
    nonce bigint,
+   bonrrID bigint,
    primary key (userID));
 
 create table Vault (

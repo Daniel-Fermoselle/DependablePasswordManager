@@ -177,4 +177,21 @@ public class PasswordManager {
         }
 
     }
+
+    public String getNewBonrrID(String publicKey) {
+        try {
+            User user = getUserByPK(publicKey);
+
+            long bonrrID = user.getBonrrID();
+            bonrrID = bonrrID + 1;
+
+            this.db.updateUserBonrrID(user.getUserID() + "", bonrrID);
+            return (user.getUserID() + "") + (bonrrID + "");
+        } catch (DataNotFoundException e) {
+            return 0 + "";
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e.getMessage());
+        }
+    }
 }
