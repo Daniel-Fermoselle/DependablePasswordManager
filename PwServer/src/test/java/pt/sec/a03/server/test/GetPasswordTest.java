@@ -5,11 +5,13 @@ import static org.junit.Assert.fail;
 
 
 import java.io.FileNotFoundException;
+import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
 
 
 import org.junit.Test;
 
+import pt.sec.a03.crypto.Crypto;
 import pt.sec.a03.server.database.Database;
 import pt.sec.a03.server.domain.PasswordManager;
 import pt.sec.a03.server.domain.Triplet;
@@ -32,8 +34,14 @@ public class GetPasswordTest extends AbstractPasswordManagerTest {
 	protected void populate() {
 		pwm = new PasswordManager();
 		db = new Database();
-		
-		t1 = new Triplet("sou_rico", "belly", "sonae");
+
+		try {
+			t1 = new Triplet("sonae", "belly", "sou_rico" ,
+                    Crypto.encode(Crypto.hashString("sou_rico")));
+		} catch (NoSuchAlgorithmException e) {
+			e.printStackTrace();
+			throw new RuntimeException(e.getMessage());
+		}
 		try {
 			db.saveUser("123456789");
 			db.saveUser("12345678");
