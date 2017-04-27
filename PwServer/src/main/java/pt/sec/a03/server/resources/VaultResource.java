@@ -17,6 +17,7 @@ import javax.ws.rs.core.UriInfo;
 import org.glassfish.jersey.server.ManagedAsync;
 import pt.sec.a03.common_classes.AuthLink;
 import pt.sec.a03.common_classes.CommonTriplet;
+import pt.sec.a03.server.domain.Triplet;
 import pt.sec.a03.server.service.VaultService;
 
 import java.security.PrivateKey;
@@ -48,17 +49,19 @@ public class VaultResource {
                             @HeaderParam(SIGNATURE_HEADER_NAME) String signature,
                             @HeaderParam(NONCE_HEADER_NAME) String wts,
                             @HeaderParam(BONRR_HEADER_NAME) String bonrr,
-
                             CommonTriplet t, @Context UriInfo uriInfo) {
 
         System.out.println("Received Post packet addPassword");
         authLink.deliver(publicKey, authSig, signature, wts, t);
 
-        String[] response = vaultService.put(publicKey, signature, wts, t.getHashPassword(), t.getPassword(), t.getUsername(), t.getDomain(), bonrr);
+        Triplet triplet = new Triplet(t.getDomain(), t.getUsername(), t.getPassword(), t.getHash());
+        String[] response = vaultService.put(publicKey, signature, wts, triplet, bonrr);
 
         asyncResponse.resume(Response.status(Status.CREATED)
-                .header(SIGNATURE_HEADER_NAME, response[0])
-                .header(NONCE_HEADER_NAME, response[1])
+                .header(PUBLIC_KEY_HEADER_NAME, response[0])
+                .header(AUTH_LINK_SIG, response[1])
+                .header(ACK_HEADER_NAME, response[2])
+                .header(NONCE_HEADER_NAME, response[3])
                 .build());
     }
 

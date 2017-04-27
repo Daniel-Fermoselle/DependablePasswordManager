@@ -34,9 +34,11 @@ public class AuthLink {
     public AuthLink() {
     }
 
-    public void send(PrivateKey cliPrivKey, PublicKey cliPubKey, String uriToSend, PublicKey publicKey, byte[] sig, int wts, HashMap<String, byte[]> infoToSend, String bonrr) {
-        CommonTriplet commonTriplet = new CommonTriplet(Crypto.encode(infoToSend.get(PASSWORD_IN_MAP)),
-                Crypto.encode(infoToSend.get(HASH_USERNAME_IN_MAP)), Crypto.encode(infoToSend.get(HASH_DOMAIN_IN_MAP)),
+    public void send(PrivateKey cliPrivKey, PublicKey cliPubKey, String uriToSend, byte[] sig,
+                     long wts, HashMap<String, byte[]> infoToSend, String bonrr) {
+
+        CommonTriplet commonTriplet = new CommonTriplet(Crypto.encode(infoToSend.get(HASH_DOMAIN_IN_MAP)),
+                Crypto.encode(infoToSend.get(HASH_USERNAME_IN_MAP)), Crypto.encode(infoToSend.get(PASSWORD_IN_MAP)),
                 Crypto.encode(infoToSend.get(HASH_PASSWORD_IN_MAP)));
 
         Client client = ClientBuilder.newClient();
@@ -47,7 +49,7 @@ public class AuthLink {
         toSign = toSign + commonTriplet.getDomain();
         toSign = toSign + commonTriplet.getUsername();
         toSign = toSign + commonTriplet.getPassword();
-        toSign = toSign + commonTriplet.getHashPassword();
+        toSign = toSign + commonTriplet.getHash();
         byte[] authSig = makeSignature(cliPrivKey, toSign);
 
         vault.request()
@@ -59,16 +61,24 @@ public class AuthLink {
                 .async().post(Entity.json(commonTriplet), new InvocationCallback<Response>() {
             @Override
             public void completed(Response response) {
-                System.out.println("Response of save password status code " + response.getStatus() + " received.");
+                try {
 
-                String toVerify = response.getHeaderString(NONCE_HEADER_NAME) +
-                        response.getHeaderString(ACK_HEADER_NAME);
+                    System.out.println("Response of save password status code " + response.getStatus() + " received.");
 
-                //Verify signature
-                verifySignature(publicKey, response.getHeaderString(AUTH_LINK_SIG), toVerify);
+                    String toVerify = response.getHeaderString(ACK_HEADER_NAME) + response.getHeaderString(NONCE_HEADER_NAME);
 
-                AuthLink.this.bonrr.addToAckList(response.getHeaderString(ACK_HEADER_NAME),
-                        Integer.parseInt(response.getHeaderString(NONCE_HEADER_NAME)));
+                    PublicKey serverPubKey = Crypto.getPubKeyFromByte(Crypto.decode(response.getHeaderString(PUBLIC_KEY_HEADER_NAME)));
+
+                    //Verify signature
+                    verifySignature(serverPubKey, response.getHeaderString(AUTH_LINK_SIG), toVerify);
+
+                    AuthLink.this.bonrr.addToAckList(response.getHeaderString(ACK_HEADER_NAME),
+                            Long.parseLong(response.getHeaderString(NONCE_HEADER_NAME)));
+
+                } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
+                    e.printStackTrace();
+                    throw new RuntimeException(e.getMessage());
+                }
             }
 
             @Override
@@ -77,6 +87,16 @@ public class AuthLink {
                 throwable.printStackTrace();
             }
         });
+    }
+
+    public void deliver(String publicKey, String authSig, String signature, String wts, CommonTriplet t) {
+        try {
+            String toVerify = signature + wts + t.getDomain() + t.getUsername() + t.getPassword() + t.getHash();
+            PublicKey pubKey = Crypto.getPubKeyFromByte(Crypto.decode(publicKey));
+            verifySignature(pubKey, authSig, toVerify);
+        } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
     }
 
     private byte[] makeSignature(PrivateKey cliPrivKey, String toSign) {
@@ -100,13 +120,5 @@ public class AuthLink {
         }
     }
 
-    public void deliver(String publicKey, String authSig, String signature, String wts, CommonTriplet t) {
-        try {
-            String toVerify = signature + wts + t.getDomain() + t.getUsername() + t.getPassword() + t.getHashPassword();
-            PublicKey pubKey = Crypto.getPubKeyFromByte(Crypto.decode(publicKey));
-            verifySignature(pubKey, authSig, toVerify);
-        } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        }
-    }
+
 }

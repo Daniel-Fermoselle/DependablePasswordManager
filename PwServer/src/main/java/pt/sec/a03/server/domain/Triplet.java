@@ -8,29 +8,30 @@ public class Triplet {
 
 	private long tripletID;
 	private long userID;
-	private String password;
-	private String username;
 	private String domain;
+	private String username;
+	private String password;
 	private String hash;
 
 	public Triplet() {}
 	
-	public Triplet(String password, String username, String domain) {
+	public Triplet(String domain, String username, String password, String pwHash) {
 		super();
 		this.tripletID = 0;
 		this.userID = 0;
-		this.password = password;
-		this.username = username;
 		this.domain = domain;
+		this.username = username;
+		this.password = password;
+		this.hash = pwHash;
 	}	
 
-	public Triplet(long tripletID, long userID, String password, String username, String domain, String pwHash) {
+	public Triplet(long tripletID, long userID, String domain, String username, String password, String pwHash) {
 		super();
 		this.tripletID = tripletID;
 		this.userID = userID;
-		this.password = password;
-		this.username = username;
 		this.domain = domain;
+		this.username = username;
+		this.password = password;
 		this.hash = pwHash;
 	}	
 	
@@ -51,13 +52,13 @@ public class Triplet {
 	public void setUserID(long userID) {
 		this.userID = userID;
 	}
-	
-	public String getPassword() {
-		return password;
+
+	public String getDomain() {
+		return domain;
 	}
 
-	public void setPassword(String password) {
-		this.password = password;
+	public void setDomain(String domain) {
+		this.domain = domain;
 	}
 
 	public String getUsername() {
@@ -68,12 +69,12 @@ public class Triplet {
 		this.username = username;
 	}
 
-	public String getDomain() {
-		return domain;
+	public String getPassword() {
+		return password;
 	}
-	
-	public void setDomain(String domain) {
-		this.domain = domain;
+
+	public void setPassword(String password) {
+		this.password = password;
 	}
 
 	public String getHash() {

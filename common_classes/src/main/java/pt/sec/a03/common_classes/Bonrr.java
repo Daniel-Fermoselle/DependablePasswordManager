@@ -13,15 +13,16 @@ public class Bonrr {
     private static final String HASH_USERNAME_IN_MAP = "username";
     private static final String PASSWORD_IN_MAP = "password";
     private static final String HASH_PASSWORD_IN_MAP = "hash-password";
+    private static final int FAULT_NUMBER = 1;
 
     private PublicKey cliPubKey;
     private PrivateKey cliPrivKey;
     private Map<String, String> servers;
     private Map<String, PublicKey> serversPubKey;
     private String bonrr;
-    private int wts;
+    private long wts;
     private ArrayList<String> acklist;
-    private int rid;
+    private long rid;
     private ArrayList<String> readlist;
     private AuthLink authLink;
 
@@ -39,26 +40,42 @@ public class Bonrr {
         this.bonrr = bonrr;
     }
 
-    public void write(HashMap<String, byte[]> infoToSend) {
+    public Bonrr(String bonrr, long wts) {
+        this.bonrr = bonrr;
+        this.wts = wts;
+    }
+
+    public String write(HashMap<String, byte[]> infoToSend) {
         wts = wts + 1;
         acklist = new ArrayList<String>();
+        HashMap<String, byte[]> infoToSendTemp = new HashMap<>();
+
+        for (String s : infoToSend.keySet()) {
+            infoToSendTemp.put(s, infoToSend.get(s));
+        }
+
         for (String s : servers.keySet()) {
 
             //Cipher domain and username
             ArrayList<byte[]> dataCiphered = Crypto.cipher(new String[]{new String(infoToSend.get(HASH_DOMAIN_IN_MAP)),
-                            new String(infoToSend.get(HASH_USERNAME_IN_MAP))},
-                    serversPubKey.get(s));
+                            new String(infoToSend.get(HASH_USERNAME_IN_MAP))}, serversPubKey.get(s));
 
             //Make signature
             byte[] sig = makeSignature(infoToSend);
 
             //Update values to send
-            infoToSend.put(HASH_DOMAIN_IN_MAP, dataCiphered.get(0));
-            infoToSend.put(HASH_USERNAME_IN_MAP, dataCiphered.get(1));
+            infoToSendTemp.put(HASH_DOMAIN_IN_MAP, dataCiphered.get(0));
+            infoToSendTemp.put(HASH_USERNAME_IN_MAP, dataCiphered.get(1));
 
             //Send
-            authLink.send(cliPrivKey, cliPubKey, servers.get(s), serversPubKey.get(s), sig, wts, infoToSend, bonrr);
+            authLink.send(cliPrivKey, cliPubKey, servers.get(s), sig, wts, infoToSendTemp, bonrr);
         }
+
+        while (acklist.size() <= ((servers.keySet().size() + FAULT_NUMBER) / 2)){
+
+        }
+        acklist = new ArrayList<String>();
+        return "Value Wrote\n";
     }
 
     public String read(HashMap<String, byte[]> infoToSend) {
@@ -66,15 +83,16 @@ public class Bonrr {
     }
 
     public boolean deliver(String wts) {
-        if (Integer.parseInt(wts) > this.wts) {
+        if (Long.parseLong(wts) > this.wts) {
             return true;
         }
         return false;
     }
 
-    public synchronized void addToAckList(String ack, int wts) {
-        if (wts == this.wts)
+    public synchronized void addToAckList(String ack, long wts) {
+        if (wts == this.wts) {
             acklist.add(ack);
+        }
     }
 
     private byte[] makeSignature(HashMap<String, byte[]> infoToSend) {

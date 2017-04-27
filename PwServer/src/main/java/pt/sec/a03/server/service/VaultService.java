@@ -12,6 +12,7 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.SignatureException;
 import java.security.UnrecoverableKeyException;
+import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.spec.InvalidKeySpecException;
 
@@ -33,6 +34,7 @@ public class VaultService {
 	private static final String SERVER_KEY_STORE_PASS = "insecure";
 
 	PrivateKey privKey;
+	PublicKey pubKey;
 	KeyStore ksServ;
 	PasswordManager pwm;
 
@@ -46,8 +48,13 @@ public class VaultService {
 		try {
             String paramForKeys = getAlias(MyApplication.PORT);
             this.ksServ = Crypto.readKeystoreFile("ks/" + paramForKeys + ".jks", SERVER_KEY_STORE_PASS.toCharArray());
-			this.privKey = Crypto.getPrivateKeyFromKeystore(ksServ, paramForKeys, SERVER_KEY_STORE_PASS);
-			this.pwm = new PasswordManager();
+            Certificate cert = ksServ.getCertificate(paramForKeys);
+            if (cert == null) {
+                throw new RuntimeException("No certificate for server");
+            }
+            this.pubKey = Crypto.getPublicKeyFromCertificate(cert);
+            this.privKey = Crypto.getPrivateKeyFromKeystore(ksServ, paramForKeys, SERVER_KEY_STORE_PASS);
+            this.pwm = new PasswordManager();
 
 		} catch (KeyStoreException | NoSuchAlgorithmException | CertificateException | IOException
 				| UnrecoverableKeyException e) {
@@ -56,36 +63,38 @@ public class VaultService {
 		} 
 	}
 
-    public String[] put(String publicKey, String signature, String wts, String hashPw, String cipherPassword,
-                        String cipheredHashUsername, String cipheredHashDomain, String bonrr) {
+    public String[] put(String publicKey, String signature, String wts, Triplet t, String bonrr) {
 
-	    Bonrr bonrrInstance = pwm.verifyBonrr(bonrr);
+	    //Get Bonrr instance
+	    Bonrr bonrrInstance = pwm.getBonrr(bonrr);
 
+	    //Verify deliver
 	    if(!bonrrInstance.deliver(wts)){
             throw new InvalidNonceException("wts with wrong value");
         }
 
         // Decipher
-        String[] userAndDom = decipherUsernameAndDomain(cipheredHashDomain, cipheredHashUsername);
+        String[] userAndDom = decipherUsernameAndDomain(t.getDomain(), t.getUsername());
 
         // Verify signature
-        String serverSideTosign = userAndDom[0] + userAndDom[1] + stringNonce + hashPw + cipherPassword;
+        String serverSideTosign = bonrr + wts + userAndDom[1] + userAndDom[0] + t.getPassword() + t.getHash();
         verifySignature(publicKey, signature, serverSideTosign);
 
-        pwm.saveBonrr(bonrr, wts, cipheredHashDomain, cipheredHashUsername, cipherPassword, hashPw);
+        Triplet triplet = new Triplet(userAndDom[1], userAndDom[0], t.getPassword(), t.getHash());
+
+        //Save to bonrr
+        pwm.saveBonrr(bonrr, wts,  signature, triplet);
 
         //Save Pass
-        Triplet t = pwm.saveTriplet(new Triplet(cipherPassword, userAndDom[0], userAndDom[1]), publicKey);
-        pwm.saveHash(t.getTripletID(), hashPw);
+        pwm.saveTriplet(triplet , publicKey);
 
-        //Get new nonce
-        String[] nonceNormCiph = getNewNonceForUser(publicKey);
+        //Response
+        String ackMsg = "ACK" + wts;
 
         //Make signature
-        String toSign = nonceNormCiph[0];
-        String sign = signString(toSign);
+        String sign = signString(ackMsg);
 
-        return new String[] { sign, nonceNormCiph[1]};
+        return new String[] { Crypto.encode(this.pubKey.getEncoded()), sign, "ACK", wts };
     }
 
 

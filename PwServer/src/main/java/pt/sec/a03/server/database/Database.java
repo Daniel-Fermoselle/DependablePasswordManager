@@ -152,7 +152,7 @@ public class Database {
 		if (rowCount == 0) {
 			return null;
 		} else {
-			return new Triplet(tripletID, userID, password, usernameDB, domainDB, pwHash);
+			return new Triplet(tripletID, userID, domainDB, usernameDB, password, pwHash);
 		}
 	}
 
@@ -161,8 +161,8 @@ public class Database {
 		getConnection();
 		Statement stmt = this.conn.createStatement();
 		
-		String sqlInsert = "insert into Vault(userID, pw, username, domain) values (" + userID + ", '" + t.getPassword()
-				+ "', '" + t.getUsername() + "', '" + t.getDomain() + "');";
+		String sqlInsert = "insert into Vault(userID, pw, username, domain, pwHash) values (" + userID + ", '" + t.getPassword()
+				+ "', '" + t.getUsername() + "', '" + t.getDomain() + "', '" + t.getHash() + "');";
 		stmt.execute(sqlInsert);
 		
 		this.conn.close();
@@ -173,8 +173,8 @@ public class Database {
 		getConnection();
 		Statement stmt = this.conn.createStatement();
 		
-		String strUpdate = "update Vault set pw='" + t.getPassword() + "' where domain='" + t.getDomain()
-				+ "' and username='" + t.getUsername() + "';";
+		String strUpdate = "update Vault set pw='" + t.getPassword() + "' , pwHash='" + t.getHash() + "' where domain='"
+				+ t.getDomain() + "' and username='" + t.getUsername() + "';";
 		stmt.executeUpdate(strUpdate);
 		
 		this.conn.close();
@@ -184,10 +184,10 @@ public class Database {
 		//Get mysql conneciton
 		getConnection();
 		Statement stmt = this.conn.createStatement();
-		
+
 		String strUpdate = "update Vault set pwHash='" + hashPw + "' where tripletID='" + tripletID + "';";
 		stmt.executeUpdate(strUpdate);
-		
+
 		this.conn.close();
 	}
 	
@@ -230,9 +230,44 @@ public class Database {
 		throw new RuntimeException("No matching database to port");
 	}
 
-    public Bonrr existsBonrr(String bonrr) {
-    }
+	public Bonrr getBonrr(String bonrr) throws SQLException {
+		//Get mysql conneciton
+		getConnection();
+		Statement stmt = this.conn.createStatement();
 
-	public Bonrr create(String bonrr) {
+		String DBbonrr = "";
+		long DBwts = 0;
+
+		// Step 1: Execute a SQL SELECT query, the query result
+		String strSelect = "select bonrr, MAX(wts) as wts from Bonrrs where bonrr = '" + bonrr + "';";
+
+		// Step 2: Process the ResultSet by scrolling the cursor forward via
+		ResultSet rset = stmt.executeQuery(strSelect);
+		int rowCount = 0;
+		while (rset.next()) { // Move the cursor to the next row
+			DBbonrr = rset.getString("bonrr");
+			DBwts = rset.getLong("wts");
+			++rowCount;
+		}
+		this.conn.close();
+		if (rowCount == 0) {
+			return null;
+		} else {
+			return new Bonrr(DBbonrr, DBwts);
+		}
+	}
+
+	public void saveBonrr(String bonrr, String wts, String signature, Triplet t) throws SQLException{
+		//Get mysql conneciton
+		getConnection();
+		Statement stmt = this.conn.createStatement();
+
+		String sqlInsert = "insert into Bonrrs(bonrr, wts, signature, username, domain, pw, pwHash) " +
+				" values ('" + bonrr + "', " + Long.parseLong(wts) + ", '" + signature + "', '" + t.getUsername() + "', '"
+				+ t.getDomain() + "', '" + t.getPassword() + "', '" + t.getHash() + "');";
+
+		stmt.execute(sqlInsert);
+
+		this.conn.close();
 	}
 }

@@ -28,6 +28,15 @@ elif [ "$cmd" == "compile" ]; then
 	mvn compile
 	cd ../client
 	mvn compile
+elif [ "$cmd" == "install-no-tests" ]; then
+	cd ../crypto
+	mvn install
+	cd ../common_classes
+	mvn install
+	cd ../client_lib
+	mvn install -DskipTests
+	cd ../client
+	mvn install
 else
 	mvn exec:java -Dexec.args="$cmd"
 fi

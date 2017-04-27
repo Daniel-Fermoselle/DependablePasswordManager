@@ -22,6 +22,13 @@ elif [ "$cmd" == "compile" ]; then
 	mvn compile
 	cd ../PwServer
 	mvn compile
+elif [ "$cmd" == "install-no-tests" ]; then
+	cd ../crypto
+	mvn install
+	cd ../common_classes
+	mvn install
+	cd ../PwServer 
+	mvn install -DskipTests
 else
 	mvn exec:java -Dexec.args="$cmd"
 fi

@@ -78,16 +78,16 @@ public class PasswordManager {
 
     public Triplet saveTriplet(Triplet t, String publicKey) {
         if (publicKey == null || t == null || t.getPassword() == null || t.getUsername() == null
-                || t.getDomain() == null) {
+                || t.getDomain() == null || t.getHash() == null) {
             throw new InvalidArgumentException("The arguments provided are not suitable to create a new password");
         }
         try {
             User u = this.db.getUserByPK(publicKey);
-            Triplet newTriplet = this.db.getTriplet(t.getUsername(), t.getDomain());//TODO Isto nao devia estar em baixo do primeiro if
             if (u == null) {
                 throw new DataNotFoundException(
                         "The user with the public key " + publicKey + " doesn't exist in the server");
             }
+            Triplet newTriplet = this.db.getTriplet(t.getUsername(), t.getDomain());
             if (newTriplet != null) {
                 if (newTriplet.getUserID() == u.getUserID()) {
                     this.db.updateTriplet(t);
@@ -154,14 +154,27 @@ public class PasswordManager {
         return Long.parseLong(getUserMetaInfo(publicKey)) == nonceToValidate;
     }
 
-    public Bonrr verifyBonrr(String bonrr) {
-        Bonrr bonrrInstance = this.db.existsBonrr(bonrr);
-	    if(bonrrInstance != null){
-	        return bonrrInstance;
+    public Bonrr getBonrr(String bonrr) {
+	    try {
+            Bonrr bonrrInstance = this.db.getBonrr(bonrr);
+            if (bonrrInstance != null) {
+                return bonrrInstance;
+            } else {
+                return new Bonrr(bonrr, 0);
+            }
+        } catch (SQLException e) {
+	        e.printStackTrace();
+	        throw new RuntimeException(e.getMessage());
         }
-        else{
-	        bonrrInstance = this.db.create(bonrr);
-	        return bonrrInstance;
+    }
+
+    public void saveBonrr(String bonrr, String wts, String signature, Triplet t) {
+	    try {
+            this.db.saveBonrr(bonrr, wts, signature, t);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e.getMessage());
         }
+
     }
 }

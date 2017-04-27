@@ -96,7 +96,7 @@ public class ClientLib {
 		}
 
 		//TODO should use value form getMetaInfo
-		bonrr = new Bonrr(cliPubKey, cliPrivKey, servers, serversPubKey, 0);
+		bonrr = new Bonrr(cliPubKey, cliPrivKey, servers, serversPubKey, 0+"");
 
 	}
 
@@ -200,7 +200,7 @@ public class ClientLib {
 		}
 
 		HashMap<String, byte[]> infoToSend = prepareForSave(domain, username, password);
-		bonrr.write(infoToSend);
+		System.out.println(bonrr.write(infoToSend));
 	}
 
 	public HashMap prepareForSave(String domain, String username, String password) {
