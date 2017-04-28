@@ -168,6 +168,20 @@ public class PasswordManager {
         }
     }
 
+    public String[] getBonrrInfo(long bonrr) {
+	    try {
+            String[] bonrrInfo = this.db.getSpecificBonrr(bonrr);
+            if (bonrrInfo != null) {
+                return bonrrInfo;
+            } else {
+            	throw new DataNotFoundException("Bonrr not found");
+            }
+        } catch (SQLException e) {
+	        e.printStackTrace();
+	        throw new RuntimeException(e.getMessage());
+        }
+    }
+    
     public void saveBonrr(String bonrr, String wts, String signature, Triplet t) {
 	    try {
             this.db.saveBonrr(bonrr, wts, signature, t);

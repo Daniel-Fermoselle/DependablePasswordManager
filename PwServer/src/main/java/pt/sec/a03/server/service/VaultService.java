@@ -32,6 +32,8 @@ import pt.sec.a03.server.exception.InvalidNonceException;
 public class VaultService {
 
 	private static final String SERVER_KEY_STORE_PASS = "insecure";
+	private static final String WRITE_MODE = "write";
+    private static final String READ_MODE = "read";
 
 	PrivateKey privKey;
 	PublicKey pubKey;
@@ -69,7 +71,7 @@ public class VaultService {
 	    Bonrr bonrrInstance = pwm.getBonrr(bonrr);
 
 	    //Verify deliver
-	    if(!bonrrInstance.deliver(wts)){
+	    if(!bonrrInstance.deliver(wts, WRITE_MODE)){
             throw new InvalidNonceException("wts with wrong value");
         }
 
@@ -98,13 +100,15 @@ public class VaultService {
     }
 
 
-    public String[] get(String publicKey, String username, String domain, String nonce, String signature) {
+    public String[] get(String publicKey, String username, String domain, String rid, String signature, long bonrr) {
 
-        String stringNonce = decipherAndDecode(nonce);
+    	//Get Bonrr instance
+	    String[] bonrrInfo = pwm.getBonrrInfo(bonrr);
 
-        // Verify nonce
-        verifyNonce(publicKey, Long.parseLong(stringNonce));
-
+	    /*if(!bonrrInstance.deliver(rid, READ_MODE)){
+            throw new InvalidNonceException("rid with wrong value");
+        }*/
+	    
         // Decipher domain and username
         String[] userAndDom = decipherUsernameAndDomain(domain, username);
 

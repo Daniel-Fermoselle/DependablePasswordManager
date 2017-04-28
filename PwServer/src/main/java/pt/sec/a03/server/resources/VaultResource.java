@@ -68,14 +68,15 @@ public class VaultResource {
     @GET
     @ManagedAsync
     public void getPassword(@Suspended final AsyncResponse asyncResponse,
+    							@HeaderParam(AUTH_LINK_SIG) String authSig,
                                 @HeaderParam(PUBLIC_KEY_HEADER_NAME) String publicKey,
-                                @HeaderParam(SIGNATURE_HEADER_NAME) String stringSig,
-                                @HeaderParam(NONCE_HEADER_NAME) String nonce,
+                                @HeaderParam(NONCE_HEADER_NAME) String rid,
                                 @HeaderParam(DOMAIN_HEADER_NAME) String domain,
-                                @HeaderParam(USERNAME_HEADER_NAME) String username) {
+                                @HeaderParam(USERNAME_HEADER_NAME) String username,
+                                @HeaderParam(BONRR_HEADER_NAME) long bonrr) {
 
         System.out.println("Received Get packet getPassword");
-        String[] response = vaultService.get(publicKey, username, domain, nonce, stringSig);
+        String[] response = vaultService.get(publicKey, username, domain, rid, authSig,bonrr);
         CommonTriplet triplet = new CommonTriplet();
         triplet.setPassword(response[3]);
 

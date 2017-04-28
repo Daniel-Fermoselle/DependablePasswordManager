@@ -256,6 +256,33 @@ public class Database {
 			return new Bonrr(DBbonrr, DBwts);
 		}
 	}
+	
+	public String[] getSpecificBonrr(long bonrr) throws SQLException {
+		//Get mysql conneciton
+		getConnection();
+		Statement stmt = this.conn.createStatement();
+		String DBpw = "";
+		String DBpwHash = "";
+
+		// Step 1: Execute a SQL SELECT query, the query result
+		String strSelect = "select bonrr, MAX(wts) as wts, pw, pwHash from Bonrrs where bonrr = '" + bonrr + "';";
+
+		// Step 2: Process the ResultSet by scrolling the cursor forward via
+		ResultSet rset = stmt.executeQuery(strSelect);
+		int rowCount = 0;
+		while (rset.next()) { // Move the cursor to the next row
+			DBpw = rset.getString("pw");
+			DBpwHash = rset.getString("pwHash");
+			++rowCount;
+		}
+		String [] returnStringArray = {DBpw, DBpwHash};
+		this.conn.close();
+		if (rowCount == 0) {
+			return null;
+		} else {
+			return returnStringArray;
+		}
+	}
 
 	public void saveBonrr(String bonrr, String wts, String signature, Triplet t) throws SQLException{
 		//Get mysql conneciton
