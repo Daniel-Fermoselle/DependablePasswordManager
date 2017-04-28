@@ -13,6 +13,9 @@ public class Bonrr {
     private static final String HASH_USERNAME_IN_MAP = "username";
     private static final String PASSWORD_IN_MAP = "password";
     private static final String HASH_PASSWORD_IN_MAP = "hash-password";
+	private static final String WTS_IN_MAP = "wts";
+	private static final String SIGNATURE_IN_MAP = "signature";
+	
     private static final int FAULT_NUMBER = 1;
 
     private PublicKey cliPubKey;
@@ -23,7 +26,7 @@ public class Bonrr {
     private long wts;
     private ArrayList<String> acklist;
     private long rid;
-    private ArrayList<String> readlist;
+    private ArrayList<HashMap<String, String>> readlist;
     private AuthLink authLink;
 
 
@@ -35,7 +38,7 @@ public class Bonrr {
         this.wts = 0;
         acklist = new ArrayList<String>();
         this.rid = 0;
-        readlist = new ArrayList<String>();
+        readlist = new ArrayList<HashMap<String, String>>();
         authLink = new AuthLink(this);
         this.bonrr = bonrr;
     }
@@ -80,7 +83,7 @@ public class Bonrr {
 
     public String read(HashMap<String, byte[]> infoToSend) {
     	rid = rid++;
-    	readlist = new ArrayList<String>();
+    	readlist = new ArrayList<HashMap<String, String>>();
     	
         HashMap<String, byte[]> infoToSendTemp = new HashMap<>();
 
@@ -101,14 +104,15 @@ public class Bonrr {
             //Send
             authLink.send(cliPrivKey, cliPubKey, servers.get(s), wts, infoToSendTemp, bonrr);
         }
-
-        //TODO verify sign here
         
         while (readlist.size() <= ((servers.keySet().size() + FAULT_NUMBER) / 2)){
 
         }
-        String password = highestVal(readlist);
-        readlist = new ArrayList<String>();
+        
+        HashMap<String,String> highestValue = highestVal(readlist);
+        readlist = new ArrayList<HashMap<String, String>>();
+        	
+        String password = "";
         return password;
     }
 
@@ -125,9 +129,9 @@ public class Bonrr {
         }
     }
     
-    public synchronized void addToReadList(String password, long readid) {
+    public synchronized void addToReadList(HashMap<String,String> value, long readid) {
         if (readid == this.rid) {
-            readlist.add(password);
+        	readlist.add(value);
         }
     }
 
@@ -145,28 +149,20 @@ public class Bonrr {
         }
     }
     
-    private String highestVal(ArrayList<String> readlist){
-    	HashMap<String, Integer> ocurrencies = new HashMap<String, Integer>();
-    	String password = "Hehe xD";
-    	int max = 0;
+    private HashMap<String,String> highestVal(ArrayList<HashMap<String, String>> readlist){
+    	long highestWts = 0;
+    	HashMap<String, String> highestValue = new HashMap<String,String>();
     	
-    	for(String ocurrency : readlist){
-    		if(!ocurrencies.containsKey(ocurrency)){
-    			ocurrencies.put(ocurrency, 1);
-    			if(max < 1){
-    				max = 1;
-    				password = ocurrency;
-    			}
-    		}
-    		else{
-    			int i = ocurrencies.get(ocurrency);
-    			ocurrencies.put(ocurrency, ++i);
-    			if(max < i){
-    				max = i;
-    				password = ocurrency;
-    			}
+    	for(HashMap<String, String> ocurrency : readlist){
+    		if(Long.parseLong(ocurrency.get(WTS_IN_MAP)) > highestWts){
+    			highestWts = Long.parseLong(ocurrency.get(WTS_IN_MAP));
+    			highestValue = ocurrency;
     		}
     	}
-    	return password;
+    	return highestValue;
+    }
+    
+    public String getBonrr(){
+    	return this.bonrr;
     }
 }

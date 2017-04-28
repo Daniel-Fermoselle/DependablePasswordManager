@@ -6,6 +6,7 @@ import javax.ws.rs.client.*;
 import javax.ws.rs.core.Response;
 import java.security.*;
 import java.security.spec.InvalidKeySpecException;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 public class AuthLink {
@@ -14,6 +15,8 @@ public class AuthLink {
 	private static final String HASH_USERNAME_IN_MAP = "username";
 	private static final String PASSWORD_IN_MAP = "password";
 	private static final String HASH_PASSWORD_IN_MAP = "hash-password";
+	private static final String WTS_IN_MAP = "wts";
+	private static final String SIGNATURE_IN_MAP = "signature";
 
 	private static final String PUBLIC_KEY_HEADER_NAME = "public-key";
 	private static final String SIGNATURE_HEADER_NAME = "signature";
@@ -93,27 +96,28 @@ public class AuthLink {
 	public void send(PrivateKey cliPrivKey, PublicKey cliPubKey, String uriToSend, long readid,
 			HashMap<String, byte[]> infoToSend, String bonrr) {
 
-		CommonTriplet commonTriplet = new CommonTriplet(Crypto.encode(infoToSend.get(HASH_DOMAIN_IN_MAP)),
-				Crypto.encode(infoToSend.get(HASH_USERNAME_IN_MAP)), null, null);
+		String hashedDomain = Crypto.encode(infoToSend.get(HASH_DOMAIN_IN_MAP));
+		String hashedUsername = Crypto.encode(infoToSend.get(HASH_USERNAME_IN_MAP));
 
 		Client client = ClientBuilder.newClient();
 		WebTarget vault = client.target("http://" + uriToSend + "/PwServer/").path("vault");
 
 		// Verify Signature
 		String toSign = "" + readid;
-		toSign = toSign + commonTriplet.getDomain();
-		toSign = toSign + commonTriplet.getUsername();
+		toSign = toSign + hashedDomain;
+		toSign = toSign + hashedUsername;
 		byte[] authSig = makeSignature(cliPrivKey, toSign);
 
 		vault.request().header(AUTH_LINK_SIG, Crypto.encode(authSig))
 				.header(PUBLIC_KEY_HEADER_NAME, Crypto.encode(cliPubKey.getEncoded()))
-				.header(NONCE_HEADER_NAME, readid + "")
-				.header(BONRR_HEADER_NAME, bonrr).async()
-				.post(Entity.json(commonTriplet), new InvocationCallback<Response>() {
+				.header(NONCE_HEADER_NAME, readid + "").header(BONRR_HEADER_NAME, bonrr)
+				.header(DOMAIN_HEADER_NAME, hashedDomain).header(USERNAME_HEADER_NAME, hashedUsername).async()
+				.get(new InvocationCallback<Response>() {
 					@Override
 					public void completed(Response response) {
 						try {
-							//TODO
+							// TODO
+							// -----------------------------------------------------------------------------------
 							System.out.println(
 									"Response of save password status code " + response.getStatus() + " received.");
 
@@ -126,7 +130,33 @@ public class AuthLink {
 							// Verify signature
 							verifySignature(serverPubKey, response.getHeaderString(AUTH_LINK_SIG), toVerify);
 
-							AuthLink.this.bonrr.addToReadList(response.getHeaderString(ACK_HEADER_NAME),
+							// TODO
+							// -----------------------------------------------------------------------------------
+
+							String encodedWriteSig = "";
+							String encodedHashDomain = "";
+							String encodedHashUsername = "";
+							String encodedCipheredPassword = "";
+							String encodedCipheredHashPassword = "";
+							String wts = "";
+							
+							String toVerifyWriteSig = bonrr + wts;
+							HashMap<String,String> value = new HashMap<String, String>();
+							value.put(HASH_DOMAIN_IN_MAP, encodedHashDomain);
+							toVerifyWriteSig = toVerifyWriteSig + encodedHashDomain;
+							value.put(HASH_USERNAME_IN_MAP, encodedHashUsername);
+							toVerifyWriteSig = toVerifyWriteSig + encodedHashUsername;
+							value.put(PASSWORD_IN_MAP, encodedCipheredPassword);
+							toVerifyWriteSig = toVerifyWriteSig + encodedCipheredPassword;
+							value.put(HASH_PASSWORD_IN_MAP, encodedCipheredHashPassword);
+							toVerifyWriteSig = toVerifyWriteSig + encodedCipheredHashPassword;
+							
+							// Verify signature
+							verifySignature(serverPubKey, encodedWriteSig, toVerifyWriteSig);
+							
+							value.put(WTS_IN_MAP, wts);
+							value.put(SIGNATURE_IN_MAP, encodedWriteSig);
+							AuthLink.this.bonrr.addToReadList(value,
 									Long.parseLong(response.getHeaderString(NONCE_HEADER_NAME)));
 
 						} catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
