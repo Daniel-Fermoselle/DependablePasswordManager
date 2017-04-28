@@ -34,10 +34,6 @@ public class Database {
 
 	private Connection conn;
 
-	public Database(){
-		
-	}
-	
 	private void getConnection(){
 		String mysqlDB = MY_SQL_DB_DEFAULT;
 		String mysqlID = MYSQL_ID;
@@ -67,28 +63,24 @@ public class Database {
 		Statement stmt = this.conn.createStatement();
 		
 		String publicKeyDB = "";
-		long userID = 0;
 		long nonce = 0;
-		long bonrrID = 0;
-		
+
 		// Step 1: Execute a SQL SELECT query, the query result
-		String strSelect = "select userID, publicKey, nonce, bonrrID from Users where publicKey = '" + publicKey + "'";
+		String strSelect = "select publicKey, nonce from Users where publicKey = '" + publicKey + "'";
 
 		// Step 2: Process the ResultSet by scrolling the cursor forward via
 		ResultSet rset = stmt.executeQuery(strSelect);
 		int rowCount = 0;
 		while (rset.next()) { // Move the cursor to the next row
-			userID = rset.getLong("userID");
 			publicKeyDB = rset.getString("publicKey");
 			nonce = rset.getLong("nonce");
-			bonrrID = rset.getLong("bonrrID");
 			++rowCount;
 		}
 		this.conn.close();
 		if (rowCount == 0) {
 			return null;
 		} else {
-			return new User(userID, publicKeyDB, nonce, bonrrID);
+			return new User(publicKeyDB, nonce);
 		}
 	}
 
@@ -97,153 +89,24 @@ public class Database {
 		getConnection();
 		Statement stmt = this.conn.createStatement();
 		
-		String sqlInsert = "insert into Users(publicKey, nonce, bonrrID) values ('" + publicKey + "'," + 0 + "," + 0 + ");";
+		String sqlInsert = "insert into Users(publicKey, nonce) values ('" + publicKey + "'," + 0 + ");";
 		stmt.execute(sqlInsert);
 		
 		this.conn.close();
 	}
 
-	public void updateUser(String id, String publicKey) throws SQLException {
+	public void updateNonce(String publicKey, long nonce) throws SQLException {
 		//Get mysql conneciton
 		getConnection();
 		Statement stmt = this.conn.createStatement();
 		
-		String strUpdate = "update Users set publicKey='" + publicKey + "' where userID='" + id + "';";
-		stmt.executeUpdate(strUpdate);
-		
-		this.conn.close();
-	}
-
-	public void updateUserNonce(String id, long nonce) throws SQLException {
-		//Get mysql conneciton
-		getConnection();
-		Statement stmt = this.conn.createStatement();
-		
-		String strUpdate = "update Users set nonce='" + nonce + "' where userID='" + id + "';";
+		String strUpdate = "update Users set nonce='" + nonce + "' where publicKey='" + publicKey + "';";
 		stmt.executeUpdate(strUpdate);
 
 		this.conn.close();
 	}
 
-	public void updateUserBonrrID(String id, long bonrrID) throws SQLException{
-		//Get mysql conneciton
-		getConnection();
-		Statement stmt = this.conn.createStatement();
-
-		String strUpdate = "update Users set bonrrID='" + bonrrID + "' where userID='" + id + "';";
-		stmt.executeUpdate(strUpdate);
-
-		this.conn.close();
-	}
-
-	public Triplet getTriplet(String username, String domain) throws SQLException {
-		//Get mysql conneciton
-		getConnection();
-		Statement stmt = this.conn.createStatement();
-		
-		String password = "", usernameDB = "", domainDB = "", pwHash = "";
-		long tripletID = 0, userID = 0;
-		
-		// Step 1: Execute a SQL SELECT query, the query result
-		String strSelect = "select tripletID, userID, pw, username, domain, pwHash from Vault where domain = '" + domain
-				+ "' and username = '" + username + "';";
-
-		// Step 2: Process the ResultSet by scrolling the cursor forward via
-		ResultSet rset = stmt.executeQuery(strSelect);
-		int rowCount = 0;
-		while (rset.next()) { // Move the cursor to the next row
-			tripletID = rset.getLong("tripletID");
-			userID = rset.getLong("userID");
-			password = rset.getString("pw");
-			usernameDB = rset.getString("username");
-			domainDB = rset.getString("domain");
-			pwHash = rset.getString("pwHash");
-			++rowCount;
-		}
-		
-		this.conn.close();
-		if (rowCount == 0) {
-			return null;
-		} else {
-			return new Triplet(tripletID, userID, domainDB, usernameDB, password, pwHash);
-		}
-	}
-
-	public void saveTriplet(Triplet t, long userID) throws SQLException {
-		//Get mysql conneciton
-		getConnection();
-		Statement stmt = this.conn.createStatement();
-		
-		String sqlInsert = "insert into Vault(userID, pw, username, domain, pwHash) values (" + userID + ", '" + t.getPassword()
-				+ "', '" + t.getUsername() + "', '" + t.getDomain() + "', '" + t.getHash() + "');";
-		stmt.execute(sqlInsert);
-		
-		this.conn.close();
-	}
-
-	public void updateTriplet(Triplet t) throws SQLException {
-		//Get mysql conneciton
-		getConnection();
-		Statement stmt = this.conn.createStatement();
-		
-		String strUpdate = "update Vault set pw='" + t.getPassword() + "' , pwHash='" + t.getHash() + "' where domain='"
-				+ t.getDomain() + "' and username='" + t.getUsername() + "';";
-		stmt.executeUpdate(strUpdate);
-		
-		this.conn.close();
-	}
-
-	public void updateHash(long tripletID, String hashPw) throws SQLException {
-		//Get mysql conneciton
-		getConnection();
-		Statement stmt = this.conn.createStatement();
-
-		String strUpdate = "update Vault set pwHash='" + hashPw + "' where tripletID='" + tripletID + "';";
-		stmt.executeUpdate(strUpdate);
-
-		this.conn.close();
-	}
-	
-	public void runScript() throws SQLException, FileNotFoundException {
-		//Get mysql conneciton
-		getConnection();
-		
-		PrintStream originalStream = System.out;
-
-		PrintStream dummyStream = new PrintStream(new OutputStream() {
-			public void write(int b) {
-			}
-		});
-
-		System.setOut(dummyStream);
-		
-		// Initialize object for ScripRunner
-		ScriptRunner sr = new ScriptRunner(conn);
-
-		// Give the input file to Reader
-		Reader reader = new BufferedReader(new FileReader(SQL_SCRIPT_PATH));
-
-		// Exctute script
-		sr.runScript(reader);
-		
-		System.setOut(originalStream);
-
-		this.conn.close();
-	}
-
-	public String[] getDBParams(String port) throws IOException {
-		String fileString = new String(Files.readAllBytes(Paths.get("metadata/metadata.in")), StandardCharsets.UTF_8);
-		String[] args = fileString.split("\n");
-		for (String arg : args) {
-			if(arg.startsWith(port)){
-				String[] split = arg.split(",");
-				return split;
-			}
-		}
-		throw new RuntimeException("No matching database to port");
-	}
-
-	public Bonrr getBonrr(String bonrr) throws SQLException {
+	public Bonrr getBonrrInstance(String bonrr) throws SQLException {
 		//Get mysql conneciton
 		getConnection();
 		Statement stmt = this.conn.createStatement();
@@ -284,5 +147,43 @@ public class Database {
 		this.conn.close();
 	}
 
+	public String[] getDBParams(String port) throws IOException {
+		String fileString = new String(Files.readAllBytes(Paths.get("metadata/metadata.in")), StandardCharsets.UTF_8);
+		String[] args = fileString.split("\n");
+		for (String arg : args) {
+			if(arg.startsWith(port)){
+				String[] split = arg.split(",");
+				return split;
+			}
+		}
+		throw new RuntimeException("No matching database to port");
+	}
+
+	public void runScript() throws SQLException, FileNotFoundException {
+		//Get mysql conneciton
+		getConnection();
+
+		PrintStream originalStream = System.out;
+
+		PrintStream dummyStream = new PrintStream(new OutputStream() {
+			public void write(int b) {
+			}
+		});
+
+		System.setOut(dummyStream);
+
+		// Initialize object for ScripRunner
+		ScriptRunner sr = new ScriptRunner(conn);
+
+		// Give the input file to Reader
+		Reader reader = new BufferedReader(new FileReader(SQL_SCRIPT_PATH));
+
+		// Exctute script
+		sr.runScript(reader);
+
+		System.setOut(originalStream);
+
+		this.conn.close();
+	}
 
 }

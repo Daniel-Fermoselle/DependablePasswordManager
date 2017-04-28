@@ -45,7 +45,6 @@ public class UserResource {
 
     }
 
-    @Path("/meta")
     @GET
     @ManagedAsync
     public void getUserMetaInfo(@Suspended final AsyncResponse asyncResponse,
@@ -58,26 +57,6 @@ public class UserResource {
                 .header(SIGNATURE_HEADER_NAME, response[1])
                 .build());
         System.out.println("Sent Metadata");
-    }
-
-    @Path("/bonrr")
-    @GET
-    @ManagedAsync
-    public void getBonrrID(@Suspended final AsyncResponse asyncResponse,
-                                @HeaderParam(PUBLIC_KEY_HEADER_NAME) String publicKey,
-                                @HeaderParam(SIGNATURE_HEADER_NAME) String signature,
-                                @HeaderParam(NONCE_HEADER_NAME) String nonce) {
-        System.out.println("Received Get packet getBonrrID");
-
-        String[] response = userService.getBonrrID(publicKey, signature, nonce);
-        System.out.println("Before sending bonrrID " + response[2]);
-        asyncResponse.resume(Response.status(Status.OK)
-                .header(SIGNATURE_HEADER_NAME, response[0])
-                .header(NONCE_HEADER_NAME, response[1])
-                .header(BONRR_HEADER_NAME, response[2])
-                .build());
-        System.out.println("Sent bonrrID " + response[2]);
-
     }
 
 }

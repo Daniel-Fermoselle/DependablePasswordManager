@@ -66,7 +66,7 @@ public class VaultService {
     public String[] put(String publicKey, String signature, String wts, Triplet t, String bonrr) {
 
 	    //Get Bonrr instance
-	    Bonrr bonrrInstance = pwm.getBonrr(bonrr);
+	    Bonrr bonrrInstance = pwm.getBonrrInstance(bonrr);
 
 	    //Verify deliver
 	    if(!bonrrInstance.deliver(wts)){
@@ -85,21 +85,17 @@ public class VaultService {
         //Save to bonrr
         pwm.saveBonrr(bonrr, wts,  signature, triplet);
 
-        //Save Pass
-        pwm.saveTriplet(triplet , publicKey);
-
         //Response
         String ackMsg = "ACK" + wts;
 
         //Make signature
-        String sign = signString(ackMsg);
+        String sign = makeSignature(ackMsg);
 
         return new String[] { Crypto.encode(this.pubKey.getEncoded()), sign, "ACK", wts };
     }
 
-
     public String[] get(String publicKey, String username, String domain, String nonce, String signature) {
-
+        /*
         String stringNonce = decipherAndDecode(nonce);
 
         // Verify nonce
@@ -123,33 +119,8 @@ public class VaultService {
         String toSign = nonceNormCiph[0] + pwHashFromDB + t.getPassword();
         String sign = signString(toSign);
 
-        return new String[]{nonceNormCiph[1], sign, pwHashFromDB, t.getPassword()};
-    }
-
-    public String[] getNewNonceForUser(String publicKey) {
-        try {
-            PublicKey cliPublicKey = Crypto.getPubKeyFromByte(Crypto.decode(publicKey));
-
-            //Get new nonce
-            String nonceToSend = pwm.getNewNonceForUser(publicKey);
-
-            //Cipher nonce
-            byte[] cipherNonce = Crypto.cipherString(nonceToSend, cliPublicKey);
-            String encodedNonce = Crypto.encode(cipherNonce);
-
-            return new String[]{nonceToSend, encodedNonce};
-        } catch (NoSuchAlgorithmException | NoSuchPaddingException
-                | IllegalBlockSizeException | BadPaddingException e) {
-            throw new BadRequestException(e.getMessage());
-        } catch (InvalidKeySpecException | InvalidKeyException e) {
-            throw new pt.sec.a03.server.exception.InvalidKeyException(e.getMessage());
-        }
-    }
-
-    public void verifyNonce(String publicKey, long nonce) {
-        if (!pwm.validateNonceForUer(publicKey, nonce)) {
-            throw new InvalidNonceException("Invalid Nonce");
-        }
+        return new String[]{nonceNormCiph[1], sign, pwHashFromDB, t.getPassword()};*/
+        return new String[] { "Pog"};
     }
 
     public String[] decipherUsernameAndDomain(String domain, String username) {
@@ -173,7 +144,7 @@ public class VaultService {
         }
     }
 
-    private String signString(String toSign) {
+    private String makeSignature(String toSign) {
         try {
             return Crypto.encode(Crypto.makeDigitalSignature(toSign.getBytes(), this.privKey));
         } catch (NoSuchAlgorithmException e) {

@@ -47,11 +47,6 @@ public class UserService {
 		}
 	}
 
-	public User getUserByPK(String publicKey) {
-		PasswordManager pwm = new PasswordManager();
-		return pwm.getUserByPK(publicKey);
-	}
-
 	public String[] addUser(String publicKey, String signature, String nonce) {
 
 		String stringNonce = decipherAndDecode(nonce);
@@ -72,7 +67,7 @@ public class UserService {
 
 		//Make signature
 		String toSign = nonceNormCiph[0];
-		String sign = signString(toSign);
+		String sign = makeSignature(toSign);
 
 		return new String[]{sign, nonceNormCiph[1]};
 	}
@@ -89,7 +84,7 @@ public class UserService {
 			String encodedNonce = Crypto.encode(cipherNonce);
 
 			//Make signature
-			String sign = signString(stringNonce);
+			String sign = makeSignature(stringNonce);
 
 			return new String[] { encodedNonce, sign };
 
@@ -140,7 +135,7 @@ public class UserService {
 		}
 	}
 
-	private String signString(String toSign) {
+	private String makeSignature(String toSign) {
 		try {
 			return Crypto.encode(Crypto.makeDigitalSignature(toSign.getBytes(), this.privKey));
 		} catch (NoSuchAlgorithmException e) {
@@ -186,29 +181,4 @@ public class UserService {
 		}
 	}
 
-	public String[] getBonrrID(String publicKey, String signature, String nonce) {
-		String stringNonce = decipherAndDecode(nonce);
-
-		//verify nonce
-		verifyNonce(publicKey, Long.parseLong(stringNonce));
-
-
-		//verify Signature
-		String toVerify = stringNonce + publicKey;
-		verifySignature(publicKey, signature, toVerify);
-
-		//--prepare answer--//
-		//Get new nonce
-		PasswordManager pwm = new PasswordManager();
-		String bonrrID = pwm.getNewBonrrID(publicKey);
-		String[] nonceNormCiph = getNewNonceForUser(publicKey);
-
-		System.out.println("Get burrito: " + bonrrID + " pog: " + nonceNormCiph[0]);
-
-		//Make signature
-		String toSign = nonceNormCiph[0] + bonrrID;
-		String sign = signString(toSign);
-
-		return new String[]{sign, nonceNormCiph[1], bonrrID};
-	}
 }

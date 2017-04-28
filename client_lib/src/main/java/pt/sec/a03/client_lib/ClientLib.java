@@ -73,13 +73,15 @@ public class ClientLib {
 	private static final String BONRR_HEADER_NAME = "bonrr";
 
 	// Attributes
+	private Client client;
 	private PublicKey cliPubKey;
 	private PrivateKey cliPrivKey;
+
 	private Map<String, PublicKey> serversPubKey;
 	private Map<String, Long> nonces;
 	private Map<String, String> bonnrs;
+
 	private Map<String, String> servers;
-	private Client client;
 	private Bonrr bonrr;
 
 	public ClientLib(Map<String, String> hosts) {
@@ -93,32 +95,15 @@ public class ClientLib {
 		}
 		readKeysFromKeyStore(ks, keyStorePw, aliasForPubPrivKey, servers.keySet());
 
-		nonces = new HashMap<String, Long>();
-		for (String alias : serversPubKey.keySet()) {
-			getMetaInfo(alias);
-		}
+		getNonces();
 
-		while (nonces.size() <= ((servers.keySet().size() + Bonrr.FAULT_NUMBER) / 2)){}
+		bonrr = new Bonrr(cliPubKey, cliPrivKey, servers, serversPubKey, Crypto.encode(cliPubKey.getEncoded()));
 
-		if(userRegistered()){
-			createBonrr();
-		}
 	}
 
-	private boolean userRegistered() {
-		int i = 0;
-		for (String s : nonces.keySet()) {
-			if (nonces.get(s) > 0){
-				i++;
-			}
-		}
-		if(i > ((servers.keySet().size() + Bonrr.FAULT_NUMBER) / 2)){
-			return true;
-		}
-		else {
-			return false;
-		}
-	}
+	//----------------------------------------
+	//			Register User Functions
+	//----------------------------------------
 
 	public void register_user() {
 		for (String alias : serversPubKey.keySet()) {
@@ -131,7 +116,6 @@ public class ClientLib {
 				throw new RuntimeException(e.getMessage());
 			}
 		}
-		createBonrr();
 	}
 
 	public String[] prepareForRegisterUser(String alias) {
@@ -211,6 +195,10 @@ public class ClientLib {
 		}
 	}
 
+	//----------------------------------------
+	//			Save Password Functions
+	//----------------------------------------
+
 	public void save_password(String domain, String username, String password) {
 		if (domain == null || username == null || password == null) {
 			throw new InvalidArgumentException(NULL_ARGUMENSTS_MSG);
@@ -254,6 +242,10 @@ public class ClientLib {
 		}
 	}
 
+	//----------------------------------------
+	//			Retrieve Password Functions
+	//----------------------------------------
+
 	public String retrieve_password(String domain, String username) {
 		if (domain == null || username == null) {
 			throw new InvalidArgumentException(NULL_ARGUMENSTS_MSG);
@@ -282,9 +274,11 @@ public class ClientLib {
 		}
 	}
 
-	public void close() {
+	public void close() {}
 
-	}
+	//----------------------------------------
+	//			Initialization Functions
+	//----------------------------------------
 
 	private void readKeysFromKeyStore(KeyStore ks, String keyStorePw, String aliasForPubPrivKey,
 									  Set<String> aliasForServers) {
@@ -311,80 +305,19 @@ public class ClientLib {
 		}
 	}
 
-	private void createBonrr() {
-
-		bonnrs = new HashMap<String, String>();
+	private void getNonces() {
+		nonces = new HashMap<String, Long>();
 		for (String alias : serversPubKey.keySet()) {
-			getBonrrID(alias);
+			getMetaInfo(alias);
 		}
 
-		while (bonnrs.size() <= ((servers.keySet().size() + Bonrr.FAULT_NUMBER) / 2)){}
-
-		bonrr = new Bonrr(cliPubKey, cliPrivKey, servers, serversPubKey, getMaxBonrrID());
-	}
-
-	private void getBonrrID(String alias) {
-		try {
-			// Generate Nonce
-			String stringNonce = nonces.get(alias) + "";
-
-			byte[] cipheredNonce = Crypto.cipherString(stringNonce, serversPubKey.get(alias));
-
-			String stringPubKey = Crypto.encode(cliPubKey.getEncoded());
-			String encodedNonce = Crypto.encode(cipheredNonce);
-
-			// Generate signature
-			String tosign = stringNonce + stringPubKey;
-			String sig = Crypto.encode(Crypto.makeDigitalSignature(tosign.getBytes(), cliPrivKey));
-
-			getWebTargetToResource(alias, USERS_URI).path("/bonrr").request()
-					.header(SIGNATURE_HEADER_NAME, sig)
-					.header(PUBLIC_KEY_HEADER_NAME, stringPubKey)
-					.header(NONCE_HEADER_NAME, encodedNonce)
-					.async().get(new InvocationCallback<Response>() {
-						@Override
-						public void completed(Response response) {
-							try {
-
-								String stringNonceCiph = response.getHeaderString(NONCE_HEADER_NAME);
-								String stringSig = response.getHeaderString(SIGNATURE_HEADER_NAME);
-								String bonrrID = response.getHeaderString(BONRR_HEADER_NAME);
-
-								String stringNonce = Crypto.decipherString(Crypto.decode(stringNonceCiph), cliPrivKey);
-								verifySignature(serversPubKey.get(alias), stringSig, stringNonce + bonrrID);
-
-								addToNonces(alias, Long.parseLong(stringNonce));
-								addToBonrrs(alias, bonrrID);
-
-							} catch (NoSuchAlgorithmException | InvalidKeyException | NoSuchPaddingException
-									| BadPaddingException | IllegalBlockSizeException e) {
-								e.printStackTrace();
-								throw new RuntimeException(e.getMessage());
-							}
-						}
-
-						@Override
-						public void failed(Throwable throwable) {
-							System.out.println("Invocation failed in resgister user.");
-							throwable.printStackTrace();
-						}
-					});
-
-		} catch (InvalidKeyException | NoSuchAlgorithmException | SignatureException | NoSuchPaddingException
-				| IllegalBlockSizeException | BadPaddingException e) {
-			e.printStackTrace();
-			throw new RuntimeException(e.getMessage());
-		}
-	}
-
-	private synchronized void addToBonrrs(String alias, String bonrrID) {
-		bonnrs.put(alias, bonrrID);
+		while (nonces.size() <= ((servers.keySet().size() + Bonrr.FAULT_NUMBER) / 2)){}
 	}
 
 	private void getMetaInfo(String alias) {
 		String stringPubKey = Crypto.encode(cliPubKey.getEncoded());
 
-		getWebTargetToResource(alias, USERS_URI).path("/meta").request()
+		getWebTargetToResource(alias, USERS_URI).request()
 				.header(PUBLIC_KEY_HEADER_NAME, stringPubKey).async().get(new InvocationCallback<Response>() {
 			@Override
 			public void completed(Response response) {
@@ -413,21 +346,16 @@ public class ClientLib {
 		});
 	}
 
+	//----------------------------------------
+	//		Auxiliary functions Functions
+	//----------------------------------------
+
 	private synchronized void addToNonces(String alias, long l) {
 		nonces.put(alias, l);
 	}
 
-	private String getMaxBonrrID() {
-		String s = null;
-		for (String s1 : bonnrs.values()) {
-			if(s == null){
-				s = s1;
-			}
-			else if(s1.compareTo(s) == 1) {
-				s = s1;
-			}
-		}
-		return s +  "";
+	private WebTarget getWebTargetToResource(String alias, String resource) {
+		return 	client.target("http://" + servers.get(alias) + "/PwServer/").path(resource);
 	}
 
 	private void verifyNonce(String stringNonce, String alias) {
@@ -467,10 +395,5 @@ public class ClientLib {
 			throw new BadRequestException(e.getMessage());
 		}
 	}
-
-	private WebTarget getWebTargetToResource(String alias, String resource) {
-		return 	client.target("http://" + servers.get(alias) + "/PwServer/").path(resource);
-	}
-
 
 }

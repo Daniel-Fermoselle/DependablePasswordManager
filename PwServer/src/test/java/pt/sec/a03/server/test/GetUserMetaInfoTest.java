@@ -28,7 +28,7 @@ public class GetUserMetaInfoTest extends AbstractPasswordManagerTest {
             existingUserPK = "1234";
             newUserPK = "Bob";
             db.saveUser(existingUserPK);
-            db.updateUserNonce(db.getUserByPK(existingUserPK).getUserID()+"", 1);
+            db.updateNonce(existingUserPK, 1);
         } catch (SQLException e) {
             e.printStackTrace();
         }
