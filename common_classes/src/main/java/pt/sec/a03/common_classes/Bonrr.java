@@ -7,6 +7,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+
 public class Bonrr {
 
 	private static final String HASH_DOMAIN_IN_MAP = "domain";
@@ -14,6 +18,7 @@ public class Bonrr {
 	private static final String PASSWORD_IN_MAP = "password";
 	private static final String HASH_PASSWORD_IN_MAP = "hash-password";
 	private static final String WTS_IN_MAP = "wts";
+	private static final String RID_IN_MAP = "map-rid";
 	private static final String SIGNATURE_IN_MAP = "signature";
 
 	public static final int FAULT_NUMBER = 1;
@@ -28,6 +33,7 @@ public class Bonrr {
 	private long rid;
 	private ArrayList<HashMap<String, String>> readlist;
 	private AuthLink authLink;
+	private boolean reading;
 
 	public Bonrr(PublicKey cliPubKey, PrivateKey cliPrivKey, Map<String, String> servers,
 			Map<String, PublicKey> serversPubKey, String bonrr) {
@@ -41,6 +47,7 @@ public class Bonrr {
 		readlist = new ArrayList<HashMap<String, String>>();
 		authLink = new AuthLink(this);
 		this.bonrr = bonrr;
+		reading=false;
 	}
 
 	public Bonrr(String bonrr, long wts) {
@@ -49,8 +56,11 @@ public class Bonrr {
 	}
 
 	public String write(HashMap<String, byte[]> infoToSend) {
-		wts = wts + 1;
-		acklist = new ArrayList<String>();
+		if(!reading){
+			wts = wts + 1;
+			rid = rid + 1;
+			acklist = new ArrayList<String>();
+		}
 		HashMap<String, byte[]> infoToSendTemp = new HashMap<>();
 
 		for (String s : infoToSend.keySet()) {
@@ -79,10 +89,21 @@ public class Bonrr {
 
 		}
 		acklist = new ArrayList<String>();
+		if(reading){
+			reading = false;
+			try {
+				return Crypto.decipherString(infoToSendTemp.get(PASSWORD_IN_MAP), cliPrivKey);
+			} catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException | IllegalBlockSizeException
+					| BadPaddingException e) {
+				e.printStackTrace();
+				throw new RuntimeException(e.getMessage());
+			}
+		}
 		return "Value Wrote\n";
 	}
 
 	public String read(HashMap<String, byte[]> infoToSend) {
+		reading=true;
 		rid = rid + 1;
 		readlist = new ArrayList<HashMap<String, String>>();
 		String password;
@@ -128,9 +149,16 @@ public class Bonrr {
 		}
 
 		readlist = new ArrayList<HashMap<String, String>>();
-
-		return password;
+		this.wts = Long.parseLong(highestValue.get(WTS_IN_MAP));
+		this.rid = Long.parseLong(highestValue.get(RID_IN_MAP));
+		HashMap<String, byte[]> readBroadcastInfo = new HashMap<String, byte[]>();
+		readBroadcastInfo.put(HASH_DOMAIN_IN_MAP, highestValue.get(HASH_DOMAIN_IN_MAP).getBytes());
+		readBroadcastInfo.put(HASH_USERNAME_IN_MAP, highestValue.get(HASH_USERNAME_IN_MAP).getBytes());
+		readBroadcastInfo.put(PASSWORD_IN_MAP, Crypto.decode(highestValue.get(PASSWORD_IN_MAP)));
+		readBroadcastInfo.put(HASH_PASSWORD_IN_MAP, Crypto.decode(highestValue.get(HASH_PASSWORD_IN_MAP)));
+		return write(readBroadcastInfo);
 	}
+
 
 	public boolean deliver(Long wts) {
 		if (wts > this.wts) {

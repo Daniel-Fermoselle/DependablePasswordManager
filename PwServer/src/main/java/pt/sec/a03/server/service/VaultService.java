@@ -33,173 +33,174 @@ public class VaultService {
 
 	private static final String SERVER_KEY_STORE_PASS = "insecure";
 	private static final String WRITE_MODE = "write";
-    private static final String READ_MODE = "read";
+	private static final String READ_MODE = "read";
 
 	PrivateKey privKey;
 	PublicKey pubKey;
 	KeyStore ksServ;
 	PasswordManager pwm;
 
-	//Ver se bonrr existe se nao cria-lo
+	// Ver se bonrr existe se nao cria-lo
 
-    //Instacia-lo com args
+	// Instacia-lo com args
 
-    //Passar msg ao bonrr
+	// Passar msg ao bonrr
 
 	public VaultService() {
 		try {
-            String paramForKeys = getAlias(MyApplication.PORT);
-            this.ksServ = Crypto.readKeystoreFile("ks/" + paramForKeys + ".jks", SERVER_KEY_STORE_PASS.toCharArray());
-            Certificate cert = ksServ.getCertificate(paramForKeys);
-            if (cert == null) {
-                throw new RuntimeException("No certificate for server");
-            }
-            this.pubKey = Crypto.getPublicKeyFromCertificate(cert);
-            this.privKey = Crypto.getPrivateKeyFromKeystore(ksServ, paramForKeys, SERVER_KEY_STORE_PASS);
-            this.pwm = new PasswordManager();
+			String paramForKeys = getAlias(MyApplication.PORT);
+			this.ksServ = Crypto.readKeystoreFile("ks/" + paramForKeys + ".jks", SERVER_KEY_STORE_PASS.toCharArray());
+			Certificate cert = ksServ.getCertificate(paramForKeys);
+			if (cert == null) {
+				throw new RuntimeException("No certificate for server");
+			}
+			this.pubKey = Crypto.getPublicKeyFromCertificate(cert);
+			this.privKey = Crypto.getPrivateKeyFromKeystore(ksServ, paramForKeys, SERVER_KEY_STORE_PASS);
+			this.pwm = new PasswordManager();
 
 		} catch (KeyStoreException | NoSuchAlgorithmException | CertificateException | IOException
 				| UnrecoverableKeyException e) {
 			e.printStackTrace();
 			throw new RuntimeException(e.getMessage());
-		} 
+		}
 	}
 
-    public String[] put(String publicKey, Triplet t, String bonrr) {
+	public String[] put(String publicKey, Triplet t, String bonrr) {
 
-	    //Get Bonrr instance
-	    Bonrr bonrrInstance = pwm.getBonrrInstance(bonrr);
+		// Get Bonrr instance
+		Bonrr bonrrInstance = pwm.getBonrrInstance(bonrr);
 
-	    //Verify deliver
-	    if(!bonrrInstance.deliver(t.getWts())){
-            throw new InvalidNonceException("wts with wrong value");
-        }
+		// Verify deliver
+		if (bonrrInstance.deliver(t.getWts())) {
+			// Decipher
+			String[] userAndDom = decipherUsernameAndDomain(t.getDomain(), t.getUsername());
 
-        // Decipher
-        String[] userAndDom = decipherUsernameAndDomain(t.getDomain(), t.getUsername());
+			// Verify signature
+			String serverSideTosign = bonrr + t.getWts() + userAndDom[1] + userAndDom[0] + t.getPassword()
+					+ t.getHash();
+			verifySignature(publicKey, t.getSignature(), serverSideTosign);
 
-        // Verify signature
-        String serverSideTosign = bonrr + t.getWts() + userAndDom[1] + userAndDom[0] + t.getPassword() + t.getHash();
-        verifySignature(publicKey, t.getSignature(), serverSideTosign);
+			Triplet triplet = new Triplet(userAndDom[1], userAndDom[0], t.getPassword(), t.getHash(), t.getSignature(),
+					t.getWts());
 
-        Triplet triplet = new Triplet(userAndDom[1], userAndDom[0], t.getPassword(), t.getHash(), t.getSignature(), t.getWts());
+			// Save to bonrr
+			pwm.saveBonrr(bonrr, triplet);
+		}
+		// Response
+		String ackMsg = "ACK" + t.getWts();
 
-        //Save to bonrr
-        pwm.saveBonrr(bonrr, triplet);
+		// Make signature
+		String sign = makeSignature(ackMsg);
 
-        //Response
-        String ackMsg = "ACK" + t.getWts();
+		return new String[] {Crypto.encode(this.pubKey.getEncoded()), sign, "ACK", t.getWts() + "" };
+	}
 
-        //Make signature
-        String sign = makeSignature(ackMsg);
+	public String[] get(String publicKey, String username, String domain, String rid, String bonrr) {
 
-        return new String[] { Crypto.encode(this.pubKey.getEncoded()), sign, "ACK", t.getWts() + "" };
-    }
+		// Decipher domain and username
+		String[] userAndDom = decipherUsernameAndDomain(domain, username);
 
+		// Get Bonrr instance
+		Triplet bonrrInfo = pwm.getBonrr(bonrr, userAndDom[0], userAndDom[1]);
 
-    public String[] get(String publicKey, String username, String domain, String rid, String bonrr) {
+		String[] cipherUserDom = cipherUsernameAndDomain(bonrrInfo.getDomain(), bonrrInfo.getUsername(), publicKey);
+		bonrrInfo.setDomain(cipherUserDom[1]);
+		bonrrInfo.setUsername(cipherUserDom[0]);
 
-        // Decipher domain and username
-        String[] userAndDom = decipherUsernameAndDomain(domain, username);
+		/*
+		 * if(!bonrrInstance.deliver(rid, READ_MODE)){ throw new
+		 * InvalidNonceException("rid with wrong value"); }
+		 */
 
-        //Get Bonrr instance
-        Triplet bonrrInfo = pwm.getBonrr(bonrr, userAndDom[0], userAndDom[1]);
+		// Make signature
+		String toSign = rid + bonrrInfo.getWts() + bonrrInfo.getDomain() + bonrrInfo.getUsername()
+				+ bonrrInfo.getPassword() + bonrrInfo.getHash() + bonrrInfo.getSignature();
+		String sign = makeSignature(toSign);
 
-        String[] cipherUserDom = cipherUsernameAndDomain(bonrrInfo.getDomain(), bonrrInfo.getUsername(), publicKey);
-        bonrrInfo.setDomain(cipherUserDom[1]);
-        bonrrInfo.setUsername(cipherUserDom[0]);
+		return new String[] { Crypto.encode(this.pubKey.getEncoded()), sign, rid, bonrrInfo.getWts() + "",
+				bonrrInfo.getDomain(), bonrrInfo.getUsername(), bonrrInfo.getPassword(), bonrrInfo.getHash(),
+				bonrrInfo.getSignature() };
+	}
 
-	    /*if(!bonrrInstance.deliver(rid, READ_MODE)){
-            throw new InvalidNonceException("rid with wrong value");
-        }*/
+	private String[] cipherUsernameAndDomain(String domain, String username, String publicKey) {
+		try {
+			PublicKey pubKey = Crypto.getPubKeyFromByte(Crypto.decode(publicKey));
+			String cipheredDomain = Crypto.encode(Crypto.cipherString(domain, pubKey));
+			String cipheredUsername = Crypto.encode(Crypto.cipherString(username, pubKey));
+			return new String[] { cipheredUsername, cipheredDomain };
+		} catch (InvalidKeySpecException | NoSuchAlgorithmException | NoSuchPaddingException | IllegalBlockSizeException
+				| BadPaddingException | InvalidKeyException e) {
+			e.printStackTrace();
+			throw new RuntimeException(e.getMessage());
+		}
+	}
 
-        //Make signature
-        String toSign = rid + bonrrInfo.getWts() + bonrrInfo.getDomain() + bonrrInfo.getUsername() + bonrrInfo.getPassword()
-                + bonrrInfo.getHash() + bonrrInfo.getSignature();
-        String sign = makeSignature(toSign);
+	public String[] decipherUsernameAndDomain(String domain, String username) {
+		try {
+			byte[] byteDomain = Crypto.decode(domain);
+			byte[] byteUsername = Crypto.decode(username);
 
-        return new String[]{Crypto.encode(this.pubKey.getEncoded()), sign, rid, bonrrInfo.getWts() + "", bonrrInfo.getDomain(), bonrrInfo.getUsername(),
-            bonrrInfo.getPassword(), bonrrInfo.getHash(), bonrrInfo.getSignature()};
-    }
+			String hashedDomain = null;
+			String hashedUsername = null;
 
-    private String[] cipherUsernameAndDomain(String domain, String username, String publicKey) {
-        try {
-            PublicKey pubKey = Crypto.getPubKeyFromByte(Crypto.decode(publicKey));
-            String cipheredDomain = Crypto.encode(Crypto.cipherString(domain, pubKey));
-            String cipheredUsername = Crypto.encode(Crypto.cipherString(username, pubKey));
-            return new String[]{cipheredUsername, cipheredDomain};
-        } catch (InvalidKeySpecException | NoSuchAlgorithmException | NoSuchPaddingException
-                | IllegalBlockSizeException |  BadPaddingException | InvalidKeyException e) {
-            e.printStackTrace();
-            throw new RuntimeException(e.getMessage());
-        }
-    }
+			hashedDomain = Crypto.decipherString(byteDomain, this.privKey);
 
-    public String[] decipherUsernameAndDomain(String domain, String username) {
-        try {
-            byte[] byteDomain = Crypto.decode(domain);
-            byte[] byteUsername = Crypto.decode(username);
+			hashedUsername = Crypto.decipherString(byteUsername, this.privKey);
 
-            String hashedDomain = null;
-            String hashedUsername = null;
+			return new String[] { hashedUsername, hashedDomain };
+		} catch (InvalidKeyException e) {
+			throw new pt.sec.a03.server.exception.InvalidKeyException(e.getMessage());
+		} catch (BadPaddingException | NoSuchAlgorithmException | IllegalBlockSizeException
+				| NoSuchPaddingException e) {
+			throw new BadRequestException(e.getMessage());
+		}
+	}
 
-            hashedDomain = Crypto.decipherString(byteDomain, this.privKey);
+	private String makeSignature(String toSign) {
+		try {
+			return Crypto.encode(Crypto.makeDigitalSignature(toSign.getBytes(), this.privKey));
+		} catch (NoSuchAlgorithmException e) {
+			throw new BadRequestException(e.getMessage());
+		} catch (SignatureException e) {
+			throw new InvalidSignatureException(e.getMessage());
+		} catch (InvalidKeyException e) {
+			throw new pt.sec.a03.server.exception.InvalidKeyException(e.getMessage());
+		}
+	}
 
-            hashedUsername = Crypto.decipherString(byteUsername, this.privKey);
+	public void verifySignature(String publicKey, String signature, String serverSideTosign) {
+		try {
+			byte[] serverSideSig = Crypto.decode(signature);
 
-            return new String[]{hashedUsername, hashedDomain};
-        } catch (InvalidKeyException e) {
-            throw new pt.sec.a03.server.exception.InvalidKeyException(e.getMessage());
-        } catch (BadPaddingException | NoSuchAlgorithmException
-                | IllegalBlockSizeException | NoSuchPaddingException e) {
-            throw new BadRequestException(e.getMessage());
-        }
-    }
+			PublicKey pk = Crypto.getPubKeyFromByte(Crypto.decode(publicKey));
 
-    private String makeSignature(String toSign) {
-        try {
-            return Crypto.encode(Crypto.makeDigitalSignature(toSign.getBytes(), this.privKey));
-        } catch (NoSuchAlgorithmException e) {
-            throw new BadRequestException(e.getMessage());
-        } catch (SignatureException e) {
-            throw new InvalidSignatureException(e.getMessage());
-        } catch (InvalidKeyException e) {
-            throw new pt.sec.a03.server.exception.InvalidKeyException(e.getMessage());
-        }
-    }
+			if (!Crypto.verifyDigitalSignature(serverSideSig, serverSideTosign.getBytes(), pk)) {
+				throw new InvalidSignatureException("Invalid Signature");
+			}
+		} catch (InvalidKeySpecException | InvalidKeyException e) {
+			throw new pt.sec.a03.server.exception.InvalidKeyException(e.getMessage());
+		} catch (SignatureException e) {
+			throw new InvalidSignatureException(e.getMessage());
+		} catch (NoSuchAlgorithmException e) {
+			throw new BadRequestException(e.getMessage());
+		}
+	}
 
-    public void verifySignature(String publicKey, String signature, String serverSideTosign) {
-        try {
-            byte[] serverSideSig = Crypto.decode(signature);
-
-            PublicKey pk = Crypto.getPubKeyFromByte(Crypto.decode(publicKey));
-
-            if (!Crypto.verifyDigitalSignature(serverSideSig, serverSideTosign.getBytes(), pk)) {
-                throw new InvalidSignatureException("Invalid Signature");
-            }
-        } catch (InvalidKeySpecException | InvalidKeyException e) {
-            throw new pt.sec.a03.server.exception.InvalidKeyException(e.getMessage());
-        } catch (SignatureException e) {
-            throw new InvalidSignatureException(e.getMessage());
-        } catch (NoSuchAlgorithmException e) {
-            throw new BadRequestException(e.getMessage());
-        }
-    }
-
-    private String getAlias(String port) {
-        try {
-            String fileString = new String(Files.readAllBytes(Paths.get("metadata/metadata.in")), StandardCharsets.UTF_8);
-            String[] args = fileString.split("\n");
-            for (String arg : args) {
-                if (arg.startsWith(port)) {
-                    String[] split = arg.split(",");
-                    return split[4];
-                }
-            }
-            throw new RuntimeException("No matching alias to port");
-        } catch (IOException e) {
-            throw new RuntimeException(e.getMessage());
-        }
-    }
+	private String getAlias(String port) {
+		try {
+			String fileString = new String(Files.readAllBytes(Paths.get("metadata/metadata.in")),
+					StandardCharsets.UTF_8);
+			String[] args = fileString.split("\n");
+			for (String arg : args) {
+				if (arg.startsWith(port)) {
+					String[] split = arg.split(",");
+					return split[4];
+				}
+			}
+			throw new RuntimeException("No matching alias to port");
+		} catch (IOException e) {
+			throw new RuntimeException(e.getMessage());
+		}
+	}
 
 }

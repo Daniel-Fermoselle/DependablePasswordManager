@@ -21,6 +21,7 @@ public class AuthLink {
 	private static final String HASH_PASSWORD_IN_MAP = "hash-password";
 	private static final String WTS_IN_MAP = "wts";
 	private static final String SIGNATURE_IN_MAP = "signature";
+	private static final String RID_IN_MAP = "map-rid";
 
 	private static final String PUBLIC_KEY_HEADER_NAME = "public-key";
 	private static final String SIGNATURE_HEADER_NAME = "signature";
@@ -167,6 +168,7 @@ public class AuthLink {
                             value.put(HASH_PASSWORD_IN_MAP, encodedCipheredHashPassword);
                             value.put(WTS_IN_MAP, wts + "");
                             value.put(SIGNATURE_IN_MAP, encodedWriteSig);
+                            value.put(RID_IN_MAP, rid + "");
 							AuthLink.this.bonrr.addToReadList(value, rid);
 
 						} catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
