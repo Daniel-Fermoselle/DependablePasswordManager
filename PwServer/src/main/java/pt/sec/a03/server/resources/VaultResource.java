@@ -56,7 +56,8 @@ public class VaultResource {
         System.out.println("Received Post packet addPassword");
         authLink.deliverWrite(publicKey, authSig, signature, wts, t, rid, rank);
 
-        Triplet triplet = new Triplet(t.getDomain(), t.getUsername(), t.getPassword(), t.getHash(), signature, Long.parseLong(wts), Long.parseLong(rid), rank);
+        Triplet triplet = new Triplet(t.getDomain(), t.getUsername(), t.getPassword(), t.getHash(), signature,
+                Long.parseLong(wts), Long.parseLong(rid), Long.parseLong(rank));
         String[] response = vaultService.put(publicKey, triplet, bonrr);
 
         asyncResponse.resume(Response.status(Status.CREATED)
@@ -84,17 +85,18 @@ public class VaultResource {
         String[] response = vaultService.get(publicKey, username, domain, rid, bonrr);
 
         CommonTriplet triplet = new CommonTriplet();
-        triplet.setDomain(response[4]);
-        triplet.setUsername(response[5]);
-        triplet.setPassword(response[6]);
-        triplet.setHash(response[7]);
+        triplet.setDomain(response[5]);
+        triplet.setUsername(response[6]);
+        triplet.setPassword(response[7]);
+        triplet.setHash(response[8]);
 
         asyncResponse.resume(Response.status(Status.OK)
                 .header(PUBLIC_KEY_HEADER_NAME, response[0])
                 .header(AUTH_LINK_SIG, response[1])
                 .header(RID_HEADER_NAME, response[2])
                 .header(NONCE_HEADER_NAME, response[3])
-                .header(SIGNATURE_HEADER_NAME, response[8])
+                .header(RANK_HEADER_NAME, response[4])
+                .header(SIGNATURE_HEADER_NAME, response[9])
                 .entity(triplet)
                 .build());
     }

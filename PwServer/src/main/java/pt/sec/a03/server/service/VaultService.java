@@ -32,8 +32,6 @@ import pt.sec.a03.server.exception.InvalidNonceException;
 public class VaultService {
 
 	private static final String SERVER_KEY_STORE_PASS = "insecure";
-	private static final String WRITE_MODE = "write";
-	private static final String READ_MODE = "read";
 
 	PrivateKey privKey;
 	PublicKey pubKey;
@@ -70,21 +68,29 @@ public class VaultService {
 		// Get Bonrr instance
 		Bonrr bonrrInstance = pwm.getBonrrInstance(bonrr);
 
+		System.out.println("Got BonrrInstance");
+
 		// Verify deliver
 		if (bonrrInstance.deliver(t.getWts(), t.getRank())) {
-			// Decipher
+            System.out.println("Going to update/put Bonrr");
+            // Decipher
 			String[] userAndDom = decipherUsernameAndDomain(t.getDomain(), t.getUsername());
 
-			// Verify signature
-			String serverSideTosign = bonrr + t.getWts() + t.getRid() + t.getRank() + userAndDom[1] + userAndDom[0] + t.getPassword()
+            System.out.println("Going to verify sig");
+            System.out.println("Bonrr: " + bonrr + " Wts: " + t.getWts() + " Rid: " + t.getRid() + " Rank: " + t.getRank());
+            // Verify signature
+			String serverSideTosign = bonrr + (t.getWts() + "") + (t.getRank() + "") + userAndDom[1] + userAndDom[0] + t.getPassword()
 					+ t.getHash();
 			verifySignature(publicKey, t.getSignature(), serverSideTosign);
 
-			Triplet triplet = new Triplet(userAndDom[1], userAndDom[0], t.getPassword(), t.getHash(), t.getSignature(),
+            System.out.println("Verified update/put Bonrr");
+
+            Triplet triplet = new Triplet(userAndDom[1], userAndDom[0], t.getPassword(), t.getHash(), t.getSignature(),
 					t.getWts(),t.getRid(), t.getRank());
 
 			// Save to bonrr
-			pwm.saveBonrr(bonrr, triplet);
+            System.out.println("Going to save update/put Bonrr");
+            pwm.saveBonrr(bonrr, triplet);
 		}
 		// Response
 		String ackMsg = "ACK" + t.getWts();
@@ -113,13 +119,13 @@ public class VaultService {
 		 */
 
 		// Make signature
-		String toSign = rid + bonrrInfo.getWts() + bonrrInfo.getDomain() + bonrrInfo.getUsername()
-				+ bonrrInfo.getPassword() + bonrrInfo.getHash() + bonrrInfo.getSignature();
+		String toSign = rid + (bonrrInfo.getWts() + "") + (bonrrInfo.getRank() + "") + bonrrInfo.getDomain()
+                + bonrrInfo.getUsername() + bonrrInfo.getPassword() + bonrrInfo.getHash() + bonrrInfo.getSignature();
 		String sign = makeSignature(toSign);
 
 		return new String[] { Crypto.encode(this.pubKey.getEncoded()), sign, rid, bonrrInfo.getWts() + "",
-				bonrrInfo.getDomain(), bonrrInfo.getUsername(), bonrrInfo.getPassword(), bonrrInfo.getHash(),
-				bonrrInfo.getSignature() };
+				bonrrInfo.getRank() + "", bonrrInfo.getDomain(), bonrrInfo.getUsername(), bonrrInfo.getPassword(),
+				bonrrInfo.getHash(), bonrrInfo.getSignature() };
 	}
 
 	private String[] cipherUsernameAndDomain(String domain, String username, String publicKey) {

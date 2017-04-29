@@ -112,11 +112,11 @@ public class Database {
 		Statement stmt = this.conn.createStatement();
 
 		String DBbonrr = "";
-		String DBrank= "";
+		long DBrank= 0;
 		long DBwts = 0;
 
 		// Step 1: Execute a SQL SELECT query, the query result
-		String strSelect = "select bonrr, MAX(wts) as wts, rank from Bonrrs where bonrr = '" + bonrr + "';";
+		String strSelect = "select bonrr, MAX(wts) as wts, rank from Bonrrs where bonrr = '" + bonrr + "'GROUP BY wts ORDER BY wts DESC;";
 
 		// Step 2: Process the ResultSet by scrolling the cursor forward via
 		ResultSet rset = stmt.executeQuery(strSelect);
@@ -124,8 +124,9 @@ public class Database {
 		while (rset.next()) { // Move the cursor to the next row
 			DBbonrr = rset.getString("bonrr");
 			DBwts = rset.getLong("wts");
-			DBrank = rset.getString("rank");
+			DBrank = rset.getLong("rank");
 			++rowCount;
+			break;
 		}
 		this.conn.close();
 		if (rowCount == 0) {
@@ -141,7 +142,7 @@ public class Database {
 		Statement stmt = this.conn.createStatement();
 
 		String sqlInsert = "insert into Bonrrs(bonrr, wts, rank, signature, username, domain, pw, pwHash) " +
-				" values ('" + bonrr + "', " + t.getWts() + ", '" + t.getRank() + "', '" + t.getSignature() + "', '" + t.getUsername() + "', '"
+				" values ('" + bonrr + "', " + t.getWts() + ", " + t.getRank() + ", '" + t.getSignature() + "', '" + t.getUsername() + "', '"
 				+ t.getDomain() + "', '" + t.getPassword() + "', '" + t.getHash() + "');";
 
 		stmt.execute(sqlInsert);
@@ -169,7 +170,7 @@ public class Database {
             t.setHash(rset.getString("pwHash"));
             t.setSignature(rset.getString("signature"));
             t.setWts(rset.getLong("wts"));
-            t.setRank(rset.getString("rank"));
+            t.setRank(rset.getLong("rank"));
             ++rowCount;
             break;
         }

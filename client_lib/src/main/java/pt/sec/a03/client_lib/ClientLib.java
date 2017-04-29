@@ -40,15 +40,16 @@ import pt.sec.a03.crypto.Crypto;
 public class ClientLib {
 
 	// Connection related constants
-	private static final String VAULT_URI = "vault";
 	private static final String USERS_URI = "users";
 
 	private static final String PUBLIC_KEY_HEADER_NAME = "public-key";
 	private static final String SIGNATURE_HEADER_NAME = "signature";
 	private static final String NONCE_HEADER_NAME = "nonce-value";
-	private static final String HASH_PASSWORD_HEADER_NAME = "hash-password";
-	private static final String DOMAIN_HEADER_NAME = "domain";
-	private static final String USERNAME_HEADER_NAME = "username";
+
+    private static final String HASH_DOMAIN_IN_MAP = "domain";
+    private static final String HASH_USERNAME_IN_MAP = "username";
+    private static final String PASSWORD_IN_MAP = "password";
+    private static final String HASH_PASSWORD_IN_MAP = "hash-password";
 
 	// Internal message constants
 	private static final String SUCCESS_MSG = "Success";
@@ -66,11 +67,7 @@ public class ClientLib {
 	private static final String INTERNAL_SERVER_FAILURE_EXCEPTION_MSG = "There were an problem with the server";
 	private static final String UNEXPECTED_ERROR_EXCEPTION_MSG = "There was an unexpected error";
 	private static final String INVALID_ARGUMENSTS_MSG = "One of the arguments was invalid";
-	private static final String HASH_DOMAIN_IN_MAP = "domain";
-	private static final String HASH_USERNAME_IN_MAP = "username";
-	private static final String PASSWORD_IN_MAP = "password";
-	private static final String HASH_PASSWORD_IN_MAP = "hash-password";
-	private static final String BONRR_HEADER_NAME = "bonrr";
+
 
 	// Attributes
 	private Client client;
@@ -373,23 +370,6 @@ public class ClientLib {
 				throw new InvalidSignatureException("Invalid Signature");
 			}
 		} catch (NoSuchAlgorithmException | SignatureException | InvalidKeyException e) {
-			throw new BadRequestException(e.getMessage());
-		}
-	}
-
-	private void verifyPassHash(String password, String encodedHashReceived, PublicKey pubKeyClient) {
-		try {
-			byte[] hashToVerify = Crypto.hashString(password);
-			byte[] cipheredHashReceived = Crypto.decode(encodedHashReceived);
-			String hashReceived = Crypto.decipherString(cipheredHashReceived, pubKeyClient);
-
-			if (!hashReceived.equals(new String(hashToVerify))) {
-				throw new InvalidReceivedPasswordException(
-						"Password received was different than the one sent to the server");
-			}
-
-		} catch (NoSuchAlgorithmException | InvalidKeyException | NoSuchPaddingException | IllegalBlockSizeException
-				| BadPaddingException e) {
 			throw new BadRequestException(e.getMessage());
 		}
 	}

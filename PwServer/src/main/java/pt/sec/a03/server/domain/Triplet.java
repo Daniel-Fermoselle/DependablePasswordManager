@@ -13,18 +13,21 @@ public class Triplet {
 	private String signature;
 	private long wts;
 	private long rid;
-	private String rank;
+	private long rank;
 
 
 	public Triplet() {}
 	
-	public Triplet(String domain, String username, String password, String pwHash, String signature, long wts, long rid, String rank) {
+	public Triplet(String domain, String username, String password, String pwHash, String signature, long wts,
+				   long rid, long rank) {
 		this.domain = domain;
 		this.username = username;
 		this.password = password;
 		this.hash = pwHash;
 		this.signature = signature;
 		this.wts = wts;
+		this.rid = rid;
+		this.rank = rank;
 	}	
 
 	public String getDomain() {
@@ -71,7 +74,7 @@ public class Triplet {
     
     public void setRid(long rid) { this.rid = rid; }
     
-    public String getRank() { return rank; }
+    public long getRank() { return rank; }
     
-    public void setRank(String rank) { this.rank = rank; }
+    public void setRank(long rank) { this.rank = rank; }
 }
