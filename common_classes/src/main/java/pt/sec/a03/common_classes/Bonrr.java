@@ -86,7 +86,6 @@ public class Bonrr {
 		rid = rid++;
 		readlist = new ArrayList<HashMap<String, String>>();
 		String password = "Champog";
-
 		HashMap<String, byte[]> infoToSendTemp = new HashMap<>();
 
 		for (String s : infoToSend.keySet()) {
@@ -94,7 +93,6 @@ public class Bonrr {
 		}
 
 		for (String s : servers.keySet()) {
-
 			// Cipher domain and username
 			ArrayList<byte[]> dataCiphered = Crypto.cipher(new String[] {
 					new String(infoToSend.get(HASH_DOMAIN_IN_MAP)), new String(infoToSend.get(HASH_USERNAME_IN_MAP)) },
@@ -108,12 +106,9 @@ public class Bonrr {
 			authLink.send(cliPrivKey, cliPubKey, servers.get(s), wts, infoToSendTemp, bonrr);
 		}
 
-		while (readlist.size() <= ((servers.keySet().size() + FAULT_NUMBER) / 2)) {
-
-		}
+		while (readlist.size() <= ((servers.keySet().size() + FAULT_NUMBER) / 2)) {}
 
 		HashMap<String, String> highestValue = highestVal(readlist);
-
 		try {
 			// Decipher password
 			String passwordReceived = highestValue.get(PASSWORD_IN_MAP);
@@ -169,7 +164,7 @@ public class Bonrr {
 		}
 	}
 
-	private HashMap<String, String> highestVal(ArrayList<HashMap<String, String>> readlist) {
+	public HashMap<String, String> highestVal(ArrayList<HashMap<String, String>> readlist) {
 		long highestWts = 0;
 		HashMap<String, String> highestValue = new HashMap<String, String>();
 
@@ -180,9 +175,5 @@ public class Bonrr {
 			}
 		}
 		return highestValue;
-	}
-
-	public String getBonrr() {
-		return this.bonrr;
 	}
 }
