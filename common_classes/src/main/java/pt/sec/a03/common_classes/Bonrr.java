@@ -52,6 +52,7 @@ public class Bonrr {
 		this.bonrr = bonrr;
 		reading=false;
 		writeVal = new HashMap<String, byte[]>();
+		this.rank = "100";
 	}
 
 	public Bonrr(String bonrr, long wts, String rank) {
@@ -66,9 +67,10 @@ public class Bonrr {
 		acklist = new ArrayList<String>();
 		readlist = new ArrayList<HashMap<String, String>>();
 		this.writeVal=infoToSend;
+		writeVal.put(RANK_IN_MAP, this.rank.getBytes());
 		HashMap<String, byte[]> infoToRead = new HashMap<String, byte[]>();
-		infoToRead.put(HASH_DOMAIN_IN_MAP, infoToSend.get(infoToSend));
-		infoToRead.put(HASH_USERNAME_IN_MAP, infoToSend.get(infoToSend));
+		infoToRead.put(HASH_DOMAIN_IN_MAP, infoToSend.get(HASH_DOMAIN_IN_MAP));
+		infoToRead.put(HASH_USERNAME_IN_MAP, infoToSend.get(HASH_USERNAME_IN_MAP));
 		return read(infoToRead);
 	}
 
@@ -103,6 +105,24 @@ public class Bonrr {
 		while (readlist.size() <= ((servers.keySet().size() + FAULT_NUMBER) / 2)) {
 		}
 
+		int nrOfErrors = 0;
+		for(HashMap<String,String> readlistElement: readlist){
+			if(readlistElement==null){
+				nrOfErrors++;
+			}
+		}
+		//ERROR CASE FOR A WRITE WITHOUT PREVIOUS VALUE
+		if(nrOfErrors>(servers.keySet().size() + FAULT_NUMBER) / 2){
+			HashMap<String, byte[]> readBroadcastInfo = new HashMap<String, byte[]>();
+			this.wts = 1;
+			readBroadcastInfo.put(RANK_IN_MAP, this.rank.getBytes());
+			readBroadcastInfo.put(HASH_DOMAIN_IN_MAP, writeVal.get(HASH_DOMAIN_IN_MAP));
+			readBroadcastInfo.put(HASH_USERNAME_IN_MAP, writeVal.get(HASH_USERNAME_IN_MAP));
+			readBroadcastInfo.put(PASSWORD_IN_MAP, writeVal.get(PASSWORD_IN_MAP));
+			readBroadcastInfo.put(HASH_PASSWORD_IN_MAP, writeVal.get(HASH_PASSWORD_IN_MAP));
+			return writeBroadcast(readBroadcastInfo);
+		}
+		
 		HashMap<String, String> highestValue = highestVal(readlist);
 		try {
 			// Decipher password
@@ -135,7 +155,7 @@ public class Bonrr {
 		}
 		else{
 			this.wts = Long.parseLong(highestValue.get(WTS_IN_MAP)) + 1;
-			readBroadcastInfo.put(RANK_IN_MAP, "0".getBytes());
+			readBroadcastInfo.put(RANK_IN_MAP, this.rank.getBytes());
 			readBroadcastInfo.put(HASH_DOMAIN_IN_MAP, writeVal.get(HASH_DOMAIN_IN_MAP));
 			readBroadcastInfo.put(HASH_USERNAME_IN_MAP, writeVal.get(HASH_USERNAME_IN_MAP));
 			readBroadcastInfo.put(PASSWORD_IN_MAP, writeVal.get(PASSWORD_IN_MAP));
@@ -202,6 +222,10 @@ public class Bonrr {
 	}
 
 	public synchronized void addToReadList(HashMap<String, String> value, long readid) {
+		if(readid==-1){
+			System.out.println("addToReadList: Reading without anything written");
+			readlist.add(value);
+		}
 	    System.out.println("RID received: " + readid + " Local Rid: " + this.rid);
 		if (readid == this.rid) {
 			readlist.add(value);

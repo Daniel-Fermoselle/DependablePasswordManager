@@ -186,6 +186,10 @@ public class AuthLink {
 
 					@Override
 					public void failed(Throwable throwable) {
+						System.out.println(throwable.getMessage());
+						if(throwable.getMessage().equals("Bonrr not found")){
+							AuthLink.this.bonrr.addToReadList(null, -1);
+						}
 						System.out.println("Invocation failed in save password.");
 						throwable.printStackTrace();
 					}

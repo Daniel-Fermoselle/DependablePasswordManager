@@ -60,6 +60,7 @@ public class ClientApplication {
 					console.printf("Try again! ^_^\n");
 				}
 			} catch (Exception e) {
+				e.printStackTrace();
 				console.printf("There was an error with the method you tried to execute try again\n");
 			}
 		}
