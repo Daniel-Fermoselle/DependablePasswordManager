@@ -207,20 +207,18 @@ public class ClientLib {
 			throw new InvalidArgumentException(OVERSIZE_PASSWORD_MSG);
 		}
 
-		System.out.println("Bonrr id is" + bonrr.getBonrrID());
-
 		HashMap<String, byte[]> infoToSend = prepareForSave(domain, username, password);
 		System.out.println(bonrr.write(infoToSend));
 	}
 
-	public HashMap prepareForSave(String domain, String username, String password) {
+	public HashMap<String, byte[]> prepareForSave(String domain, String username, String password) {
 		try {
 			// --------Initial hashs and timestamp
 			byte[] hashDomain = Crypto.hashString(domain);
 			byte[] hashUsername = Crypto.hashString(username);
 			byte[] hashPassword = Crypto.hashString(password);
 			// --------
-
+			
 			// --------Ciphered hashs and string conversion for them
 			byte[] cipherPassword = Crypto.cipherString(password, cliPubKey);
 			byte[] cipherHashPassword = Crypto.cipherString(new String(hashPassword), cliPrivKey);
@@ -255,7 +253,7 @@ public class ClientLib {
 		return pass;
 	}
 
-	public HashMap prepareForRetrievePassword(String domain, String username) {
+	public HashMap<String, byte[]> prepareForRetrievePassword(String domain, String username) {
 		try {
 			// Hash domain and username
 			byte[] hashDomain = Crypto.hashString(domain);
