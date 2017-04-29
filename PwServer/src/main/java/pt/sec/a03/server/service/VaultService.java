@@ -71,7 +71,7 @@ public class VaultService {
 	    Bonrr bonrrInstance = pwm.getBonrr(bonrr);
 
 	    //Verify deliver
-	    if(!bonrrInstance.deliver(wts, WRITE_MODE)){
+	    if(!bonrrInstance.deliver(wts)){
             throw new InvalidNonceException("wts with wrong value");
         }
 
@@ -103,8 +103,8 @@ public class VaultService {
     public String[] get(String publicKey, String username, String domain, String rid, String signature, long bonrr) {
 
     	//Get Bonrr instance
-	    String[] bonrrInfo = pwm.getBonrrInfo(bonrr);
-
+	    String[] bonrrInfo = pwm.getBonrrInfo(bonrr,username, domain);
+	    
 	    /*if(!bonrrInstance.deliver(rid, READ_MODE)){
             throw new InvalidNonceException("rid with wrong value");
         }*/
@@ -113,21 +113,21 @@ public class VaultService {
         String[] userAndDom = decipherUsernameAndDomain(domain, username);
 
         // Verify Signature
-        String serverSideTosign = userAndDom[0] + userAndDom[1] + stringNonce;
+        String serverSideTosign = rid + userAndDom[0] + userAndDom[1];
         verifySignature(publicKey, signature, serverSideTosign);
 
         //Get pass and hash
-        Triplet t = pwm.getTriplet(userAndDom[0], userAndDom[1], publicKey);
-        String pwHashFromDB = pwm.getHash(userAndDom[0], userAndDom[1], publicKey);
+        //Triplet t = pwm.getTriplet(userAndDom[0], userAndDom[1], publicKey);
+        //String pwHashFromDB = pwm.getHash(userAndDom[0], userAndDom[1], publicKey);
 
         //Get new nonce
-        String[] nonceNormCiph = getNewNonceForUser(publicKey);
+        //String[] nonceNormCiph = getNewNonceForUser(publicKey);
 
         //Make signature
-        String toSign = nonceNormCiph[0] + pwHashFromDB + t.getPassword();
+        String toSign = rid + bonrrInfo[1] + bonrrInfo[0];
         String sign = signString(toSign);
 
-        return new String[]{nonceNormCiph[1], sign, pwHashFromDB, t.getPassword()};
+        return new String[]{sign, bonrrInfo[1], bonrrInfo[0], "ACK", rid};
     }
 
     public String[] getNewNonceForUser(String publicKey) {

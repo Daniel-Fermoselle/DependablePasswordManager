@@ -76,14 +76,16 @@ public class VaultResource {
                                 @HeaderParam(BONRR_HEADER_NAME) long bonrr) {
 
         System.out.println("Received Get packet getPassword");
+        //authLink.deliver(publicKey, authSig, signature, rid, t);
         String[] response = vaultService.get(publicKey, username, domain, rid, authSig,bonrr);
         CommonTriplet triplet = new CommonTriplet();
-        triplet.setPassword(response[3]);
+        triplet.setPassword(response[1]);
 
         asyncResponse.resume(Response.status(Status.OK)
-                .header(SIGNATURE_HEADER_NAME, response[1])
-                .header(NONCE_HEADER_NAME, response[0])
+                .header(SIGNATURE_HEADER_NAME, response[0])
                 .header(HASH_PASSWORD_HEADER_NAME, response[2])
+                .header(ACK_HEADER_NAME, response[3])
+                .header(NONCE_HEADER_NAME, response[4])
                 .entity(triplet)
                 .build());
     }

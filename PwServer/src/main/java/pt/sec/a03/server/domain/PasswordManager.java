@@ -168,9 +168,9 @@ public class PasswordManager {
         }
     }
 
-    public String[] getBonrrInfo(long bonrr) {
+    public String[] getBonrrInfo(long bonrr, String username, String domain) {
 	    try {
-            String[] bonrrInfo = this.db.getSpecificBonrr(bonrr);
+            String[] bonrrInfo = this.db.getSpecificBonrr(bonrr, username, domain);
             if (bonrrInfo != null) {
                 return bonrrInfo;
             } else {

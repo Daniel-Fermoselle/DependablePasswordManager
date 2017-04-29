@@ -257,15 +257,17 @@ public class Database {
 		}
 	}
 	
-	public String[] getSpecificBonrr(long bonrr) throws SQLException {
+	public String[] getSpecificBonrr(long bonrr, String username, String domain) throws SQLException {
 		//Get mysql conneciton
 		getConnection();
 		Statement stmt = this.conn.createStatement();
 		String DBpw = "";
 		String DBpwHash = "";
+		String DBsignature = "";
 
 		// Step 1: Execute a SQL SELECT query, the query result
-		String strSelect = "select bonrr, MAX(wts) as wts, pw, pwHash from Bonrrs where bonrr = '" + bonrr + "';";
+		String strSelect = "select bonrr, MAX(wts) as wts, pw, pwHash, signature from Bonrrs where bonrr = " + bonrr + " and domain = '" + domain
+				+ "' and username = '" + username + "';";
 
 		// Step 2: Process the ResultSet by scrolling the cursor forward via
 		ResultSet rset = stmt.executeQuery(strSelect);
@@ -273,9 +275,10 @@ public class Database {
 		while (rset.next()) { // Move the cursor to the next row
 			DBpw = rset.getString("pw");
 			DBpwHash = rset.getString("pwHash");
+			DBsignature = rset.getString("signature");
 			++rowCount;
 		}
-		String [] returnStringArray = {DBpw, DBpwHash};
+		String [] returnStringArray = {DBpw, DBpwHash, DBsignature};
 		this.conn.close();
 		if (rowCount == 0) {
 			return null;
