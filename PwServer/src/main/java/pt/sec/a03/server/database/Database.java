@@ -133,19 +133,50 @@ public class Database {
 		}
 	}
 
-	public void saveBonrr(String bonrr, String wts, String signature, Triplet t) throws SQLException{
+	public void saveBonrr(String bonrr, Triplet t) throws SQLException{
 		//Get mysql conneciton
 		getConnection();
 		Statement stmt = this.conn.createStatement();
 
 		String sqlInsert = "insert into Bonrrs(bonrr, wts, signature, username, domain, pw, pwHash) " +
-				" values ('" + bonrr + "', " + Long.parseLong(wts) + ", '" + signature + "', '" + t.getUsername() + "', '"
+				" values ('" + bonrr + "', " + t.getWts() + ", '" + t.getSignature() + "', '" + t.getUsername() + "', '"
 				+ t.getDomain() + "', '" + t.getPassword() + "', '" + t.getHash() + "');";
 
 		stmt.execute(sqlInsert);
 
 		this.conn.close();
 	}
+
+    public Triplet getBonrr(String bonrr, String username, String domain) throws SQLException {
+        //Get mysql conneciton
+        getConnection();
+        Statement stmt = this.conn.createStatement();
+        Triplet t = new Triplet();
+
+        // Step 1: Execute a SQL SELECT query, the query result
+        String strSelect = "select bonrr, MAX(wts) as wts, pw, pwHash, signature from Bonrrs where bonrr = '" + bonrr + "' and domain = '" + domain
+                + "' and username = '" + username + "'GROUP BY wts ORDER BY wts DESC;";
+
+        // Step 2: Process the ResultSet by scrolling the cursor forward via
+        ResultSet rset = stmt.executeQuery(strSelect);
+        int rowCount = 0;
+        while (rset.next()) { // Move the cursor to the next row
+            t.setDomain(domain);
+            t.setUsername(username);
+            t.setPassword(rset.getString("pw"));
+            t.setHash(rset.getString("pwHash"));
+            t.setSignature(rset.getString("signature"));
+            t.setWts(rset.getLong("wts"));
+            ++rowCount;
+            break;
+        }
+        this.conn.close();
+        if (rowCount == 0) {
+            return null;
+        } else {
+            return t;
+        }
+    }
 
 	public String[] getDBParams(String port) throws IOException {
 		String fileString = new String(Files.readAllBytes(Paths.get("metadata/metadata.in")), StandardCharsets.UTF_8);

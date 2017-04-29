@@ -10,14 +10,18 @@ public class Triplet {
 	private String username;
 	private String password;
 	private String hash;
+	private String signature;
+	private long wts;
 
 	public Triplet() {}
 	
-	public Triplet(String domain, String username, String password, String pwHash) {
+	public Triplet(String domain, String username, String password, String pwHash, String signature, long wts) {
 		this.domain = domain;
 		this.username = username;
 		this.password = password;
 		this.hash = pwHash;
+		this.signature = signature;
+		this.wts = wts;
 	}	
 
 	public String getDomain() {
@@ -51,6 +55,12 @@ public class Triplet {
 	public void setHash(String hash) {
 		this.hash = hash;
 	}
-	
-	
+
+	public String getSignature() { return signature; }
+
+	public void setSignature(String signature) { this.signature = signature; }
+
+    public long getWts() { return wts; }
+
+    public void setWts(long wts) { this.wts = wts; }
 }

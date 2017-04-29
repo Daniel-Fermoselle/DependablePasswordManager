@@ -106,7 +106,26 @@ public class PasswordManager {
         }
     }
 
-    public void saveBonrr(String bonrr, String wts, String signature, Triplet t) {
+    public Triplet getBonrr(String bonrr, String username, String domain) {
+        if (bonrr == null || username == null || domain == null) {
+            throw new InvalidArgumentException("The arguments provided are not suitable to create a new password");
+        }
+	    try {
+            getUserByPK(bonrr);
+            //TODO see if its needed more restrictions
+            Triplet bonrrInfo = this.db.getBonrr(bonrr, username, domain);
+            if (bonrrInfo != null) {
+                return bonrrInfo;
+            } else {
+            	throw new DataNotFoundException("Bonrr not found");
+            }
+        } catch (SQLException e) {
+	        e.printStackTrace();
+	        throw new RuntimeException(e.getMessage());
+        }
+    }
+    
+    public void saveBonrr(String bonrr, Triplet t) {
         if (bonrr == null || t == null || t.getPassword() == null || t.getUsername() == null
                 || t.getDomain() == null || t.getHash() == null) {
             throw new InvalidArgumentException("The arguments provided are not suitable to create a new password");
@@ -116,7 +135,7 @@ public class PasswordManager {
             //TODO add get bonrr to verify if we are not changing the domian and username of another user if yes
             // ^ should throw new ForbiddenAccessException("The user with the public key " + publicKey + " has
             // no permissions to access this information");
-            this.db.saveBonrr(bonrr, wts, signature, t);
+            this.db.saveBonrr(bonrr, t);
         } catch (SQLException e) {
             e.printStackTrace();
             throw new RuntimeException(e.getMessage());

@@ -2,6 +2,10 @@ package pt.sec.a03.common_classes;
 
 import pt.sec.a03.crypto.Crypto;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import javax.ws.rs.BadRequestException;
 import javax.ws.rs.client.*;
 import javax.ws.rs.core.Response;
 import java.security.*;
@@ -26,9 +30,12 @@ public class AuthLink {
 	private static final String USERNAME_HEADER_NAME = "username";
 	private static final String AUTH_LINK_SIG = "auth-signature";
 	private static final String ACK_HEADER_NAME = "ack";
-	private static final String BONRR_HEADER_NAME = "bonrr";
+    private static final String RID_HEADER_NAME = "rid";
+    private static final String BONRR_HEADER_NAME = "bonrr";
 
 	private Bonrr bonrr;
+	private PublicKey publicKey;
+	private PrivateKey privateKey;
 
 	public AuthLink(Bonrr bonrr) {
 		this.bonrr = bonrr;
@@ -57,7 +64,8 @@ public class AuthLink {
 
 		vault.request().header(AUTH_LINK_SIG, Crypto.encode(authSig))
 				.header(PUBLIC_KEY_HEADER_NAME, Crypto.encode(cliPubKey.getEncoded()))
-				.header(SIGNATURE_HEADER_NAME, Crypto.encode(sig)).header(NONCE_HEADER_NAME, wts + "")
+				.header(SIGNATURE_HEADER_NAME, Crypto.encode(sig))
+                .header(NONCE_HEADER_NAME, wts + "")
 				.header(BONRR_HEADER_NAME, bonrr).async()
 				.post(Entity.json(commonTriplet), new InvocationCallback<Response>() {
 					@Override
@@ -93,8 +101,10 @@ public class AuthLink {
 				});
 	}
 
-	public void send(PrivateKey cliPrivKey, PublicKey cliPubKey, String uriToSend, long readid,
+	public void send(PrivateKey cliPrivKey, PublicKey cliPubKey, String uriToSend, long readId,
 			HashMap<String, byte[]> infoToSend, String bonrr) {
+	    this.privateKey = cliPrivKey;
+	    this.publicKey = cliPubKey;
 
 		String hashedDomain = Crypto.encode(infoToSend.get(HASH_DOMAIN_IN_MAP));
 		String hashedUsername = Crypto.encode(infoToSend.get(HASH_USERNAME_IN_MAP));
@@ -103,14 +113,14 @@ public class AuthLink {
 		WebTarget vault = client.target("http://" + uriToSend + "/PwServer/").path("vault");
 
 		// Verify Signature
-		String toSign = "" + readid;
+		String toSign = "" + readId;
 		toSign = toSign + hashedDomain;
 		toSign = toSign + hashedUsername;
 		byte[] authSig = makeSignature(cliPrivKey, toSign);
 
 		vault.request().header(AUTH_LINK_SIG, Crypto.encode(authSig))
 				.header(PUBLIC_KEY_HEADER_NAME, Crypto.encode(cliPubKey.getEncoded()))
-				.header(NONCE_HEADER_NAME, readid + "")
+				.header(RID_HEADER_NAME, readId + "")
 				.header(BONRR_HEADER_NAME, bonrr)
 				.header(DOMAIN_HEADER_NAME, hashedDomain)
 				.header(USERNAME_HEADER_NAME, hashedUsername).async()
@@ -118,48 +128,46 @@ public class AuthLink {
 					@Override
 					public void completed(Response response) {
 						try {
-							// TODO
-							// -----------------------------------------------------------------------------------
+
+                            CommonTriplet t = response.readEntity(CommonTriplet.class);
+                            String encodedHashDomain = t.getDomain();
+                            String encodedHashUsername = t.getUsername();
+                            String encodedCipheredPassword = t.getPassword();
+                            String encodedCipheredHashPassword = t.getHash();
+                            String encodedWriteSig = response.getHeaderString(SIGNATURE_HEADER_NAME);
+                            long wts = Long.parseLong(response.getHeaderString(NONCE_HEADER_NAME));
+                            long rid = Long.parseLong(response.getHeaderString(RID_HEADER_NAME));
+
 							System.out.println(
 									"Response of save password status code " + response.getStatus() + " received.");
 
-							String toVerify = response.getHeaderString(ACK_HEADER_NAME)
-									+ response.getHeaderString(NONCE_HEADER_NAME);
+							String toVerify = (rid + "") + (wts + "") + encodedHashDomain + encodedHashUsername + encodedCipheredPassword
+                                    + encodedCipheredHashPassword + encodedWriteSig;
 
 							PublicKey serverPubKey = Crypto
 									.getPubKeyFromByte(Crypto.decode(response.getHeaderString(PUBLIC_KEY_HEADER_NAME)));
 
-							// Verify signature
+							System.out.println("Verify auth");
+							// Verify authentication link signature
 							verifySignature(serverPubKey, response.getHeaderString(AUTH_LINK_SIG), toVerify);
 
-							// TODO
-							// -----------------------------------------------------------------------------------
+                            String[] userAndDom = decipherUsernameAndDomain(encodedHashDomain, encodedHashUsername);
 
-							String encodedWriteSig = "";
-							String encodedHashDomain = "";
-							String encodedHashUsername = "";
-							String encodedCipheredPassword = "";
-							String encodedCipheredHashPassword = "";
-							String wts = "";
-							
-							String toVerifyWriteSig = bonrr + wts;
-							HashMap<String,String> value = new HashMap<String, String>();
-							value.put(HASH_DOMAIN_IN_MAP, encodedHashDomain);
-							toVerifyWriteSig = toVerifyWriteSig + encodedHashDomain;
-							value.put(HASH_USERNAME_IN_MAP, encodedHashUsername);
-							toVerifyWriteSig = toVerifyWriteSig + encodedHashUsername;
-							value.put(PASSWORD_IN_MAP, encodedCipheredPassword);
-							toVerifyWriteSig = toVerifyWriteSig + encodedCipheredPassword;
-							value.put(HASH_PASSWORD_IN_MAP, encodedCipheredHashPassword);
-							toVerifyWriteSig = toVerifyWriteSig + encodedCipheredHashPassword;
-							
-							// Verify signature
-							verifySignature(serverPubKey, encodedWriteSig, toVerifyWriteSig);
-							
-							value.put(WTS_IN_MAP, wts);
-							value.put(SIGNATURE_IN_MAP, encodedWriteSig);
-							AuthLink.this.bonrr.addToReadList(value,
-									Long.parseLong(response.getHeaderString(NONCE_HEADER_NAME)));
+                            String toVerifyWriteSig = bonrr + wts + userAndDom[1] + userAndDom[0]
+                                    + encodedCipheredPassword + encodedCipheredHashPassword;
+
+                            System.out.println("Verify writeSig");
+                            // Verify write signature
+                            verifySignature(AuthLink.this.publicKey, encodedWriteSig, toVerifyWriteSig);
+
+                            HashMap<String,String> value = new HashMap<String, String>();
+                            value.put(HASH_DOMAIN_IN_MAP, userAndDom[1]);
+                            value.put(HASH_USERNAME_IN_MAP, userAndDom[0]);
+                            value.put(PASSWORD_IN_MAP, encodedCipheredPassword);
+                            value.put(HASH_PASSWORD_IN_MAP, encodedCipheredHashPassword);
+                            value.put(WTS_IN_MAP, wts + "");
+                            value.put(SIGNATURE_IN_MAP, encodedWriteSig);
+							AuthLink.this.bonrr.addToReadList(value, rid);
 
 						} catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
 							e.printStackTrace();
@@ -175,15 +183,28 @@ public class AuthLink {
 				});
 	}
 
-	public void deliver(String publicKey, String authSig, String signature, String wts, CommonTriplet t) {
+	public void deliverWrite(String publicKey, String authSig, String signature, String wts, CommonTriplet t) {
 		try {
 			String toVerify = signature + wts + t.getDomain() + t.getUsername() + t.getPassword() + t.getHash();
 			PublicKey pubKey = Crypto.getPubKeyFromByte(Crypto.decode(publicKey));
 			verifySignature(pubKey, authSig, toVerify);
 		} catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
 			e.printStackTrace();
+			throw new RuntimeException(e.getMessage());
 		}
 	}
+
+    public void deliverRead(String publicKey, String authSig, String rid, String domain, String username) {
+        try {
+            String toVerify = rid + domain + username;
+            PublicKey pubKey = Crypto.getPubKeyFromByte(Crypto.decode(publicKey));
+            verifySignature(pubKey, authSig, toVerify);
+        } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e.getMessage());
+
+        }
+    }
 
 	private byte[] makeSignature(PrivateKey cliPrivKey, String toSign) {
 		try {
@@ -205,5 +226,27 @@ public class AuthLink {
 			throw new RuntimeException(e.getMessage());
 		}
 	}
+
+    public String[] decipherUsernameAndDomain(String domain, String username) {
+        try {
+            byte[] byteDomain = Crypto.decode(domain);
+            byte[] byteUsername = Crypto.decode(username);
+
+            String hashedDomain = null;
+            String hashedUsername = null;
+
+            hashedDomain = Crypto.decipherString(byteDomain, this.privateKey);
+
+            hashedUsername = Crypto.decipherString(byteUsername, this.privateKey);
+
+            return new String[]{hashedUsername, hashedDomain};
+        } catch (BadPaddingException | NoSuchAlgorithmException
+                | IllegalBlockSizeException | NoSuchPaddingException | InvalidKeyException e) {
+            throw new RuntimeException(e.getMessage());
+        }
+    }
+
+
+
 
 }

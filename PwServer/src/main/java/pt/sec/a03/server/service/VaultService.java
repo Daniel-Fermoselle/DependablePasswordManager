@@ -32,6 +32,8 @@ import pt.sec.a03.server.exception.InvalidNonceException;
 public class VaultService {
 
 	private static final String SERVER_KEY_STORE_PASS = "insecure";
+	private static final String WRITE_MODE = "write";
+    private static final String READ_MODE = "read";
 
 	PrivateKey privKey;
 	PublicKey pubKey;
@@ -63,13 +65,13 @@ public class VaultService {
 		} 
 	}
 
-    public String[] put(String publicKey, String signature, String wts, Triplet t, String bonrr) {
+    public String[] put(String publicKey, Triplet t, String bonrr) {
 
 	    //Get Bonrr instance
 	    Bonrr bonrrInstance = pwm.getBonrrInstance(bonrr);
 
 	    //Verify deliver
-	    if(!bonrrInstance.deliver(wts)){
+	    if(!bonrrInstance.deliver(t.getWts())){
             throw new InvalidNonceException("wts with wrong value");
         }
 
@@ -77,50 +79,60 @@ public class VaultService {
         String[] userAndDom = decipherUsernameAndDomain(t.getDomain(), t.getUsername());
 
         // Verify signature
-        String serverSideTosign = bonrr + wts + userAndDom[1] + userAndDom[0] + t.getPassword() + t.getHash();
-        verifySignature(publicKey, signature, serverSideTosign);
+        String serverSideTosign = bonrr + t.getWts() + userAndDom[1] + userAndDom[0] + t.getPassword() + t.getHash();
+        verifySignature(publicKey, t.getSignature(), serverSideTosign);
 
-        Triplet triplet = new Triplet(userAndDom[1], userAndDom[0], t.getPassword(), t.getHash());
+        Triplet triplet = new Triplet(userAndDom[1], userAndDom[0], t.getPassword(), t.getHash(), t.getSignature(), t.getWts());
 
         //Save to bonrr
-        pwm.saveBonrr(bonrr, wts,  signature, triplet);
+        pwm.saveBonrr(bonrr, triplet);
 
         //Response
-        String ackMsg = "ACK" + wts;
+        String ackMsg = "ACK" + t.getWts();
 
         //Make signature
         String sign = makeSignature(ackMsg);
 
-        return new String[] { Crypto.encode(this.pubKey.getEncoded()), sign, "ACK", wts };
+        return new String[] { Crypto.encode(this.pubKey.getEncoded()), sign, "ACK", t.getWts() + "" };
     }
 
-    public String[] get(String publicKey, String username, String domain, String nonce, String signature) {
-        /*
-        String stringNonce = decipherAndDecode(nonce);
 
-        // Verify nonce
-        verifyNonce(publicKey, Long.parseLong(stringNonce));
+    public String[] get(String publicKey, String username, String domain, String rid, String bonrr) {
 
         // Decipher domain and username
         String[] userAndDom = decipherUsernameAndDomain(domain, username);
 
-        // Verify Signature
-        String serverSideTosign = userAndDom[0] + userAndDom[1] + stringNonce;
-        verifySignature(publicKey, signature, serverSideTosign);
+        //Get Bonrr instance
+        Triplet bonrrInfo = pwm.getBonrr(bonrr, userAndDom[0], userAndDom[1]);
 
-        //Get pass and hash
-        Triplet t = pwm.getTriplet(userAndDom[0], userAndDom[1], publicKey);
-        String pwHashFromDB = pwm.getHash(userAndDom[0], userAndDom[1], publicKey);
+        String[] cipherUserDom = cipherUsernameAndDomain(bonrrInfo.getDomain(), bonrrInfo.getUsername(), publicKey);
+        bonrrInfo.setDomain(cipherUserDom[1]);
+        bonrrInfo.setUsername(cipherUserDom[0]);
 
-        //Get new nonce
-        String[] nonceNormCiph = getNewNonceForUser(publicKey);
+	    /*if(!bonrrInstance.deliver(rid, READ_MODE)){
+            throw new InvalidNonceException("rid with wrong value");
+        }*/
 
         //Make signature
-        String toSign = nonceNormCiph[0] + pwHashFromDB + t.getPassword();
-        String sign = signString(toSign);
+        String toSign = rid + bonrrInfo.getWts() + bonrrInfo.getDomain() + bonrrInfo.getUsername() + bonrrInfo.getPassword()
+                + bonrrInfo.getHash() + bonrrInfo.getSignature();
+        String sign = makeSignature(toSign);
 
-        return new String[]{nonceNormCiph[1], sign, pwHashFromDB, t.getPassword()};*/
-        return new String[] { "Pog"};
+        return new String[]{Crypto.encode(this.pubKey.getEncoded()), sign, rid, bonrrInfo.getWts() + "", bonrrInfo.getDomain(), bonrrInfo.getUsername(),
+            bonrrInfo.getPassword(), bonrrInfo.getHash(), bonrrInfo.getSignature()};
+    }
+
+    private String[] cipherUsernameAndDomain(String domain, String username, String publicKey) {
+        try {
+            PublicKey pubKey = Crypto.getPubKeyFromByte(Crypto.decode(publicKey));
+            String cipheredDomain = Crypto.encode(Crypto.cipherString(domain, pubKey));
+            String cipheredUsername = Crypto.encode(Crypto.cipherString(username, pubKey));
+            return new String[]{cipheredUsername, cipheredDomain};
+        } catch (InvalidKeySpecException | NoSuchAlgorithmException | NoSuchPaddingException
+                | IllegalBlockSizeException |  BadPaddingException | InvalidKeyException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e.getMessage());
+        }
     }
 
     public String[] decipherUsernameAndDomain(String domain, String username) {
@@ -170,15 +182,6 @@ public class VaultService {
         } catch (SignatureException e) {
             throw new InvalidSignatureException(e.getMessage());
         } catch (NoSuchAlgorithmException e) {
-            throw new BadRequestException(e.getMessage());
-        }
-    }
-
-    private String decipherAndDecode(String toDecipher) {
-        try {
-            return Crypto.decipherString(Crypto.decode(toDecipher), this.privKey);
-        } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException
-                | IllegalBlockSizeException |  BadPaddingException e) {
             throw new BadRequestException(e.getMessage());
         }
     }

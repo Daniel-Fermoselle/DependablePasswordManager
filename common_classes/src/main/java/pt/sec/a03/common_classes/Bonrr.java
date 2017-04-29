@@ -83,9 +83,9 @@ public class Bonrr {
 	}
 
 	public String read(HashMap<String, byte[]> infoToSend) {
-		rid = rid++;
+		rid = rid + 1;
 		readlist = new ArrayList<HashMap<String, String>>();
-		String password = "Champog";
+		String password;
 		HashMap<String, byte[]> infoToSendTemp = new HashMap<>();
 
 		for (String s : infoToSend.keySet()) {
@@ -103,10 +103,11 @@ public class Bonrr {
 			infoToSendTemp.put(HASH_USERNAME_IN_MAP, dataCiphered.get(1));
 
 			// Send
-			authLink.send(cliPrivKey, cliPubKey, servers.get(s), wts, infoToSendTemp, bonrr);
+			authLink.send(cliPrivKey, cliPubKey, servers.get(s), rid, infoToSendTemp, bonrr);
 		}
 
-		while (readlist.size() <= ((servers.keySet().size() + FAULT_NUMBER) / 2)) {}
+		while (readlist.size() <= ((servers.keySet().size() + FAULT_NUMBER) / 2)) {
+		}
 
 		HashMap<String, String> highestValue = highestVal(readlist);
 		try {
@@ -131,8 +132,8 @@ public class Bonrr {
 		return password;
 	}
 
-	public boolean deliver(String wts) {
-		if (Long.parseLong(wts) > this.wts) {
+	public boolean deliver(Long wts) {
+		if (wts > this.wts) {
 			return true;
 		}
 		return false;
@@ -145,6 +146,7 @@ public class Bonrr {
 	}
 
 	public synchronized void addToReadList(HashMap<String, String> value, long readid) {
+	    System.out.println("RID received: " + readid + " Local Rid: " + this.rid);
 		if (readid == this.rid) {
 			readlist.add(value);
 		}
