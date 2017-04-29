@@ -13,6 +13,7 @@ create table Users (
 create table Bonrrs (
 	bonrr VARCHAR(500),
 	wts bigint,
+	rank TEXT,
 	signature TEXT,
 	username TEXT,
 	domain TEXT,
@@ -36,6 +37,7 @@ create table Users (
 create table Bonrrs (
 	bonrr VARCHAR(500),
 	wts bigint,
+	rank TEXT,
 	signature TEXT,
 	username TEXT,
 	domain TEXT,
@@ -59,6 +61,7 @@ create table Users (
 create table Bonrrs (
 	bonrr VARCHAR(500),
 	wts bigint,
+	rank TEXT,
 	signature TEXT,
 	username TEXT,
 	domain TEXT,
@@ -82,6 +85,7 @@ create table Users (
 create table Bonrrs (
 	bonrr VARCHAR(500),
 	wts bigint,
+	rank TEXT,
 	signature TEXT,
 	username TEXT,
 	domain TEXT,
@@ -105,6 +109,7 @@ create table Users (
 create table Bonrrs (
 	bonrr VARCHAR(500),
 	wts bigint,
+	rank TEXT,
 	signature TEXT,
 	username TEXT,
 	domain TEXT,

@@ -22,6 +22,7 @@ public class AuthLink {
 	private static final String WTS_IN_MAP = "wts";
 	private static final String SIGNATURE_IN_MAP = "signature";
 	private static final String RID_IN_MAP = "map-rid";
+	private static final String RANK_IN_MAP = "map-rank";
 
 	private static final String PUBLIC_KEY_HEADER_NAME = "public-key";
 	private static final String SIGNATURE_HEADER_NAME = "signature";
@@ -33,6 +34,7 @@ public class AuthLink {
 	private static final String ACK_HEADER_NAME = "ack";
     private static final String RID_HEADER_NAME = "rid";
     private static final String BONRR_HEADER_NAME = "bonrr";
+    private static final String RANK_HEADER_NAME = "rank";
 
 	private Bonrr bonrr;
 	private PublicKey publicKey;
@@ -45,7 +47,7 @@ public class AuthLink {
 	public AuthLink() {
 	}
 
-	public void send(PrivateKey cliPrivKey, PublicKey cliPubKey, String uriToSend, byte[] sig, long wts,
+	public void send(PrivateKey cliPrivKey, PublicKey cliPubKey, String uriToSend, byte[] sig, long wts, long rid,
 			HashMap<String, byte[]> infoToSend, String bonrr) {
 
 		CommonTriplet commonTriplet = new CommonTriplet(Crypto.encode(infoToSend.get(HASH_DOMAIN_IN_MAP)),
@@ -54,9 +56,12 @@ public class AuthLink {
 
 		Client client = ClientBuilder.newClient();
 		WebTarget vault = client.target("http://" + uriToSend + "/PwServer/").path("vault");
-
+		
+		String rank = new String(infoToSend.get(RANK_IN_MAP));
+		
 		// Verify Signature
-		String toSign = Crypto.encode(sig) + wts;
+		String toSign = Crypto.encode(sig) + wts + rid;
+		toSign = toSign + rank;
 		toSign = toSign + commonTriplet.getDomain();
 		toSign = toSign + commonTriplet.getUsername();
 		toSign = toSign + commonTriplet.getPassword();
@@ -67,7 +72,9 @@ public class AuthLink {
 				.header(PUBLIC_KEY_HEADER_NAME, Crypto.encode(cliPubKey.getEncoded()))
 				.header(SIGNATURE_HEADER_NAME, Crypto.encode(sig))
                 .header(NONCE_HEADER_NAME, wts + "")
-				.header(BONRR_HEADER_NAME, bonrr).async()
+                .header(RID_HEADER_NAME, rid + "")
+				.header(BONRR_HEADER_NAME, bonrr)
+				.header(RANK_HEADER_NAME, rank).async()
 				.post(Entity.json(commonTriplet), new InvocationCallback<Response>() {
 					@Override
 					public void completed(Response response) {
@@ -185,9 +192,9 @@ public class AuthLink {
 				});
 	}
 
-	public void deliverWrite(String publicKey, String authSig, String signature, String wts, CommonTriplet t) {
+	public void deliverWrite(String publicKey, String authSig, String signature, String wts, CommonTriplet t, String rid, String rank) {
 		try {
-			String toVerify = signature + wts + t.getDomain() + t.getUsername() + t.getPassword() + t.getHash();
+			String toVerify = signature + wts + rid + rank + t.getDomain() + t.getUsername() + t.getPassword() + t.getHash();
 			PublicKey pubKey = Crypto.getPubKeyFromByte(Crypto.decode(publicKey));
 			verifySignature(pubKey, authSig, toVerify);
 		} catch (InvalidKeySpecException | NoSuchAlgorithmException e) {

@@ -98,7 +98,7 @@ public class PasswordManager {
             if (bonrrInstance != null) {
                 return bonrrInstance;
             } else {
-                return new Bonrr(bonrr, 0);
+                return new Bonrr(bonrr, 0, "0");
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -127,7 +127,7 @@ public class PasswordManager {
     
     public void saveBonrr(String bonrr, Triplet t) {
         if (bonrr == null || t == null || t.getPassword() == null || t.getUsername() == null
-                || t.getDomain() == null || t.getHash() == null) {
+                || t.getDomain() == null || t.getHash() == null || t.getRank() == null || t.getSignature() == null) {
             throw new InvalidArgumentException("The arguments provided are not suitable to create a new password");
         }
         try {

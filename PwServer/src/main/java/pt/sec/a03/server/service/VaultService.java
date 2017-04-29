@@ -71,17 +71,17 @@ public class VaultService {
 		Bonrr bonrrInstance = pwm.getBonrrInstance(bonrr);
 
 		// Verify deliver
-		if (bonrrInstance.deliver(t.getWts())) {
+		if (bonrrInstance.deliver(t.getWts(), t.getRank())) {
 			// Decipher
 			String[] userAndDom = decipherUsernameAndDomain(t.getDomain(), t.getUsername());
 
 			// Verify signature
-			String serverSideTosign = bonrr + t.getWts() + userAndDom[1] + userAndDom[0] + t.getPassword()
+			String serverSideTosign = bonrr + t.getWts() + t.getRid() + t.getRank() + userAndDom[1] + userAndDom[0] + t.getPassword()
 					+ t.getHash();
 			verifySignature(publicKey, t.getSignature(), serverSideTosign);
 
 			Triplet triplet = new Triplet(userAndDom[1], userAndDom[0], t.getPassword(), t.getHash(), t.getSignature(),
-					t.getWts());
+					t.getWts(),t.getRid(), t.getRank());
 
 			// Save to bonrr
 			pwm.saveBonrr(bonrr, triplet);

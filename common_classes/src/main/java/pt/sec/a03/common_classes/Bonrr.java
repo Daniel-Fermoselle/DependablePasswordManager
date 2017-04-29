@@ -20,6 +20,7 @@ public class Bonrr {
 	private static final String WTS_IN_MAP = "wts";
 	private static final String RID_IN_MAP = "map-rid";
 	private static final String SIGNATURE_IN_MAP = "signature";
+	private static final String RANK_IN_MAP = "rank";
 
 	public static final int FAULT_NUMBER = 1;
 
@@ -34,6 +35,8 @@ public class Bonrr {
 	private ArrayList<HashMap<String, String>> readlist;
 	private AuthLink authLink;
 	private boolean reading;
+	private String rank;
+	private HashMap<String, byte[]> writeVal;
 
 	public Bonrr(PublicKey cliPubKey, PrivateKey cliPrivKey, Map<String, String> servers,
 			Map<String, PublicKey> serversPubKey, String bonrr) {
@@ -48,64 +51,34 @@ public class Bonrr {
 		authLink = new AuthLink(this);
 		this.bonrr = bonrr;
 		reading=false;
+		writeVal = new HashMap<String, byte[]>();
 	}
 
-	public Bonrr(String bonrr, long wts) {
+	public Bonrr(String bonrr, long wts, String rank) {
 		this.bonrr = bonrr;
 		this.wts = wts;
+		this.rank = rank;
 	}
 
 	public String write(HashMap<String, byte[]> infoToSend) {
-		if(!reading){
-			wts = wts + 1;
-			rid = rid + 1;
-			acklist = new ArrayList<String>();
-		}
-		HashMap<String, byte[]> infoToSendTemp = new HashMap<>();
-
-		for (String s : infoToSend.keySet()) {
-			infoToSendTemp.put(s, infoToSend.get(s));
-		}
-
-		for (String s : servers.keySet()) {
-
-			// Cipher domain and username
-			ArrayList<byte[]> dataCiphered = Crypto.cipher(new String[] {
-					new String(infoToSend.get(HASH_DOMAIN_IN_MAP)), new String(infoToSend.get(HASH_USERNAME_IN_MAP)) },
-					serversPubKey.get(s));
-
-			// Make signature
-			byte[] sig = makeSignature(infoToSend);
-
-			// Update values to send
-			infoToSendTemp.put(HASH_DOMAIN_IN_MAP, dataCiphered.get(0));
-			infoToSendTemp.put(HASH_USERNAME_IN_MAP, dataCiphered.get(1));
-
-			// Send
-			authLink.send(cliPrivKey, cliPubKey, servers.get(s), sig, wts, infoToSendTemp, bonrr);
-		}
-
-		while (acklist.size() <= ((servers.keySet().size() + FAULT_NUMBER) / 2)) {
-
-		}
+		wts = wts + 1;
+		rid = rid + 1;
 		acklist = new ArrayList<String>();
-		if(reading){
-			reading = false;
-			try {
-				return Crypto.decipherString(infoToSendTemp.get(PASSWORD_IN_MAP), cliPrivKey);
-			} catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException | IllegalBlockSizeException
-					| BadPaddingException e) {
-				e.printStackTrace();
-				throw new RuntimeException(e.getMessage());
-			}
-		}
-		return "Value Wrote\n";
+		readlist = new ArrayList<HashMap<String, String>>();
+		this.writeVal=infoToSend;
+		HashMap<String, byte[]> infoToRead = new HashMap<String, byte[]>();
+		infoToRead.put(HASH_DOMAIN_IN_MAP, infoToSend.get(infoToSend));
+		infoToRead.put(HASH_USERNAME_IN_MAP, infoToSend.get(infoToSend));
+		return read(infoToRead);
 	}
 
 	public String read(HashMap<String, byte[]> infoToSend) {
-		reading=true;
-		rid = rid + 1;
-		readlist = new ArrayList<HashMap<String, String>>();
+		if(reading){
+			reading=true;
+			rid = rid + 1;
+			readlist = new ArrayList<HashMap<String, String>>();
+			acklist =  new ArrayList<String>();
+		}
 		String password;
 		HashMap<String, byte[]> infoToSendTemp = new HashMap<>();
 
@@ -149,19 +122,74 @@ public class Bonrr {
 		}
 
 		readlist = new ArrayList<HashMap<String, String>>();
-		this.wts = Long.parseLong(highestValue.get(WTS_IN_MAP));
-		this.rid = Long.parseLong(highestValue.get(RID_IN_MAP));
+		
 		HashMap<String, byte[]> readBroadcastInfo = new HashMap<String, byte[]>();
-		readBroadcastInfo.put(HASH_DOMAIN_IN_MAP, highestValue.get(HASH_DOMAIN_IN_MAP).getBytes());
-		readBroadcastInfo.put(HASH_USERNAME_IN_MAP, highestValue.get(HASH_USERNAME_IN_MAP).getBytes());
-		readBroadcastInfo.put(PASSWORD_IN_MAP, Crypto.decode(highestValue.get(PASSWORD_IN_MAP)));
-		readBroadcastInfo.put(HASH_PASSWORD_IN_MAP, Crypto.decode(highestValue.get(HASH_PASSWORD_IN_MAP)));
-		return write(readBroadcastInfo);
+		if(reading){
+			this.wts = Long.parseLong(highestValue.get(WTS_IN_MAP));
+			readBroadcastInfo.put(RANK_IN_MAP, highestValue.get(RANK_IN_MAP).getBytes());
+			readBroadcastInfo.put(HASH_DOMAIN_IN_MAP, highestValue.get(HASH_DOMAIN_IN_MAP).getBytes());
+			readBroadcastInfo.put(HASH_USERNAME_IN_MAP, highestValue.get(HASH_USERNAME_IN_MAP).getBytes());
+			readBroadcastInfo.put(PASSWORD_IN_MAP, Crypto.decode(highestValue.get(PASSWORD_IN_MAP)));
+			readBroadcastInfo.put(HASH_PASSWORD_IN_MAP, Crypto.decode(highestValue.get(HASH_PASSWORD_IN_MAP)));
+
+		}
+		else{
+			this.wts = Long.parseLong(highestValue.get(WTS_IN_MAP)) + 1;
+			readBroadcastInfo.put(RANK_IN_MAP, "0".getBytes());
+			readBroadcastInfo.put(HASH_DOMAIN_IN_MAP, writeVal.get(HASH_DOMAIN_IN_MAP));
+			readBroadcastInfo.put(HASH_USERNAME_IN_MAP, writeVal.get(HASH_USERNAME_IN_MAP));
+			readBroadcastInfo.put(PASSWORD_IN_MAP, writeVal.get(PASSWORD_IN_MAP));
+			readBroadcastInfo.put(HASH_PASSWORD_IN_MAP, writeVal.get(HASH_PASSWORD_IN_MAP));
+		}
+		this.rid = Long.parseLong(highestValue.get(RID_IN_MAP));
+		return writeBroadcast(readBroadcastInfo);
 	}
 
 
-	public boolean deliver(Long wts) {
-		if (wts > this.wts) {
+	public String writeBroadcast(HashMap<String, byte[]> infoToSend) {
+		try {
+			HashMap<String, byte[]> infoToSendTemp = new HashMap<>();
+
+			for (String s : infoToSend.keySet()) {
+				infoToSendTemp.put(s, infoToSend.get(s));
+			}
+
+			for (String s : servers.keySet()) {
+
+				// Cipher domain and username
+				ArrayList<byte[]> dataCiphered = Crypto
+						.cipher(new String[] { new String(infoToSend.get(HASH_DOMAIN_IN_MAP)),
+								new String(infoToSend.get(HASH_USERNAME_IN_MAP)) }, serversPubKey.get(s));
+
+				// Make signature
+				byte[] sig = makeSignature(infoToSend);
+
+				// Update values to send
+				infoToSendTemp.put(HASH_DOMAIN_IN_MAP, dataCiphered.get(0));
+				infoToSendTemp.put(HASH_USERNAME_IN_MAP, dataCiphered.get(1));
+
+				// Send
+				authLink.send(cliPrivKey, cliPubKey, servers.get(s), sig, wts, rid, infoToSendTemp, bonrr);
+			}
+
+			while (acklist.size() <= ((servers.keySet().size() + FAULT_NUMBER) / 2)) {
+
+			}
+			acklist = new ArrayList<String>();
+			if (reading) {
+				reading = false;
+				return Crypto.decipherString(infoToSendTemp.get(PASSWORD_IN_MAP), cliPrivKey);
+			}
+			return "Value Wrote\n";
+		} catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException | IllegalBlockSizeException
+				| BadPaddingException e) {
+			e.printStackTrace();
+			throw new RuntimeException(e.getMessage());
+		}
+	}
+	
+	public boolean deliver(Long wts, String rank) {
+		if (wts > this.wts || (wts == this.wts && rank.compareTo(this.rank) == 1)) {
 			return true;
 		}
 		return false;

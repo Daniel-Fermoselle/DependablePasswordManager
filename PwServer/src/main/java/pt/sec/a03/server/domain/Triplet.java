@@ -12,10 +12,13 @@ public class Triplet {
 	private String hash;
 	private String signature;
 	private long wts;
+	private long rid;
+	private String rank;
+
 
 	public Triplet() {}
 	
-	public Triplet(String domain, String username, String password, String pwHash, String signature, long wts) {
+	public Triplet(String domain, String username, String password, String pwHash, String signature, long wts, long rid, String rank) {
 		this.domain = domain;
 		this.username = username;
 		this.password = password;
@@ -63,4 +66,12 @@ public class Triplet {
     public long getWts() { return wts; }
 
     public void setWts(long wts) { this.wts = wts; }
+    
+    public long getRid() { return rid; }
+    
+    public void setRid(long rid) { this.rid = rid; }
+    
+    public String getRank() { return rank; }
+    
+    public void setRank(String rank) { this.rank = rank; }
 }

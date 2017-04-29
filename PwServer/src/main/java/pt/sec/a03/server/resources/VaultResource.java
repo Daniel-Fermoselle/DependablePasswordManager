@@ -36,7 +36,7 @@ public class VaultResource {
     private static final String ACK_HEADER_NAME = "ack";
     private static final String BONRR_HEADER_NAME = "bonrr";
     private static final String RID_HEADER_NAME = "rid";
-
+    private static final String RANK_HEADER_NAME = "rank";
 
     private AuthLink authLink = new AuthLink();
     private VaultService vaultService = new VaultService();
@@ -49,12 +49,14 @@ public class VaultResource {
                             @HeaderParam(SIGNATURE_HEADER_NAME) String signature,
                             @HeaderParam(NONCE_HEADER_NAME) String wts,
                             @HeaderParam(BONRR_HEADER_NAME) String bonrr,
+                            @HeaderParam(RID_HEADER_NAME) String rid,
+                            @HeaderParam(RANK_HEADER_NAME) String rank,
                             CommonTriplet t) {
 
         System.out.println("Received Post packet addPassword");
-        authLink.deliverWrite(publicKey, authSig, signature, wts, t);
+        authLink.deliverWrite(publicKey, authSig, signature, wts, t, rid, rank);
 
-        Triplet triplet = new Triplet(t.getDomain(), t.getUsername(), t.getPassword(), t.getHash(), signature, Long.parseLong(wts));
+        Triplet triplet = new Triplet(t.getDomain(), t.getUsername(), t.getPassword(), t.getHash(), signature, Long.parseLong(wts), Long.parseLong(rid), rank);
         String[] response = vaultService.put(publicKey, triplet, bonrr);
 
         asyncResponse.resume(Response.status(Status.CREATED)
