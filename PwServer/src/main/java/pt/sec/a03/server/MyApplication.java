@@ -9,12 +9,16 @@ import org.glassfish.jersey.server.ResourceConfig;
 public class MyApplication{
 	
 	public static String PORT;
+	public static boolean SLOW_BYZANTINE = false;
+	public static int SECONDS = 10000;
 
 	public static void main(String[] args) throws Exception{
 		HttpServer server = null;
 	    try {
-	    	if (args.length != 1) { System.out.println("Invalid number of arguments");return; }
+	    	if (args.length < 1) { System.out.println("Invalid number of arguments");return; }
 			PORT = args[0];
+			
+			assignFlags(args);
 
 			server = startServer("http://" + args[0] + "/PwServer");
 
@@ -40,6 +44,17 @@ public class MyApplication{
         // create and start a new instance of grizzly http server
         // exposing the Jersey application at BASE_URI
         return GrizzlyHttpServerFactory.createHttpServer(URI.create(uri), rc);
+    }
+    
+    public static void assignFlags(String[] args){
+    	for(String arg : args){
+    		if(arg.startsWith("slow")){
+    			System.out.println("Done.................");
+    			MyApplication.SLOW_BYZANTINE = true;
+    			String seconds[] = arg.split("-");
+    			MyApplication.SECONDS = Integer.parseInt(seconds[seconds.length - 1]) * 1000;
+    		}
+    	}
     }
 
 }

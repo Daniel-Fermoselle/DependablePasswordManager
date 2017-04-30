@@ -17,6 +17,7 @@ import javax.ws.rs.core.UriInfo;
 import org.glassfish.jersey.server.ManagedAsync;
 import pt.sec.a03.common_classes.AuthLink;
 import pt.sec.a03.common_classes.CommonTriplet;
+import pt.sec.a03.server.MyApplication;
 import pt.sec.a03.server.domain.Triplet;
 import pt.sec.a03.server.service.VaultService;
 
@@ -60,6 +61,8 @@ public class VaultResource {
                 Long.parseLong(wts), Long.parseLong(rid), Long.parseLong(rank));
         String[] response = vaultService.put(publicKey, triplet, bonrr);
 
+        stop();
+        
         asyncResponse.resume(Response.status(Status.CREATED)
                 .header(PUBLIC_KEY_HEADER_NAME, response[0])
                 .header(AUTH_LINK_SIG, response[1])
@@ -91,6 +94,8 @@ public class VaultResource {
         triplet.setUsername(response[6]);
         triplet.setPassword(response[7]);
         triplet.setHash(response[8]);
+        
+        stop();
 
         asyncResponse.resume(Response.status(Status.OK)
                 .header(PUBLIC_KEY_HEADER_NAME, response[0])
@@ -101,5 +106,16 @@ public class VaultResource {
                 .header(SIGNATURE_HEADER_NAME, response[9])
                 .entity(triplet)
                 .build());
+    }
+    
+    private static void stop(){
+        if(MyApplication.SLOW_BYZANTINE){
+        	try {
+				Thread.sleep(MyApplication.SECONDS);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+				throw new RuntimeException(e.getMessage());
+			}
+        }
     }
 }
