@@ -69,11 +69,11 @@ public class RegisterUserTest extends AbstractClientLibTest {
 	@Test
 	public void test01_registerUser() {
         try {
-            Thread.sleep(1500);
+            Thread.sleep(5500);
         } catch (InterruptedException e) {
             e.printStackTrace();
-            System.out.println("REKT");
         }
+
         c1.register_user();
 	}
 
@@ -83,8 +83,9 @@ public class RegisterUserTest extends AbstractClientLibTest {
 	@Test
 	public void test02_registerUser() {
 		try {
-		    Thread.sleep(1500);
+		    Thread.sleep(4500);
             c1.register_user();
+            Thread.sleep(1000);
             c1.register_user();
 			fail("This test should fail with exception AlreadyExistsException");
 		} catch (AlreadyExistsException e) {
@@ -100,7 +101,7 @@ public class RegisterUserTest extends AbstractClientLibTest {
 	@Test
 	public void test03_registerUser() {
         try {
-            Thread.sleep(1500);
+            Thread.sleep(3500);
             c1.setResponses(new ArrayList());
             for (String s : m.keySet()) {
                 String[] infoToSend = c1.prepareForRegisterUser(s);
@@ -122,7 +123,7 @@ public class RegisterUserTest extends AbstractClientLibTest {
 	@Test
 	public void test04_registerUser() {
 		try {
-            Thread.sleep(1500);
+            Thread.sleep(2500);
             c1.setResponses(new ArrayList());
             for (String s : m.keySet()) {
                 String[] infoToSend = c1.prepareForRegisterUser(s);
@@ -144,7 +145,7 @@ public class RegisterUserTest extends AbstractClientLibTest {
 	@Test
 	public void test05_registerUser() {
 		try {
-            Thread.sleep(1500);
+            Thread.sleep(500);
             c1.setResponses(new ArrayList());
             for (String s : m.keySet()) {
                 String[] infoToSend = c1.prepareForRegisterUser(s);
