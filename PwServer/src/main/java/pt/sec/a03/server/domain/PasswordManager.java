@@ -92,9 +92,9 @@ public class PasswordManager {
     //			Bonrr Functions
     //----------------------------------------
 
-    public Bonrr getBonrrInstance(String bonrr) {
+    public Bonrr getBonrrInstance(String bonrr, String domain, String username) {
         try {
-            Bonrr bonrrInstance = this.db.getBonrrInstance(bonrr);
+            Bonrr bonrrInstance = this.db.getBonrrInstance(bonrr, domain, username);
             if (bonrrInstance != null) {
                 return bonrrInstance;
             } else {

@@ -33,7 +33,8 @@ public class Bonrr {
     private ArrayList<String> acklist;
     private ArrayList<HashMap<String, String>> readlist;
 
-    private long wts;
+    //<Domain, <Username, wts>>
+    private HashMap<String, HashMap<String, Long>> wts;
     private long rid;
     private AuthLink authLink;
     private boolean reading;
@@ -45,7 +46,7 @@ public class Bonrr {
 		this.cliPrivKey = cliPrivKey;
 		this.servers = servers;
 		this.serversPubKey = serversPubKey;
-		this.wts = 0;
+		this.wts = new HashMap<>();
 		acklist = new ArrayList<String>();
 		this.rid = 0;
 		readlist = new ArrayList<HashMap<String, String>>();
@@ -56,18 +57,19 @@ public class Bonrr {
 		this.rank = 100;
 	}
 
-	public Bonrr(String bonrr, long wts, long rank) {
+	public Bonrr(String bonrr, long wts, long rank, String domain, String username) {
 		this.bonrr = bonrr;
-		this.wts = wts;
+		this.wts = new HashMap<>();
+        updateWts(domain, username, wts);
 		this.rank = rank;
 	}
 
-	public String write(HashMap<String, byte[]> infoToSend) {
+    public String write(HashMap<String, byte[]> infoToSend) {
 		//Set variables to write
-		rid = rid + 1;
-        this.writeVal=infoToSend;
-        acklist = new ArrayList<String>();
-        readlist = new ArrayList<HashMap<String, String>>();
+		this.rid = rid + 1;
+        this.writeVal = infoToSend;
+        this.acklist = new ArrayList<String>();
+        this.readlist = new ArrayList<HashMap<String, String>>();
 
 		//Preform read
 		HashMap<String, byte[]> infoToRead = new HashMap<String, byte[]>();
@@ -108,9 +110,9 @@ public class Bonrr {
             authLink.send(servers.get(s), rid, infoToSendTemp, bonrr);
         }
 
-        while (readlist.size() <= ((servers.keySet().size() + FAULT_NUMBER) / 2)) {
-        }
+        while (readlist.size() <= ((servers.keySet().size() + FAULT_NUMBER) / 2)) {}
 
+        //ERROR CASE FOR A WRITE WITHOUT PREVIOUS VALUE
         HashMap<String, byte[]> readBroadcastInfo = new HashMap<String, byte[]>();
         if(verifyNoValueRead()){
             this.wts =  this.wts + 1;
@@ -122,6 +124,7 @@ public class Bonrr {
         }
 
         HashMap<String, String> highestValue = highestVal(readlist);
+
         verifyReadPassword(highestValue);
 
         readlist = new ArrayList<HashMap<String, String>>();
@@ -209,8 +212,8 @@ public class Bonrr {
                 nrOfErrors++;
             }
         }
-        //ERROR CASE FOR A WRITE WITHOUT PREVIOUS VALUE
-        if(nrOfErrors>(servers.keySet().size() + FAULT_NUMBER) / 2){
+
+        if(nrOfErrors > (servers.keySet().size() + FAULT_NUMBER) / 2){
             return true;
         }
         return false;
@@ -283,4 +286,22 @@ public class Bonrr {
     public boolean getReading() {
 		return this.reading;
 	}
+
+    private void updateWts(String domain, String username, long wts) {
+        HashMap<String, Long> toAdd = new HashMap<>();
+        toAdd.put(username, wts);
+        this.wts.put(domain, toAdd);
+    }
+
+    private long getWts(String domain, String username) {
+        if(this.wts == null){
+            throw new RuntimeException("Wts hashmap null");
+        }
+        else if (this.wts.get(domain) == null){
+            throw new RuntimeException("Wts domain hashmap null");
+        }
+        else {
+            return this.wts.get(domain).get(username);
+        }
+    }
 }

@@ -64,20 +64,20 @@ public class VaultService {
 	}
 
 	public String[] put(String publicKey, Triplet t, String bonrr) {
+		// Decipher
+		String[] userAndDom = decipherUsernameAndDomain(t.getDomain(), t.getUsername());
 
 		// Get Bonrr instance
-		Bonrr bonrrInstance = pwm.getBonrrInstance(bonrr);
+		Bonrr bonrrInstance = pwm.getBonrrInstance(bonrr, userAndDom[1], userAndDom[0]);
 
 		System.out.println("Got BonrrInstance");
 
 		// Verify deliver
 		if (bonrrInstance.deliver(t.getWts(), t.getRank())) {
-            System.out.println("Going to update/put Bonrr");
-            // Decipher
-			String[] userAndDom = decipherUsernameAndDomain(t.getDomain(), t.getUsername());
+			System.out.println("Going to update/put Bonrr");
 
             System.out.println("Going to verify sig");
-            System.out.println("Bonrr: " + bonrr + " Wts: " + t.getWts() + " Rid: " + t.getRid() + " Rank: " + t.getRank());
+            System.out.println("Bonrr: " + bonrr + " \nWts: " + t.getWts() + " Rid: " + t.getRid() + " Rank: " + t.getRank());
             // Verify signature
 			String serverSideTosign = bonrr + (t.getWts() + "") + (t.getRank() + "") + userAndDom[1] + userAndDom[0] + t.getPassword()
 					+ t.getHash();

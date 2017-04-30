@@ -76,7 +76,6 @@ public class ClientLib {
 
 	private Map<String, PublicKey> serversPubKey;
 	private Map<String, Long> nonces;
-	private Map<String, String> bonnrs;
 
 	private Map<String, String> servers;
 	private Bonrr bonrr;

@@ -106,7 +106,7 @@ public class Database {
 		this.conn.close();
 	}
 
-	public Bonrr getBonrrInstance(String bonrr) throws SQLException {
+	public Bonrr getBonrrInstance(String bonrr, String domain, String username) throws SQLException {
 		//Get mysql conneciton
 		getConnection();
 		Statement stmt = this.conn.createStatement();
@@ -116,7 +116,8 @@ public class Database {
 		long DBwts = 0;
 
 		// Step 1: Execute a SQL SELECT query, the query result
-		String strSelect = "select bonrr, MAX(wts) as wts, rank from Bonrrs where bonrr = '" + bonrr + "'GROUP BY wts ORDER BY wts DESC;";
+		String strSelect = "select bonrr, MAX(wts) as wts, rank from Bonrrs where bonrr = '" + bonrr + "' AND " +
+				"domain = '" + domain + "' AND  username = '" + username + "' GROUP BY wts ORDER BY wts DESC;";
 
 		// Step 2: Process the ResultSet by scrolling the cursor forward via
 		ResultSet rset = stmt.executeQuery(strSelect);
@@ -141,9 +142,9 @@ public class Database {
 		getConnection();
 		Statement stmt = this.conn.createStatement();
 
-		String sqlInsert = "insert into Bonrrs(bonrr, wts, rank, signature, username, domain, pw, pwHash) " +
-				" values ('" + bonrr + "', " + t.getWts() + ", " + t.getRank() + ", '" + t.getSignature() + "', '" + t.getUsername() + "', '"
-				+ t.getDomain() + "', '" + t.getPassword() + "', '" + t.getHash() + "');";
+		String sqlInsert = "insert into Bonrrs(bonrr, wts, username, domain, rank, signature, pw, pwHash) " +
+                " values ('" + bonrr + "', " + t.getWts() + ", '" + t.getUsername() + "', '"
+                + t.getDomain() + "', " + t.getRank() + ", '" + t.getSignature() + "', '" + t.getPassword() + "', '" + t.getHash() + "');";
 
 		stmt.execute(sqlInsert);
 

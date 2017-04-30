@@ -13,19 +13,19 @@ create table Users (
 create table Bonrrs (
 	bonrr VARCHAR(500),
 	wts bigint,
+	username VARCHAR(300),
+	domain VARCHAR(300),
 	rank bigint,
 	signature TEXT,
-	username TEXT,
-	domain TEXT,
 	pw TEXT,
 	pwHash TEXT,
-	primary key (bonrr, wts),
+	primary key (bonrr, wts, domain, username),
 	foreign key (bonrr) references Users(publicKey));
 
 create database if not exists PWM_1;
  
 use PWM_1;
- 
+
 drop table if exists Bonrrs; 
 drop table if exists Users;
 
@@ -37,13 +37,13 @@ create table Users (
 create table Bonrrs (
 	bonrr VARCHAR(500),
 	wts bigint,
+	username VARCHAR(300),
+	domain VARCHAR(300),
 	rank bigint,
 	signature TEXT,
-	username TEXT,
-	domain TEXT,
 	pw TEXT,
 	pwHash TEXT,
-	primary key (bonrr, wts),
+	primary key (bonrr, wts, domain, username),
 	foreign key (bonrr) references Users(publicKey));
 
 create database if not exists PWM_2;
@@ -61,13 +61,13 @@ create table Users (
 create table Bonrrs (
 	bonrr VARCHAR(500),
 	wts bigint,
+	username VARCHAR(300),
+	domain VARCHAR(300),
 	rank bigint,
 	signature TEXT,
-	username TEXT,
-	domain TEXT,
 	pw TEXT,
 	pwHash TEXT,
-	primary key (bonrr, wts),
+	primary key (bonrr, wts, domain, username),
 	foreign key (bonrr) references Users(publicKey));
 
 create database if not exists PWM_3;
@@ -85,13 +85,13 @@ create table Users (
 create table Bonrrs (
 	bonrr VARCHAR(500),
 	wts bigint,
+	username VARCHAR(300),
+	domain VARCHAR(300),
 	rank bigint,
 	signature TEXT,
-	username TEXT,
-	domain TEXT,
 	pw TEXT,
 	pwHash TEXT,
-	primary key (bonrr, wts),
+	primary key (bonrr, wts, domain, username),
 	foreign key (bonrr) references Users(publicKey));
 
 create database if not exists PWM_4;
@@ -109,11 +109,11 @@ create table Users (
 create table Bonrrs (
 	bonrr VARCHAR(500),
 	wts bigint,
+	username VARCHAR(300),
+	domain VARCHAR(300),
 	rank bigint,
 	signature TEXT,
-	username TEXT,
-	domain TEXT,
 	pw TEXT,
 	pwHash TEXT,
-	primary key (bonrr, wts),
+	primary key (bonrr, wts, domain, username),
 	foreign key (bonrr) references Users(publicKey));
