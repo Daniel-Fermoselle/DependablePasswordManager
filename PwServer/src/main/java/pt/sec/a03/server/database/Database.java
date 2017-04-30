@@ -133,7 +133,7 @@ public class Database {
 		if (rowCount == 0) {
 			return null;
 		} else {
-			return new Bonrr(DBbonrr, DBwts, DBrank);
+			return new Bonrr(DBbonrr, DBwts, DBrank, domain, username);
 		}
 	}
 

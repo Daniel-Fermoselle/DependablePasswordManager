@@ -73,14 +73,14 @@ public class VaultService {
 		System.out.println("Got BonrrInstance");
 
 		// Verify deliver
-		if (bonrrInstance.deliver(t.getWts(), t.getRank())) {
+		if (bonrrInstance.deliver(t.getWts(), t.getRank(), userAndDom[1], userAndDom[0])) {
 			System.out.println("Going to update/put Bonrr");
 
             System.out.println("Going to verify sig");
             System.out.println("Bonrr: " + bonrr + " \nWts: " + t.getWts() + " Rid: " + t.getRid() + " Rank: " + t.getRank());
             // Verify signature
-			String serverSideTosign = bonrr + (t.getWts() + "") + (t.getRank() + "") + userAndDom[1] + userAndDom[0] + t.getPassword()
-					+ t.getHash();
+			String serverSideTosign = bonrr + (t.getWts() + "") + (t.getRank() + "") + userAndDom[1] + userAndDom[0]
+					+ t.getPassword() + t.getHash();
 			verifySignature(publicKey, t.getSignature(), serverSideTosign);
 
             System.out.println("Verified update/put Bonrr");
@@ -92,13 +92,17 @@ public class VaultService {
             System.out.println("Going to save update/put Bonrr");
             pwm.saveBonrr(bonrr, triplet);
 		}
+
 		// Response
-		String ackMsg = "ACK" + t.getWts();
+		String[] cipherUserDom = cipherUsernameAndDomain(userAndDom[1], userAndDom[0], publicKey);
+
+		String ackMsg = "ACK" + t.getWts() + userAndDom[1] + userAndDom[0];
 
 		// Make signature
 		String sign = makeSignature(ackMsg);
 
-		return new String[] {Crypto.encode(this.pubKey.getEncoded()), sign, "ACK", t.getWts() + "" };
+		return new String[] {Crypto.encode(this.pubKey.getEncoded()), sign, "ACK", t.getWts() + "", cipherUserDom[1],
+				cipherUserDom[0] };
 	}
 
 	public String[] get(String publicKey, String username, String domain, String rid, String bonrr) {

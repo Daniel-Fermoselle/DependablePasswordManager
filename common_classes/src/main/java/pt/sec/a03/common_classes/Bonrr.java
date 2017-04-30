@@ -90,6 +90,9 @@ public class Bonrr {
 	}
 
     private String readBroadcast(HashMap<String, byte[]> infoToSend) {
+        String domain = new String(infoToSend.get(HASH_DOMAIN_IN_MAP));
+        String username = new String(infoToSend.get(HASH_USERNAME_IN_MAP));
+
         HashMap<String, byte[]> infoToSendTemp = new HashMap<>();
 
         for (String s : infoToSend.keySet()) {
@@ -115,7 +118,7 @@ public class Bonrr {
         //ERROR CASE FOR A WRITE WITHOUT PREVIOUS VALUE
         HashMap<String, byte[]> readBroadcastInfo = new HashMap<String, byte[]>();
         if(verifyNoValueRead()){
-            this.wts =  this.wts + 1;
+            updateWts(domain, username, getWts(domain, username) + 1);
             readBroadcastInfo.put(HASH_DOMAIN_IN_MAP, writeVal.get(HASH_DOMAIN_IN_MAP));
             readBroadcastInfo.put(HASH_USERNAME_IN_MAP, writeVal.get(HASH_USERNAME_IN_MAP));
             readBroadcastInfo.put(PASSWORD_IN_MAP, writeVal.get(PASSWORD_IN_MAP));
@@ -130,7 +133,7 @@ public class Bonrr {
         readlist = new ArrayList<HashMap<String, String>>();
 
         if(reading){
-            this.wts = Long.parseLong(highestValue.get(WTS_IN_MAP));
+            updateWts(domain, username, Long.parseLong(highestValue.get(WTS_IN_MAP)));
             readBroadcastInfo.put(RANK_IN_MAP, highestValue.get(RANK_IN_MAP).getBytes());
             readBroadcastInfo.put(HASH_DOMAIN_IN_MAP, highestValue.get(HASH_DOMAIN_IN_MAP).getBytes());
             readBroadcastInfo.put(HASH_USERNAME_IN_MAP, highestValue.get(HASH_USERNAME_IN_MAP).getBytes());
@@ -139,7 +142,7 @@ public class Bonrr {
 
         }
         else{
-            this.wts = Long.parseLong(highestValue.get(WTS_IN_MAP)) + 1;
+            updateWts(domain, username, Long.parseLong(highestValue.get(WTS_IN_MAP)) + 1);
             readBroadcastInfo.put(HASH_DOMAIN_IN_MAP, writeVal.get(HASH_DOMAIN_IN_MAP));
             readBroadcastInfo.put(HASH_USERNAME_IN_MAP, writeVal.get(HASH_USERNAME_IN_MAP));
             readBroadcastInfo.put(PASSWORD_IN_MAP, writeVal.get(PASSWORD_IN_MAP));
@@ -151,6 +154,9 @@ public class Bonrr {
 
     public String writeBroadcast(HashMap<String, byte[]> infoToSend) {
         try {
+            String domain = new String(infoToSend.get(HASH_DOMAIN_IN_MAP));
+            String username = new String(infoToSend.get(HASH_USERNAME_IN_MAP));
+
             HashMap<String, byte[]> infoToSendTemp = new HashMap<>();
 
             for (String s : infoToSend.keySet()) {
@@ -174,10 +180,10 @@ public class Bonrr {
 
                 // Send
                 if(reading)
-                    authLink.send(servers.get(s),wts, rid, Long.parseLong(new String (infoToSend.get(RANK_IN_MAP))),
-                            infoToSendTemp, bonrr);
+                    authLink.send(servers.get(s), getWts(domain, username), rid,
+                            Long.parseLong(new String (infoToSend.get(RANK_IN_MAP))), infoToSendTemp, bonrr);
                 else
-                    authLink.send(servers.get(s), wts, rid, rank, infoToSendTemp, bonrr);
+                    authLink.send(servers.get(s), getWts(domain, username), rid, rank, infoToSendTemp, bonrr);
 
             }
 
@@ -198,8 +204,8 @@ public class Bonrr {
         }
     }
 
-	public boolean deliver(Long wts, Long rank) {
-		if (wts > this.wts || (wts == this.wts && rank > this.rank)) {
+	public boolean deliver(Long wts, Long rank, String domain, String username) {
+		if (wts > getWts(domain, username) || (wts == getWts(domain, username) && rank > this.rank)) {
 			return true;
 		}
 		return false;
@@ -233,10 +239,12 @@ public class Bonrr {
 	}
 
     private byte[] makeSignature(HashMap<String, byte[]> infoToSend) {
-        System.out.println("Bonrr: " + bonrr + " Wts: " + wts + " Rid: " + rid + " Rank: " + rank);
-        String toSign = bonrr + (wts + "") + (rank + "");
-        toSign = toSign + new String(infoToSend.get(HASH_DOMAIN_IN_MAP));
-        toSign = toSign + new String(infoToSend.get(HASH_USERNAME_IN_MAP));
+        String domain = new String(infoToSend.get(HASH_DOMAIN_IN_MAP));
+        String username = new String(infoToSend.get(HASH_USERNAME_IN_MAP));
+        System.out.println("Bonrr: " + bonrr + " Wts: " + getWts(domain, username) + " Rid: " + rid + " Rank: " + rank);
+        String toSign = bonrr + (getWts(domain, username) + "") + (rank + "");
+        toSign = toSign + domain;
+        toSign = toSign + username;
         toSign = toSign + Crypto.encode(infoToSend.get(PASSWORD_IN_MAP));
         toSign = toSign + Crypto.encode(infoToSend.get(HASH_PASSWORD_IN_MAP));
         try {
@@ -266,8 +274,8 @@ public class Bonrr {
         }
     }
 
-    public synchronized void addToAckList(String ack, long wts) {
-        if (wts == this.wts) {
+    public synchronized void addToAckList(String ack, long wts, String domain, String username) {
+        if (wts == getWts(domain, username)) {
             acklist.add(ack);
         }
     }
@@ -295,10 +303,14 @@ public class Bonrr {
 
     private long getWts(String domain, String username) {
         if(this.wts == null){
-            throw new RuntimeException("Wts hashmap null");
+            this.wts = new HashMap<>();
+            updateWts(domain, username, 0);
+            return 0;
+
         }
         else if (this.wts.get(domain) == null){
-            throw new RuntimeException("Wts domain hashmap null");
+            updateWts(domain, username, 0);
+            return 0;
         }
         else {
             return this.wts.get(domain).get(username);

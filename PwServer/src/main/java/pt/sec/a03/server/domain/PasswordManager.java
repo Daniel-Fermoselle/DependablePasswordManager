@@ -98,7 +98,7 @@ public class PasswordManager {
             if (bonrrInstance != null) {
                 return bonrrInstance;
             } else {
-                return new Bonrr(bonrr, 0, 0);
+                return new Bonrr(bonrr, 0, 0, domain, username);
             }
         } catch (SQLException e) {
             e.printStackTrace();
