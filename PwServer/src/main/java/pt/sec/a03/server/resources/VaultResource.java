@@ -17,6 +17,7 @@ import javax.ws.rs.core.UriInfo;
 import org.glassfish.jersey.server.ManagedAsync;
 import pt.sec.a03.common_classes.AuthLink;
 import pt.sec.a03.common_classes.CommonTriplet;
+import pt.sec.a03.server.MyApplication;
 import pt.sec.a03.server.domain.Triplet;
 import pt.sec.a03.server.service.VaultService;
 
@@ -84,7 +85,7 @@ public class VaultResource {
 
         authLink.deliverRead(publicKey, authSig, rid, domain, username);
 
-        String[] response = vaultService.get(publicKey, username, domain, rid, bonrr);
+        String[] response = vaultService.get(publicKey, username, domain, rid, bonrr,MyApplication.BYZ_FAULT_CREATOR);
 
         CommonTriplet triplet = new CommonTriplet();
         triplet.setDomain(response[5]);

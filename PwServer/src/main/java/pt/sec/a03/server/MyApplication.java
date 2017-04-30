@@ -9,12 +9,17 @@ import org.glassfish.jersey.server.ResourceConfig;
 public class MyApplication{
 	
 	public static String PORT;
+	public static boolean BYZ_FAULT_CREATOR;
 
 	public static void main(String[] args) throws Exception{
 		HttpServer server = null;
 	    try {
-	    	if (args.length != 1) { System.out.println("Invalid number of arguments");return; }
+	    	if (args.length != 1 || args.length != 2) { System.out.println("Invalid number of arguments");return; }
 			PORT = args[0];
+			if(args.length == 2){
+				BYZ_FAULT_CREATOR = (args[1].equals("true")) ? true: false;
+			}
+				
 
 			server = startServer("http://" + args[0] + "/PwServer");
 

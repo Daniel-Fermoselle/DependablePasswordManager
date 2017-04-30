@@ -30,7 +30,7 @@ public class SavePasswordTest extends AbstractClientLibTest {
 	private static final String KEY_STORE_PASSWORD_1 = "insecure";
 	private static final String KEY_STORE_ALIAS_FOR_PUB_PRIV_1 = "client";
 
-	private static final String KEY_STORE_2 = "ks/Client1.jks";
+	private static final String KEY_STORE_2 = "ks/client2.jks";
 	private static final String KEY_STORE_PASSWORD_2 = "insecure";
 	private static final String KEY_STORE_ALIAS_FOR_PUB_PRIV_2 = "client";
 
@@ -66,7 +66,7 @@ public class SavePasswordTest extends AbstractClientLibTest {
 			//ks1 = Crypto.readKeystoreFile(KEY_STORE_1, KEY_STORE_PASSWORD_1.toCharArray());
 			ks1 = Crypto.readKeystoreFile("../Client/ks/Client1.jks", "insecure".toCharArray());
 			//ks2 = Crypto.readKeystoreFile(KEY_STORE_2, KEY_STORE_PASSWORD_2.toCharArray());
-			ks2 = Crypto.readKeystoreFile("../Client/ks/Client2.jks", "insecure".toCharArray());
+			ks2 = Crypto.readKeystoreFile("../Client/ks/client2.jks", "insecure".toCharArray());
 			
 			c1.init(ks1, KEY_STORE_ALIAS_FOR_PUB_PRIV_1, KEY_STORE_PASSWORD_1);
 			c1.register_user();
