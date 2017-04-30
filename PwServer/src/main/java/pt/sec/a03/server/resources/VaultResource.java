@@ -54,6 +54,10 @@ public class VaultResource {
                             @HeaderParam(RANK_HEADER_NAME) String rank,
                             CommonTriplet t) {
 
+        if(MyApplication.CRASH){
+            System.exit(1);
+        }
+
         System.out.println("Received Post packet addPassword");
         authLink.deliverWrite(publicKey, authSig, signature, wts, t, rid, rank);
 
@@ -82,6 +86,10 @@ public class VaultResource {
                                 @HeaderParam(DOMAIN_HEADER_NAME) String domain,
                                 @HeaderParam(USERNAME_HEADER_NAME) String username,
                                 @HeaderParam(BONRR_HEADER_NAME) String bonrr) {
+
+        if(MyApplication.CRASH){
+            System.exit(1);
+        }
 
         System.out.println("Received Get packet getPassword");
 

@@ -11,6 +11,8 @@ public class MyApplication{
 	public static String PORT;
 	public static boolean SLOW_BYZANTINE = false;
 	public static int SECONDS = 10000;
+	public static boolean CRASH = false;
+
 
 	public static void main(String[] args) throws Exception{
 		HttpServer server = null;
@@ -54,6 +56,10 @@ public class MyApplication{
     			String seconds[] = arg.split("-");
     			MyApplication.SECONDS = Integer.parseInt(seconds[seconds.length - 1]) * 1000;
     		}
+    		else if (arg.startsWith("crash")) {
+				System.out.println("CY@");
+				MyApplication.CRASH = true;
+			}
     	}
     }
 
