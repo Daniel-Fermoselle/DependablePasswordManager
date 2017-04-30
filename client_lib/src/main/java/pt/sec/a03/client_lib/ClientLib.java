@@ -10,6 +10,7 @@ import java.security.PublicKey;
 import java.security.SignatureException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.Certificate;
+import java.util.ArrayList;
 import java.util.Set;
 import java.util.HashMap;
 import java.util.Map;
@@ -80,6 +81,8 @@ public class ClientLib {
 	private Map<String, String> servers;
 	private Bonrr bonrr;
 
+	private ArrayList<String> responses;
+
 	public ClientLib(Map<String, String> hosts) {
 		this.servers = hosts;
 		client = ClientBuilder.newClient();
@@ -102,19 +105,15 @@ public class ClientLib {
 	//----------------------------------------
 
 	public void register_user() {
+	    responses = new ArrayList<>();
 		for (String alias : serversPubKey.keySet()) {
 			String[] infoToSend = prepareForRegisterUser(alias);
-			Future<Response> response = sendRegisterUser(infoToSend, alias);
-			try {
-				processRegisterUser(response.get(), alias);
-			} catch (InterruptedException | ExecutionException e) {
-				e.printStackTrace();
-				throw new RuntimeException(e.getMessage());
-			}
+			sendRegisterUser(infoToSend, alias);
 		}
-	}
+        processResponses();
+    }
 
-	public String[] prepareForRegisterUser(String alias) {
+    public String[] prepareForRegisterUser(String alias) {
 		try {
 			// Generate Nonce
 			String stringNonce = nonces.get(alias) + "";
@@ -144,11 +143,38 @@ public class ClientLib {
 				.header(NONCE_HEADER_NAME, infoToSend[2])
 				.async().post(Entity.json(null), new InvocationCallback<Response>() {
 					@Override
-					public void completed(Response response) {
+					public void completed(Response postResponse) {
 						System.out.println("Response of register user status code "
-								+ response.getStatus() + " received.");
-					}
+								+ postResponse.getStatus() + " received.");
 
+                        if (postResponse.getStatus() == 201) {
+                            String sigToVerify = postResponse.getHeaderString(SIGNATURE_HEADER_NAME);
+                            String encodedNonce = postResponse.getHeaderString(NONCE_HEADER_NAME);
+                            try {
+
+                                String stringNonce = Crypto.decipherString(Crypto.decode(encodedNonce), cliPrivKey);
+
+                                verifyNonce(stringNonce, alias);
+
+                                String sig = stringNonce;
+                                verifySignature(serversPubKey.get(alias), sigToVerify, sig);
+
+                            } catch (NoSuchAlgorithmException | InvalidKeyException | NoSuchPaddingException | IllegalBlockSizeException
+                                    | BadPaddingException e) {
+                                throw new BadRequestException(e.getMessage());
+                            }
+                            responses.add(SUCCESS_MSG);
+
+                        } else if (postResponse.getStatus() == 400) {
+                            responses.add(BAD_REQUEST_MSG);
+                        } else if (postResponse.getStatus() == 409) {
+                            responses.add(ALREADY_EXISTS_MSG);
+                        } else if (postResponse.getStatus() == 500) {
+                            responses.add(SERVER_ERROR_MSG);
+                        } else {
+                            responses.add(ELSE_MSG);
+                        }
+					}
 					@Override
 					public void failed(Throwable throwable) {
 						System.out.println("Invocation failed in resgister user.");
@@ -157,39 +183,52 @@ public class ClientLib {
 				});
 	}
 
-	public void processRegisterUser(Response postResponse, String alias) {
-		if (postResponse.getStatus() == 201) {
-			String sigToVerify = postResponse.getHeaderString(SIGNATURE_HEADER_NAME);
-			String encodedNonce = postResponse.getHeaderString(NONCE_HEADER_NAME);
-			try {
+    public void processResponses() {
+        while (responses.size() <= ((servers.keySet().size() + Bonrr.FAULT_NUMBER) / 2)) {}
 
-				String stringNonce = Crypto.decipherString(Crypto.decode(encodedNonce), cliPrivKey);
+        HashMap<String, Integer> nbResponses = new HashMap<>();
+        for (String response : responses) {
+            if(nbResponses.get(response) == null){
+                nbResponses.put(response, 1);
+            }
+            else{
+                nbResponses.put(response, nbResponses.get(response) + 1);
+            }
+        }
 
-				verifyNonce(stringNonce, alias);
+        int number = 0;
+        String response = null;
+        for (String s : nbResponses.keySet()) {
+            if(nbResponses.get(s) > number){
+                number = nbResponses.get(s);
+                response = s;
+            }
+        }
 
-				String sig = stringNonce;
-				verifySignature(serversPubKey.get(alias), sigToVerify, sig);
-
-			} catch (NoSuchAlgorithmException | InvalidKeyException | NoSuchPaddingException | IllegalBlockSizeException
-					| BadPaddingException e) {
-				throw new BadRequestException(e.getMessage());
-			}
-			System.out.println(SUCCESS_MSG);
-
-		} else if (postResponse.getStatus() == 400) {
-			System.out.println(BAD_REQUEST_MSG);
-			throw new BadRequestException(BAD_REQUEST_EXCEPTION_MSG);
-		} else if (postResponse.getStatus() == 409) {
-			System.out.println(ALREADY_EXISTS_MSG);
-			throw new AlreadyExistsException("This public key already exists in the server");
-		} else if (postResponse.getStatus() == 500) {
-			System.out.println(SERVER_ERROR_MSG);
-			throw new InternalServerErrorException(INTERNAL_SERVER_FAILURE_EXCEPTION_MSG);
-		} else {
-			System.out.println(ELSE_MSG);
-			throw new UnexpectedErrorExeception(UNEXPECTED_ERROR_EXCEPTION_MSG);
-		}
-	}
+        if(number <=  ((servers.keySet().size() + Bonrr.FAULT_NUMBER) / 2)){
+            throw new RuntimeException("No quorum achieved");
+        }
+        else{
+            if(response.equals(SUCCESS_MSG)){
+                System.out.println(SUCCESS_MSG);
+            }
+            else if(response.equals(BAD_REQUEST_MSG)){
+                System.out.println(BAD_REQUEST_EXCEPTION_MSG);
+                throw new BadRequestException(BAD_REQUEST_EXCEPTION_MSG);
+            }
+            else if(response.equals(ALREADY_EXISTS_MSG)){
+                System.out.println(ALREADY_EXISTS_MSG);
+                throw new AlreadyExistsException(ALREADY_EXISTS_MSG);
+            }
+            else if(response.equals(SERVER_ERROR_MSG)){
+                System.out.println(SERVER_ERROR_MSG);
+                throw new InternalServerErrorException(SERVER_ERROR_MSG);
+            } else{
+                System.out.println(ELSE_MSG);
+                throw new UnexpectedErrorExeception(ELSE_MSG);
+            }
+        }
+    }
 
 	//----------------------------------------
 	//			Save Password Functions
@@ -372,5 +411,9 @@ public class ClientLib {
 			throw new BadRequestException(e.getMessage());
 		}
 	}
+
+	public void setResponses(ArrayList a){
+	    responses = a;
+    }
 
 }
