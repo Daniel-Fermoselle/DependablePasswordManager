@@ -14,13 +14,13 @@ import pt.sec.a03.crypto.Crypto;
 
 public class InitTest extends AbstractClientLibTest {
 
-	private static final String KEY_STORE_1 = "ks/Client1.jks";
+	private static final String KEY_STORE_1 = "ks/client1.jks";
 	private static final String KEY_STORE_PASSWORD_1 = "insecure";
 	private static final String WRONG_KEY_STORE_PASSWORD_1 = "secure";
 	private static final String KEY_STORE_ALIAS_FOR_PUB_PRIV_1 = "client";
 	private static final String WRONG_KEY_STORE_ALIAS_FOR_PUB_PRIV_1 = "pog";
 
-	private static final String KEY_STORE_2 = "ks/Client2.jks";
+	private static final String KEY_STORE_2 = "ks/clientMissingCer.jks";
 	private static final String KEY_STORE_PASSWORD_2 = "insecure";
 	private static final String KEY_STORE_ALIAS_FOR_PUB_PRIV_2 = "client";
 
@@ -35,7 +35,10 @@ public class InitTest extends AbstractClientLibTest {
 	@Override
 	protected void populate() {
 		Map<String, String> m = new HashMap<String, String>();
-		m.put("server", "localhost:5555");
+		m.put("server1", "localhost:5555");
+		m.put("server2", "localhost:6666");
+		m.put("server3", "localhost:7777");
+		m.put("server4", "localhost:5444");
 		c1 = new ClientLib(m);
 		try {
 			ks1 = Crypto.readKeystoreFile(KEY_STORE_1, KEY_STORE_PASSWORD_1.toCharArray());
