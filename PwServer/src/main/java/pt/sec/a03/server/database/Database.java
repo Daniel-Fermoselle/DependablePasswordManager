@@ -136,6 +136,30 @@ public class Database {
 			return new Bonrr(DBbonrr, DBwts, DBrank, domain, username);
 		}
 	}
+	
+
+	public boolean checkUserAndDomain(String bonrr, Triplet t) throws SQLException{
+        getConnection();
+        Statement stmt = this.conn.createStatement();
+        String queryBonrr="";
+        // Step 1: Execute a SQL SELECT query, the query result
+        String strSelect = "select bonrr from Bonrrs where and domain = '" + t.getDomain()
+                + "' and username = '" + t.getUsername() + "'";
+
+        // Step 2: Process the ResultSet by scrolling the cursor forward via
+        ResultSet rset = stmt.executeQuery(strSelect);
+        int rowCount = 0;
+        while (rset.next()) { // Move the cursor to the next row
+            queryBonrr=rset.getString("bonrr");
+            ++rowCount;
+            break;
+        }
+        this.conn.close();
+        if(queryBonrr.equals(bonrr)){
+        	return true;
+        }
+		return false;
+	}
 
 	public void saveBonrr(String bonrr, Triplet t) throws SQLException{
 		//Get mysql conneciton
@@ -221,5 +245,6 @@ public class Database {
 
 		this.conn.close();
 	}
+
 
 }
