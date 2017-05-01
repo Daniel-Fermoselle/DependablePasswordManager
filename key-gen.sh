@@ -9,6 +9,8 @@ SUBJ="/CN=DistributedSystems/OU=DEI/O=IST/L=Lisbon/C=PT"
 KEYS_VALIDITY=90
 
 keytool -genkey -alias client -keyalg RSA -keystore keys/client1.jks -keysize 2048 -keypass $KEY_PASS -validity $KEYS_VALIDITY -storepass $STORE_PASS  -dname $D_NAME
+keytool -genkey -alias client -keyalg RSA -keystore keys/client2.jks -keysize 2048 -keypass $KEY_PASS -validity $KEYS_VALIDITY -storepass $STORE_PASS  -dname $D_NAME
+
 
 for server_name in $*
 do
@@ -19,6 +21,7 @@ do
   keytool -genkey -alias $server_name -keyalg RSA -keystore $server_kerystore_file -keysize 2048 -keypass $KEY_PASS -validity $KEYS_VALIDITY -storepass $STORE_PASS  -dname $D_NAME
   keytool -export -keystore $server_kerystore_file -alias $server_name -file "keys/$server_name.cer"
   keytool -import -file "keys/$server_name.cer" -alias $server_name -keystore keys/client1.jks
+  keytool -import -file "keys/$server_name.cer" -alias $server_name -keystore keys/client2.jks
 
 done
 

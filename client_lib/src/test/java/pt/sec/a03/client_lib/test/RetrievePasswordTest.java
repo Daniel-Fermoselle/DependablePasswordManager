@@ -54,14 +54,16 @@ public class RetrievePasswordTest extends AbstractClientLibTest {
 	private KeyStore ks2;
 	private ClientLib c1;
 	private ClientLib c2;
-	private String alias;
+	private Map<String, String> m;
 
 
 	public RetrievePasswordTest() {
 		super();
-		alias = "server";
-		Map<String, String> m = new HashMap<String, String>();
-		m.put(alias, "localhost:5555");
+        m = new HashMap<String, String>();
+        m.put("server1", "localhost:5555");
+        m.put("server2", "localhost:6666");
+        m.put("server3", "localhost:7777");
+        m.put("server4", "localhost:5444");
 		c1 = new ClientLib(m);
 		c2 = new ClientLib(m);
 		
