@@ -1,5 +1,7 @@
 package pt.sec.a03.common_classes;
 
+import pt.sec.a03.common_classes.exceptions.DataNotFoundException;
+import pt.sec.a03.common_classes.exceptions.IllegalAccessExistException;
 import pt.sec.a03.crypto.Crypto;
 
 import java.security.*;
@@ -10,6 +12,8 @@ import java.util.Map;
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
+import javax.ws.rs.BadRequestException;
+import javax.ws.rs.InternalServerErrorException;
 
 public class Bonrr {
 
@@ -21,6 +25,13 @@ public class Bonrr {
 	private static final String RID_IN_MAP = "map-rid";
 	private static final String SIGNATURE_IN_MAP = "signature";
 	private static final String RANK_IN_MAP = "map-rank";
+	
+	private static final String BAD_REQUEST_MSG = "Invalid Request";
+	private static final String BAD_REQUEST_EXCEPTION_MSG = "There were an problem with the headers of the request";
+	private static final String FORBIDEN_MSG = "Forbiden operation";
+	private static final String DATA_NOT_FOUND_MSG = "Data Not Found";
+	private static final String SERVER_ERROR_MSG = "Internal server error";
+	private static final String INTERNAL_SERVER_FAILURE_EXCEPTION_MSG = "There were an problem with the server";
 
 	public static final int FAULT_NUMBER = 1;
 
@@ -114,6 +125,8 @@ public class Bonrr {
         }
 
         while (readlist.size() <= ((servers.keySet().size() + FAULT_NUMBER) / 2)) {}
+        
+        checkErrorOccurences(readlist);
 
         //ERROR CASE FOR A WRITE WITHOUT PREVIOUS VALUE
         HashMap<String, byte[]> readBroadcastInfo = new HashMap<String, byte[]>();
@@ -237,6 +250,47 @@ public class Bonrr {
 		}
 		return highestValue;
 	}
+	
+	public void checkErrorOccurences(ArrayList<HashMap<String, String>> readlist) {
+		String status = null;
+		int max = 0;
+		HashMap<String, Integer> ocurrences = new HashMap<String, Integer>();
+		ocurrences.put("400", 0);ocurrences.put("403", 0);ocurrences.put("404", 0);ocurrences.put("500", 0);
+
+		if(true)return;
+		
+		for (HashMap<String, String> ocurrency : readlist) {
+			for(String error : ocurrency.keySet()){
+				if(error.equals("400") || error.equals("403") || error.equals("404") || error.equals("500")){
+					ocurrences.put(error, ocurrences.get(error) + 1);
+				}
+			}
+		}
+		
+		for(String ocurrency : ocurrences.keySet()){
+			if(ocurrences.get(ocurrency) > max){
+				status = ocurrency;
+				max = ocurrences.get(ocurrency);
+			}
+		}
+
+		if(status == null) { return; }
+		if (status.equals("400")) {
+			System.out.println(BAD_REQUEST_MSG);
+			throw new BadRequestException(BAD_REQUEST_EXCEPTION_MSG);
+		} else if (status.equals("403")) {
+			System.out.println(FORBIDEN_MSG);
+			throw new IllegalAccessExistException("This combination of username and domain already exists");
+		} else if (status.equals("404")) {
+			System.out.println(DATA_NOT_FOUND_MSG);
+			throw new DataNotFoundException("This public key is not registered in the server");
+		} else if (status.equals("500")) {
+			System.out.println(SERVER_ERROR_MSG);
+			throw new InternalServerErrorException(INTERNAL_SERVER_FAILURE_EXCEPTION_MSG);
+		}
+		
+		
+	}
 
     private byte[] makeSignature(HashMap<String, byte[]> infoToSend) {
         String domain = new String(infoToSend.get(HASH_DOMAIN_IN_MAP));
@@ -284,6 +338,8 @@ public class Bonrr {
         if(readid==-1){
             System.out.println("addToReadList: Reading without anything written");
             readlist.add(value);
+        } else if(readid<-1){
+        	readlist.add(value);
         }
         System.out.println("RID received: " + readid + " Local Rid: " + this.rid);
         if (readid == this.rid) {

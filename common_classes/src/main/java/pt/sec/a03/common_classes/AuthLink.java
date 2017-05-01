@@ -1,16 +1,18 @@
 package pt.sec.a03.common_classes;
 
+import pt.sec.a03.common_classes.exceptions.DataNotFoundException;
+import pt.sec.a03.common_classes.exceptions.IllegalAccessExistException;
 import pt.sec.a03.crypto.Crypto;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.ws.rs.BadRequestException;
+import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.client.*;
 import javax.ws.rs.core.Response;
 import java.security.*;
 import java.security.spec.InvalidKeySpecException;
-import java.util.ArrayList;
 import java.util.HashMap;
 
 public class AuthLink {
@@ -34,6 +36,13 @@ public class AuthLink {
     private static final String DOMAIN_HEADER_NAME = "domain";
     private static final String USERNAME_HEADER_NAME = "username";
     private static final String RANK_IN_MAP = "map-rank";
+    
+	private static final String BAD_REQUEST_MSG = "Invalid Request";
+	private static final String BAD_REQUEST_EXCEPTION_MSG = "There were an problem with the headers of the request";
+	private static final String FORBIDEN_MSG = "Forbiden operation";
+	private static final String DATA_NOT_FOUND_MSG = "Data Not Found";
+	private static final String SERVER_ERROR_MSG = "Internal server error";
+	private static final String INTERNAL_SERVER_FAILURE_EXCEPTION_MSG = "There were an problem with the server";
 
     private Bonrr bonrr;
 	private PublicKey publicKey;
@@ -139,7 +148,35 @@ public class AuthLink {
                             if(response.getStatus() == 404 && !AuthLink.this.bonrr.getReading()){
                                 AuthLink.this.bonrr.addToReadList(null, -1);
                                 return;
-                            }
+                            } else if (response.getStatus() == 400) {
+                				System.out.println(BAD_REQUEST_MSG);
+                				HashMap<String,String> map = new HashMap<String,String>();
+                				map.put("400", "400");
+                                AuthLink.this.bonrr.addToReadList(map, -400);
+                                return;
+                				//throw new BadRequestException(BAD_REQUEST_EXCEPTION_MSG);
+                			} else if (response.getStatus() == 403) {
+                				System.out.println(FORBIDEN_MSG);
+                				HashMap<String,String> map = new HashMap<String,String>();
+                				map.put("403", "403");
+                                AuthLink.this.bonrr.addToReadList(null, -403);
+                                return;
+                				//throw new IllegalAccessExistException("This combination of username and domain already exists");
+                			} else if (response.getStatus() == 404) {
+                				System.out.println(DATA_NOT_FOUND_MSG);
+                				HashMap<String,String> map = new HashMap<String,String>();
+                				map.put("404", "404");
+                                AuthLink.this.bonrr.addToReadList(null, -404);
+                                return;
+                				//throw new DataNotFoundException("This public key is not registered in the server");
+                			} else if (response.getStatus() == 500) {
+                				System.out.println(SERVER_ERROR_MSG);
+                				HashMap<String,String> map = new HashMap<String,String>();
+                				map.put("500", "500");
+                                AuthLink.this.bonrr.addToReadList(null, -500);
+                                return;
+                				//throw new InternalServerErrorException(INTERNAL_SERVER_FAILURE_EXCEPTION_MSG);
+                			}
 
                             CommonTriplet t = response.readEntity(CommonTriplet.class);
                             String encodedHashDomain = t.getDomain();

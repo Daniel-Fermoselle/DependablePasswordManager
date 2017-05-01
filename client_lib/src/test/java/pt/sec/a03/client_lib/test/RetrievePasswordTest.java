@@ -154,7 +154,7 @@ public class RetrievePasswordTest extends AbstractClientLibTest {
 	 * PubKey not registered
 	 */
 	@Test
-	public void test05_retrivePassword() {
+	public void test05_retrievePassword() {
 		try {
 			Thread.sleep(3000);
 			c2.retrieve_password(DOMAIN_1, USERNAME_1);
@@ -174,13 +174,18 @@ public class RetrievePasswordTest extends AbstractClientLibTest {
 	 * Username and Domain exist for other user
 	 */
 	@Test
-	public void test06_retrivePassword() {
+	public void test06_retrievePassword() {
 		try {
+			Thread.sleep(3000);
 			c2.register_user();
 			c2.retrieve_password(DOMAIN_1, USERNAME_1);
 			fail("This test should fail with exception IllegalAccessExistException");
 		} catch (IllegalAccessExistException e) {
-
+			try {
+				Thread.sleep(3000);
+			} catch (InterruptedException e1) {
+				e1.printStackTrace();
+			}
 		} catch (Exception e) {
 			fail("This test should fail with exception IllegalAccessExistException");
 		}
