@@ -94,6 +94,7 @@ public class PasswordManager {
 
     public Bonrr getBonrrInstance(String bonrr, String domain, String username) {
         try {
+            getUserByPK(bonrr);
             Bonrr bonrrInstance = this.db.getBonrrInstance(bonrr, domain, username);
             if (bonrrInstance != null) {
                 return bonrrInstance;

@@ -24,21 +24,21 @@ import pt.sec.a03.crypto.Crypto;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class RegisterUserTest extends AbstractClientLibTest {
 
-    private static final String KEY_STORE_1 = "ks/client1.jks";
-    private static final String KEY_STORE_PASSWORD_1 = "insecure";
-    private static final String KEY_STORE_ALIAS_FOR_PUB_PRIV_1 = "client";
+	private static final String KEY_STORE_1 = "ks/client1.jks";
+	private static final String KEY_STORE_PASSWORD_1 = "insecure";
+	private static final String KEY_STORE_ALIAS_FOR_PUB_PRIV_1 = "client";
 
 	private ClientLib c1;
 	private KeyStore ks1;
 	private Map<String, String> m;
 
-    public RegisterUserTest() {
+	public RegisterUserTest() {
 		super();
-        m = new HashMap<String, String>();
-        m.put("server1", "localhost:5555");
-        m.put("server2", "localhost:6666");
-        m.put("server3", "localhost:7777");
-        m.put("server4", "localhost:5444");
+		m = new HashMap<String, String>();
+		m.put("server1", "localhost:5555");
+		m.put("server2", "localhost:6666");
+		m.put("server3", "localhost:7777");
+		m.put("server4", "localhost:5444");
 	}
 
 	@Override
@@ -55,12 +55,12 @@ public class RegisterUserTest extends AbstractClientLibTest {
 
 	@Override
 	protected void after() {
-        try {
-            restore();
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException(e.getMessage());
-        }
+		try {
+			restore();
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new RuntimeException(e.getMessage());
+		}
 	}
 
 	/**
@@ -68,7 +68,13 @@ public class RegisterUserTest extends AbstractClientLibTest {
 	 */
 	@Test
 	public void test01_registerUser() {
-        c1.register_user();
+		try {
+			Thread.sleep(5500);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+
+		c1.register_user();
 	}
 
 	/**
@@ -77,8 +83,10 @@ public class RegisterUserTest extends AbstractClientLibTest {
 	@Test
 	public void test02_registerUser() {
 		try {
-            c1.register_user();
-            c1.register_user();
+			Thread.sleep(4500);
+			c1.register_user();
+			Thread.sleep(1000);
+			c1.register_user();
 			fail("This test should fail with exception AlreadyExistsException");
 		} catch (AlreadyExistsException e) {
 
@@ -86,20 +94,21 @@ public class RegisterUserTest extends AbstractClientLibTest {
 			fail("This test should fail with exception AlreadyExistsException");
 		}
 	}
-	
+
 	/**
 	 * Invalid Signature
 	 */
 	@Test
 	public void test03_registerUser() {
-        try {
-            c1.setResponses(new ArrayList());
-            for (String s : m.keySet()) {
-                String[] infoToSend = c1.prepareForRegisterUser(s);
-                infoToSend[0] ="pohsdadwqdwdwdqwdqwdqws";
-                c1.sendRegisterUser(infoToSend, s);
-            }
-            c1.processResponses();
+		try {
+			Thread.sleep(3500);
+			c1.setResponses(new ArrayList());
+			for (String s : m.keySet()) {
+				String[] infoToSend = c1.prepareForRegisterUser(s);
+				infoToSend[0] ="pohsdadwqdwdwdqwdqwdqws";
+				c1.sendRegisterUser(infoToSend, s);
+			}
+			c1.processResponses();
 			fail("This test should fail with exception BadRequestException");
 		} catch (BadRequestException e) {
 
@@ -107,46 +116,48 @@ public class RegisterUserTest extends AbstractClientLibTest {
 			fail("This test should fail with exception BadRequestException");
 		}
 	}
-	
+
 	/**
 	 * Invalid Public Key
 	 */
 	@Test
 	public void test04_registerUser() {
 		try {
-            c1.setResponses(new ArrayList());
-            for (String s : m.keySet()) {
-                String[] infoToSend = c1.prepareForRegisterUser(s);
-                infoToSend[1] = "pohsdadwqdwdwdqwdqwdqws";
-                c1.sendRegisterUser(infoToSend, s);
-            }
-            c1.processResponses();
-            fail("This test should fail with exception BadRequestException");
+			Thread.sleep(2500);
+			c1.setResponses(new ArrayList());
+			for (String s : m.keySet()) {
+				String[] infoToSend = c1.prepareForRegisterUser(s);
+				infoToSend[1] = "pohsdadwqdwdwdqwdqwdqws";
+				c1.sendRegisterUser(infoToSend, s);
+			}
+			c1.processResponses();
+			fail("This test should fail with exception BadRequestException");
 		} catch (BadRequestException e) {
 
 		} catch (Exception e) {
 			fail("This test should fail with exception BadRequestException");
 		}
 	}
-	
+
 	/**
 	 * Invalid TimeStamp
 	 */
 	@Test
 	public void test05_registerUser() {
 		try {
-            c1.setResponses(new ArrayList());
-            for (String s : m.keySet()) {
-                String[] infoToSend = c1.prepareForRegisterUser(s);
-                Certificate cert2 = ks1.getCertificate(s);
-                PublicKey serverPub = Crypto.getPublicKeyFromCertificate(cert2);
-                String stringNonce = 31321 + "";
-                byte[] cipheredNonce = Crypto.cipherString(stringNonce, serverPub);
-                infoToSend[2] = Crypto.encode(cipheredNonce);
-                c1.sendRegisterUser(infoToSend, s);
-            }
-            c1.processResponses();
-            fail("This test should fail with exception BadRequestException");
+			Thread.sleep(500);
+			c1.setResponses(new ArrayList());
+			for (String s : m.keySet()) {
+				String[] infoToSend = c1.prepareForRegisterUser(s);
+				Certificate cert2 = ks1.getCertificate(s);
+				PublicKey serverPub = Crypto.getPublicKeyFromCertificate(cert2);
+				String stringNonce = 31321 + "";
+				byte[] cipheredNonce = Crypto.cipherString(stringNonce, serverPub);
+				infoToSend[2] = Crypto.encode(cipheredNonce);
+				c1.sendRegisterUser(infoToSend, s);
+			}
+			c1.processResponses();
+			fail("This test should fail with exception BadRequestException");
 		} catch (BadRequestException e) {
 
 		} catch (Exception e) {
