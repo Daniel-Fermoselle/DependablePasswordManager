@@ -159,21 +159,21 @@ public class AuthLink {
                 				System.out.println(FORBIDEN_MSG);
                 				HashMap<String,String> map = new HashMap<String,String>();
                 				map.put("403", "403");
-                                AuthLink.this.bonrr.addToReadList(null, -403);
+                                AuthLink.this.bonrr.addToReadList(map, -403);
                                 return;
                 				//throw new IllegalAccessExistException("This combination of username and domain already exists");
                 			} else if (response.getStatus() == 404) {
                 				System.out.println(DATA_NOT_FOUND_MSG);
                 				HashMap<String,String> map = new HashMap<String,String>();
                 				map.put("404", "404");
-                                AuthLink.this.bonrr.addToReadList(null, -404);
+                                AuthLink.this.bonrr.addToReadList(map, -404);
                                 return;
                 				//throw new DataNotFoundException("This public key is not registered in the server");
                 			} else if (response.getStatus() == 500) {
                 				System.out.println(SERVER_ERROR_MSG);
                 				HashMap<String,String> map = new HashMap<String,String>();
                 				map.put("500", "500");
-                                AuthLink.this.bonrr.addToReadList(null, -500);
+                                AuthLink.this.bonrr.addToReadList(map, -500);
                                 return;
                 				//throw new InternalServerErrorException(INTERNAL_SERVER_FAILURE_EXCEPTION_MSG);
                 			}

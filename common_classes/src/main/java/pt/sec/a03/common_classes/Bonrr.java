@@ -255,26 +255,32 @@ public class Bonrr {
 		String status = null;
 		int max = 0;
 		HashMap<String, Integer> ocurrences = new HashMap<String, Integer>();
-		ocurrences.put("400", 0);ocurrences.put("403", 0);ocurrences.put("404", 0);ocurrences.put("500", 0);
-
-		if(true)return;
-		
-		for (HashMap<String, String> ocurrency : readlist) {
-			for(String error : ocurrency.keySet()){
-				if(error.equals("400") || error.equals("403") || error.equals("404") || error.equals("500")){
-					ocurrences.put(error, ocurrences.get(error) + 1);
+		ocurrences.put("400", 0);
+		ocurrences.put("403", 0);
+		ocurrences.put("404", 0);
+		ocurrences.put("500", 0);
+		try {
+			for (HashMap<String, String> ocurrency : readlist) {
+				for (String error : ocurrency.keySet()) {
+					if (error.equals("400") || error.equals("403") || error.equals("404") || error.equals("500")) {
+						ocurrences.put(error, ocurrences.get(error) + 1);
+					}
 				}
 			}
+		} catch (NullPointerException e) {
+			return;
 		}
-		
-		for(String ocurrency : ocurrences.keySet()){
-			if(ocurrences.get(ocurrency) > max){
+
+		for (String ocurrency : ocurrences.keySet()) {
+			if (ocurrences.get(ocurrency) > max) {
 				status = ocurrency;
 				max = ocurrences.get(ocurrency);
 			}
 		}
 
-		if(status == null) { return; }
+		if (status == null) {
+			return;
+		}
 		if (status.equals("400")) {
 			System.out.println(BAD_REQUEST_MSG);
 			throw new BadRequestException(BAD_REQUEST_EXCEPTION_MSG);
@@ -288,8 +294,7 @@ public class Bonrr {
 			System.out.println(SERVER_ERROR_MSG);
 			throw new InternalServerErrorException(INTERNAL_SERVER_FAILURE_EXCEPTION_MSG);
 		}
-		
-		
+
 	}
 
     private byte[] makeSignature(HashMap<String, byte[]> infoToSend) {

@@ -34,6 +34,8 @@ public class RetrievePasswordTest extends AbstractClientLibTest {
 	private static final String USERNAME_2 = "lol_gosuu";
 	private static final String PASSWORD_1 = "bestAdc";
 	private static final String PASSWORD_2 = "buffLucian";
+	
+	private static final long SLEEP_TIME = 1000;
 
 	private KeyStore ks1;
 	private KeyStore ks2;
@@ -56,12 +58,13 @@ public class RetrievePasswordTest extends AbstractClientLibTest {
 			ks2 = Crypto.readKeystoreFile(KEY_STORE_2, KEY_STORE_PASSWORD_2.toCharArray());
 
 			c1.init(ks1, KEY_STORE_ALIAS_FOR_PUB_PRIV_1, KEY_STORE_PASSWORD_1);
+			Thread.sleep(SLEEP_TIME);
 			c1.register_user();
-
+			Thread.sleep(SLEEP_TIME);
 			c2.init(ks2, KEY_STORE_ALIAS_FOR_PUB_PRIV_2, KEY_STORE_PASSWORD_2);
-
+			Thread.sleep(SLEEP_TIME);
 			c1.save_password(DOMAIN_1, USERNAME_1, PASSWORD_1);
-
+			Thread.sleep(SLEEP_TIME);
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new RuntimeException(e.getMessage());
@@ -87,9 +90,9 @@ public class RetrievePasswordTest extends AbstractClientLibTest {
 	@Test
 	public void test01_retrievePassword() {
 		try {
-			Thread.sleep(3000);
+			Thread.sleep(SLEEP_TIME);
 			assertEquals(PASSWORD_1, c1.retrieve_password(DOMAIN_1, USERNAME_1));
-			Thread.sleep(3000);
+			Thread.sleep(SLEEP_TIME);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
@@ -101,12 +104,12 @@ public class RetrievePasswordTest extends AbstractClientLibTest {
 	@Test
 	public void test02_retrievePassword() {
 		try {
-			Thread.sleep(3000);
+			Thread.sleep(SLEEP_TIME);
 			c1.retrieve_password(null, USERNAME_1);
 			fail("This test should fail with exception InvalidArgumentException");
 		} catch (InvalidArgumentException e) {
 			try {
-				Thread.sleep(3000);
+				Thread.sleep(SLEEP_TIME);
 			} catch (InterruptedException e1) {
 				e1.printStackTrace();
 			}
@@ -121,12 +124,12 @@ public class RetrievePasswordTest extends AbstractClientLibTest {
 	@Test
 	public void test03_retrievePassword() {
 		try {
-			Thread.sleep(3000);
+			Thread.sleep(SLEEP_TIME);
 			c1.retrieve_password(DOMAIN_1, null);
 			fail("This test should fail with exception InvalidArgumentException");
 		} catch (InvalidArgumentException e) {
 			try {
-				Thread.sleep(3000);
+				Thread.sleep(SLEEP_TIME);
 			} catch (InterruptedException e1) {
 				e1.printStackTrace();
 			}
@@ -141,10 +144,11 @@ public class RetrievePasswordTest extends AbstractClientLibTest {
 	@Test
 	public void test04_retrievePassword() {
 		try {
-			Thread.sleep(3000);
+			Thread.sleep(SLEEP_TIME);
 			c1.save_password(DOMAIN_1, USERNAME_1, PASSWORD_2);
+			Thread.sleep(SLEEP_TIME);
 			assertEquals(PASSWORD_2, c1.retrieve_password(DOMAIN_1, USERNAME_1));
-			Thread.sleep(3000);
+			Thread.sleep(SLEEP_TIME);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
@@ -156,16 +160,17 @@ public class RetrievePasswordTest extends AbstractClientLibTest {
 	@Test
 	public void test05_retrievePassword() {
 		try {
-			Thread.sleep(3000);
+			Thread.sleep(SLEEP_TIME);
 			c2.retrieve_password(DOMAIN_1, USERNAME_1);
 			fail("This test should fail with exception DataNotFoundException");
 		} catch (DataNotFoundException e) {
 			try {
-				Thread.sleep(3000);
+				Thread.sleep(SLEEP_TIME);
 			} catch (InterruptedException e1) {
 				e1.printStackTrace();
 			}
 		} catch (Exception e) {
+			System.out.println(e.getClass().toString());
 			fail("This test should fail with exception DataNotFoundException");
 		}
 	}
@@ -176,18 +181,19 @@ public class RetrievePasswordTest extends AbstractClientLibTest {
 	@Test
 	public void test06_retrievePassword() {
 		try {
-			Thread.sleep(3000);
+			Thread.sleep(SLEEP_TIME);
 			c2.register_user();
+			Thread.sleep(SLEEP_TIME);
 			c2.retrieve_password(DOMAIN_1, USERNAME_1);
-			fail("This test should fail with exception IllegalAccessExistException");
-		} catch (IllegalAccessExistException e) {
+			fail("This test should fail with exception DataNotFoundException");
+		} catch (DataNotFoundException e) {
 			try {
-				Thread.sleep(3000);
+				Thread.sleep(SLEEP_TIME);
 			} catch (InterruptedException e1) {
 				e1.printStackTrace();
 			}
 		} catch (Exception e) {
-			fail("This test should fail with exception IllegalAccessExistException");
+			fail("This test should fail with exception DataNotFoundException");
 		}
 	}
 
@@ -195,12 +201,17 @@ public class RetrievePasswordTest extends AbstractClientLibTest {
 	 * Username and Domain exist for other user
 	 */
 	@Test
-	public void test07_retrivePassword() {
+	public void test07_retrievePassword() {
 		try {
+			Thread.sleep(SLEEP_TIME);
 			c1.retrieve_password(DOMAIN_1, USERNAME_2);
 			fail("This test should fail with exception DataNotFoundException");
 		} catch (DataNotFoundException e) {
-
+			try {
+				Thread.sleep(SLEEP_TIME);
+			} catch (InterruptedException e1) {
+				e1.printStackTrace();
+			}
 		} catch (Exception e) {
 			fail("This test should fail with exception DataNotFoundException");
 		}
@@ -210,12 +221,17 @@ public class RetrievePasswordTest extends AbstractClientLibTest {
 	 * Username and Domain exist for other user
 	 */
 	@Test
-	public void test08_retrivePassword() {
+	public void test08_retrievePassword() {
 		try {
+			Thread.sleep(SLEEP_TIME);
 			c1.retrieve_password(DOMAIN_2, USERNAME_1);
 			fail("This test should fail with exception DataNotFoundException");
 		} catch (DataNotFoundException e) {
-
+			try {
+				Thread.sleep(SLEEP_TIME);
+			} catch (InterruptedException e1) {
+				e1.printStackTrace();
+			}
 		} catch (Exception e) {
 			fail("This test should fail with exception DataNotFoundException");
 		}
