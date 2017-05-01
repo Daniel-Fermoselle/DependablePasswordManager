@@ -18,7 +18,7 @@ import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
 import pt.sec.a03.client_lib.ClientLib;
-import pt.sec.a03.client_lib.exception.AlreadyExistsException;
+import pt.sec.a03.common_classes.exceptions.AlreadyExistsException;
 import pt.sec.a03.crypto.Crypto;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)

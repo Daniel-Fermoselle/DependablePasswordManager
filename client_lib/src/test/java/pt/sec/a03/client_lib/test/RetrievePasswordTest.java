@@ -4,25 +4,17 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import java.security.KeyStore;
-import java.security.PublicKey;
-import java.security.cert.Certificate;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.Future;
-
-import javax.ws.rs.BadRequestException;
-import javax.ws.rs.core.Response;
 
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
 import pt.sec.a03.client_lib.ClientLib;
-import pt.sec.a03.client_lib.exception.DataNotFoundException;
-import pt.sec.a03.client_lib.exception.IllegalAccessExistException;
-import pt.sec.a03.client_lib.exception.InvalidArgumentException;
-import pt.sec.a03.client_lib.exception.InvalidSignatureException;
-import pt.sec.a03.client_lib.exception.InvalidTimestampException;
+import pt.sec.a03.common_classes.exceptions.DataNotFoundException;
+import pt.sec.a03.common_classes.exceptions.IllegalAccessExistException;
+import pt.sec.a03.common_classes.exceptions.InvalidArgumentException;
 import pt.sec.a03.crypto.Crypto;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -42,13 +34,6 @@ public class RetrievePasswordTest extends AbstractClientLibTest {
 	private static final String USERNAME_2 = "lol_gosuu";
 	private static final String PASSWORD_1 = "bestAdc";
 	private static final String PASSWORD_2 = "buffLucian";
-
-	private static final String FAKE_SIGNATURE = "fewvrwrwrgkwrgkwewkge";
-
-	private static final String SIGNATURE_HEADER_NAME = "signature";
-	private static final String NONCE_HEADER_NAME = "nonce-value";
-
-	private static final String FAKE_HASH = "WFEFERGGREGegerge";
 
 	private KeyStore ks1;
 	private KeyStore ks2;

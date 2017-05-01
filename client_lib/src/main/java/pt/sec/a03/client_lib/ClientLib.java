@@ -25,17 +25,13 @@ import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.client.*;
 import javax.ws.rs.core.Response;
 
-import pt.sec.a03.client_lib.exception.AlreadyExistsException;
-import pt.sec.a03.client_lib.exception.DataNotFoundException;
-import pt.sec.a03.client_lib.exception.IllegalAccessExistException;
-import pt.sec.a03.client_lib.exception.InvalidArgumentException;
-import pt.sec.a03.client_lib.exception.InvalidReceivedPasswordException;
-import pt.sec.a03.client_lib.exception.InvalidSignatureException;
-import pt.sec.a03.client_lib.exception.InvalidTimestampException;
-import pt.sec.a03.client_lib.exception.UnexpectedErrorExeception;
-import pt.sec.a03.client_lib.exception.UsernameAndDomainAlreadyExistException;
 import pt.sec.a03.common_classes.Bonrr;
 import pt.sec.a03.common_classes.CommonTriplet;
+import pt.sec.a03.common_classes.exceptions.AlreadyExistsException;
+import pt.sec.a03.common_classes.exceptions.InvalidArgumentException;
+import pt.sec.a03.common_classes.exceptions.InvalidSignatureException;
+import pt.sec.a03.common_classes.exceptions.InvalidTimestampException;
+import pt.sec.a03.common_classes.exceptions.UnexpectedErrorExeception;
 import pt.sec.a03.crypto.Crypto;
 
 public class ClientLib {

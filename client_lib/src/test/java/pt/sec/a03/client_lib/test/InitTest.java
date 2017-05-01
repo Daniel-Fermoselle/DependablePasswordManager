@@ -9,7 +9,7 @@ import java.util.Map;
 import org.junit.Test;
 
 import pt.sec.a03.client_lib.ClientLib;
-import pt.sec.a03.client_lib.exception.InvalidArgumentException;
+import pt.sec.a03.common_classes.exceptions.InvalidArgumentException;
 import pt.sec.a03.crypto.Crypto;
 
 public class InitTest extends AbstractClientLibTest {

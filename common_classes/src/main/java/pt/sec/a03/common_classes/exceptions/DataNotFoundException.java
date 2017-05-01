@@ -1,4 +1,4 @@
-package pt.sec.a03.client_lib.exception;
+package pt.sec.a03.common_classes.exceptions;
 
 
 public class DataNotFoundException extends RuntimeException {
