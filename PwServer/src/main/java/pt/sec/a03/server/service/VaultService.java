@@ -118,7 +118,7 @@ public class VaultService {
 		bonrrInfo.setUsername(cipherUserDom[0]);
 		
 		//CREATING BYZANTINE FAULTS
-		if(byzFaultCreator) {bonrrInfo.setPassword("Error");}
+		if(byzFaultCreator) {bonrrInfo.setPassword(bonrrInfo.getPassword() + "ByzantineFault");}
 		/*
 		 * if(!bonrrInstance.deliver(rid, READ_MODE)){ throw new
 		 * InvalidNonceException("rid with wrong value"); }
