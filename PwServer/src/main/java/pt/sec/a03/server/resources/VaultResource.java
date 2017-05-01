@@ -95,7 +95,7 @@ public class VaultResource {
 
         authLink.deliverRead(publicKey, authSig, rid, domain, username);
 
-        String[] response = vaultService.get(publicKey, username, domain, rid, bonrr);
+        String[] response = vaultService.get(publicKey, username, domain, rid, bonrr, MyApplication.BYZ_FAULT_CREATOR);
 
         CommonTriplet triplet = new CommonTriplet();
         triplet.setDomain(response[5]);

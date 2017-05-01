@@ -105,7 +105,7 @@ public class VaultService {
 				cipherUserDom[0] };
 	}
 
-	public String[] get(String publicKey, String username, String domain, String rid, String bonrr) {
+	public String[] get(String publicKey, String username, String domain, String rid, String bonrr, boolean byzFaultCreator) {
 
 		// Decipher domain and username
 		String[] userAndDom = decipherUsernameAndDomain(domain, username);
@@ -116,7 +116,12 @@ public class VaultService {
 		String[] cipherUserDom = cipherUsernameAndDomain(bonrrInfo.getDomain(), bonrrInfo.getUsername(), publicKey);
 		bonrrInfo.setDomain(cipherUserDom[1]);
 		bonrrInfo.setUsername(cipherUserDom[0]);
-
+		
+		//CREATING BYZANTINE FAULTS
+		if(byzFaultCreator) {
+		    System.out.println("Added Fault");
+		    bonrrInfo.setPassword(bonrrInfo.getPassword() + "ByzantineFault");
+		}
 		/*
 		 * if(!bonrrInstance.deliver(rid, READ_MODE)){ throw new
 		 * InvalidNonceException("rid with wrong value"); }

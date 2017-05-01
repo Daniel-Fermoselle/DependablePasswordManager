@@ -1,5 +1,7 @@
 package pt.sec.a03.common_classes;
 
+import pt.sec.a03.common_classes.exception.DataNotFoundException;
+import pt.sec.a03.common_classes.exception.UsernameAndDomainAlreadyExistException;
 import pt.sec.a03.crypto.Crypto;
 
 import javax.crypto.BadPaddingException;
@@ -34,6 +36,11 @@ public class AuthLink {
     private static final String DOMAIN_HEADER_NAME = "domain";
     private static final String USERNAME_HEADER_NAME = "username";
     private static final String RANK_IN_MAP = "map-rank";
+    
+	private static final String BAD_REQUEST_EXCEPTION_MSG = "There were an problem with the headers of the request";
+	private static final String INTERNAL_SERVER_FAILURE_EXCEPTION_MSG = "There were an problem with the server";
+	private static final String DATA_NOT_FOUND_MSG = "404:Data not found for the arguments given";
+	private static final String FORBIDEN_MSG = "Forbiden operation";
 
     private Bonrr bonrr;
 	private PublicKey publicKey;
@@ -139,6 +146,20 @@ public class AuthLink {
                             if(response.getStatus() == 404 && !AuthLink.this.bonrr.getReading()){
                                 AuthLink.this.bonrr.addToReadList(null, -1);
                                 return;
+                            }
+                            else if(response.getStatus() == 404){
+                                throw new DataNotFoundException(DATA_NOT_FOUND_MSG);
+                            }
+                            else if(response.getStatus() == 403){
+                                throw new UsernameAndDomainAlreadyExistException(FORBIDEN_MSG);
+                            }
+                            else if(response.getStatus() == 400){
+                            	//Wrong Exception
+                                throw new DataNotFoundException(BAD_REQUEST_EXCEPTION_MSG);
+                            }
+                            else if(response.getStatus() == 500){
+                            	//Wrong Exception
+                                throw new DataNotFoundException(INTERNAL_SERVER_FAILURE_EXCEPTION_MSG);
                             }
 
                             CommonTriplet t = response.readEntity(CommonTriplet.class);

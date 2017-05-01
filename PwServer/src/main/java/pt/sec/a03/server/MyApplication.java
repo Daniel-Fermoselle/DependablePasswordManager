@@ -12,11 +12,12 @@ public class MyApplication{
 	public static boolean SLOW_BYZANTINE = false;
 	public static int SECONDS = 10000;
 	public static boolean CRASH = false;
-
+	public static boolean BYZ_FAULT_CREATOR = false;
 
 	public static void main(String[] args) throws Exception{
 		HttpServer server = null;
 	    try {
+
 	    	if (args.length < 1) { System.out.println("Invalid number of arguments");return; }
 			PORT = args[0];
 			
@@ -60,6 +61,10 @@ public class MyApplication{
 				System.out.println("CY@");
 				MyApplication.CRASH = true;
 			}
+			else if(arg.equals("fault")){
+                System.out.println("Fault mode on");
+                BYZ_FAULT_CREATOR = true;
+            }
     	}
     }
 
