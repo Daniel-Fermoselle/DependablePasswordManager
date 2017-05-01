@@ -30,7 +30,7 @@ elif [ "$cmd" == "install-no-tests" ]; then
 	cd ../PwServer 
 	mvn install -DskipTests
 else
-	mvn exec:java -Dexec.args="$cmd"
+	open run.command
 fi
 
 done

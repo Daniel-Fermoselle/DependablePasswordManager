@@ -18,9 +18,9 @@ import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
 import pt.sec.a03.client_lib.ClientLib;
-import pt.sec.a03.client_lib.exception.DataNotFoundException;
-import pt.sec.a03.client_lib.exception.InvalidArgumentException;
-import pt.sec.a03.client_lib.exception.UsernameAndDomainAlreadyExistException;
+import pt.sec.a03.common_classes.exception.DataNotFoundException;
+import pt.sec.a03.common_classes.exception.InvalidArgumentException;
+import pt.sec.a03.common_classes.exception.UsernameAndDomainAlreadyExistException;
 import pt.sec.a03.crypto.Crypto;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)

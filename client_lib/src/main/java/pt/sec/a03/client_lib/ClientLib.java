@@ -14,7 +14,6 @@ import java.util.ArrayList;
 import java.util.Set;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 import javax.crypto.BadPaddingException;
@@ -25,17 +24,12 @@ import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.client.*;
 import javax.ws.rs.core.Response;
 
-import pt.sec.a03.client_lib.exception.AlreadyExistsException;
-import pt.sec.a03.client_lib.exception.DataNotFoundException;
-import pt.sec.a03.client_lib.exception.IllegalAccessExistException;
-import pt.sec.a03.client_lib.exception.InvalidArgumentException;
-import pt.sec.a03.client_lib.exception.InvalidReceivedPasswordException;
-import pt.sec.a03.client_lib.exception.InvalidSignatureException;
-import pt.sec.a03.client_lib.exception.InvalidTimestampException;
-import pt.sec.a03.client_lib.exception.UnexpectedErrorExeception;
-import pt.sec.a03.client_lib.exception.UsernameAndDomainAlreadyExistException;
 import pt.sec.a03.common_classes.Bonrr;
-import pt.sec.a03.common_classes.CommonTriplet;
+import pt.sec.a03.common_classes.exception.AlreadyExistsException;
+import pt.sec.a03.common_classes.exception.InvalidArgumentException;
+import pt.sec.a03.common_classes.exception.InvalidSignatureException;
+import pt.sec.a03.common_classes.exception.InvalidTimestampException;
+import pt.sec.a03.common_classes.exception.UnexpectedErrorExeception;
 import pt.sec.a03.crypto.Crypto;
 
 public class ClientLib {
