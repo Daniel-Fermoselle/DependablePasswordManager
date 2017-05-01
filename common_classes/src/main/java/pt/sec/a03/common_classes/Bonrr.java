@@ -131,6 +131,7 @@ public class Bonrr {
         //ERROR CASE FOR A WRITE WITHOUT PREVIOUS VALUE
         HashMap<String, byte[]> readBroadcastInfo = new HashMap<String, byte[]>();
         if(verifyNoValueRead()){
+            readlist = new ArrayList<HashMap<String, String>>();
             updateWts(domain, username, getWts(domain, username) + 1);
             readBroadcastInfo.put(HASH_DOMAIN_IN_MAP, writeVal.get(HASH_DOMAIN_IN_MAP));
             readBroadcastInfo.put(HASH_USERNAME_IN_MAP, writeVal.get(HASH_USERNAME_IN_MAP));
@@ -199,9 +200,16 @@ public class Bonrr {
                     authLink.send(servers.get(s), getWts(domain, username), rid, rank, infoToSendTemp, bonrr);
 
             }
+            
 
-            while (acklist.size() <= ((servers.keySet().size() + FAULT_NUMBER) / 2)) {}
+            while (acklist.size() <= ((servers.keySet().size() + FAULT_NUMBER) / 2)) {
+                if(readlist.size() > ((servers.keySet().size() + FAULT_NUMBER) / 2)) {
+                    checkErrorOccurences(readlist);
+                }
 
+            }
+
+            readlist = new ArrayList<HashMap<String, String>>();
             acklist = new ArrayList<String>();
 
             if (reading) {
@@ -268,7 +276,7 @@ public class Bonrr {
 				}
 			}
 		} catch (NullPointerException e) {
-			return;
+            return;
 		}
 
 		for (String ocurrency : ocurrences.keySet()) {
@@ -281,7 +289,8 @@ public class Bonrr {
 		if (status == null) {
 			return;
 		}
-		if (status.equals("400")) {
+        this.readlist = new ArrayList<>();
+        if (status.equals("400")) {
 			System.out.println(BAD_REQUEST_MSG);
 			throw new BadRequestException(BAD_REQUEST_EXCEPTION_MSG);
 		} else if (status.equals("403")) {
@@ -340,10 +349,7 @@ public class Bonrr {
     }
 
     public synchronized void addToReadList(HashMap<String, String> value, long readid) {
-        if(readid==-1){
-            System.out.println("addToReadList: Reading without anything written");
-            readlist.add(value);
-        } else if(readid<-1){
+        if(readid<-1){
         	readlist.add(value);
         }
         System.out.println("RID received: " + readid + " Local Rid: " + this.rid);

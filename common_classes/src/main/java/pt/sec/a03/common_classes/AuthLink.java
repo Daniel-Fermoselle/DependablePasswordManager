@@ -85,6 +85,37 @@ public class AuthLink {
 							System.out.println(
 									"Response of save password status code " + response.getStatus() + " received.");
 
+							if (response.getStatus() == 400) {
+								System.out.println(BAD_REQUEST_MSG);
+								HashMap<String,String> map = new HashMap<String,String>();
+								map.put("400", "400");
+								AuthLink.this.bonrr.addToReadList(map, -400);
+								return;
+								//throw new BadRequestException(BAD_REQUEST_EXCEPTION_MSG);
+							} else if (response.getStatus() == 403) {
+								System.out.println(FORBIDEN_MSG);
+								HashMap<String,String> map = new HashMap<String,String>();
+								map.put("403", "403");
+								AuthLink.this.bonrr.addToReadList(map, -403);
+								return;
+								//throw new IllegalAccessExistException("This combination of username and domain already exists");
+							} else if (response.getStatus() == 404) {
+								System.out.println(DATA_NOT_FOUND_MSG);
+								HashMap<String,String> map = new HashMap<String,String>();
+								map.put("404", "404");
+								AuthLink.this.bonrr.addToReadList(map, -404);
+								return;
+								//throw new DataNotFoundException("This public key is not registered in the server");
+							} else if (response.getStatus() == 500) {
+								System.out.println(SERVER_ERROR_MSG);
+								HashMap<String,String> map = new HashMap<String,String>();
+								map.put("500", "500");
+								AuthLink.this.bonrr.addToReadList(map, -500);
+								return;
+								//throw new InternalServerErrorException(INTERNAL_SERVER_FAILURE_EXCEPTION_MSG);
+							}
+
+
 							String encodedHashDomain = response.getHeaderString(DOMAIN_HEADER_NAME);
 							String encodedHashUsername = response.getHeaderString(USERNAME_HEADER_NAME);
 
@@ -146,7 +177,7 @@ public class AuthLink {
 						try {
 
                             if(response.getStatus() == 404 && !AuthLink.this.bonrr.getReading()){
-                                AuthLink.this.bonrr.addToReadList(null, -1);
+                                AuthLink.this.bonrr.addToReadList(null, readId);
                                 return;
                             } else if (response.getStatus() == 400) {
                 				System.out.println(BAD_REQUEST_MSG);

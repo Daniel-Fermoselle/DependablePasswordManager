@@ -143,8 +143,7 @@ public class Database {
         Statement stmt = this.conn.createStatement();
         String queryBonrr="";
         // Step 1: Execute a SQL SELECT query, the query result
-        String strSelect = "select bonrr from Bonrrs where and domain = '" + t.getDomain()
-                + "' and username = '" + t.getUsername() + "'";
+        String strSelect = "select bonrr from Bonrrs where domain = '" + t.getDomain() + "' and username = '" + t.getUsername() + "';";
 
         // Step 2: Process the ResultSet by scrolling the cursor forward via
         ResultSet rset = stmt.executeQuery(strSelect);
@@ -155,7 +154,7 @@ public class Database {
             break;
         }
         this.conn.close();
-        if(queryBonrr.equals(bonrr)){
+        if(queryBonrr.equals("") || queryBonrr.equals(bonrr)){
         	return true;
         }
 		return false;
