@@ -96,7 +96,7 @@ public class VaultService {
 		// Response
 		String[] cipherUserDom = cipherUsernameAndDomain(userAndDom[1], userAndDom[0], publicKey);
 
-		String ackMsg = "ACK" + t.getWts() + userAndDom[1] + userAndDom[0];
+		String ackMsg = "ACK" + (t.getWts() + "") + (t.getRid() + "") + userAndDom[1] + userAndDom[0];
 
 		// Make signature
 		String sign = makeSignature(ackMsg);

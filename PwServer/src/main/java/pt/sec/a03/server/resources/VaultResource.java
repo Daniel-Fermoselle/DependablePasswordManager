@@ -65,6 +65,7 @@ public class VaultResource {
                 .header(AUTH_LINK_SIG, response[1])
                 .header(ACK_HEADER_NAME, response[2])
                 .header(NONCE_HEADER_NAME, response[3])
+                .header(RID_HEADER_NAME, rid)
                 .header(DOMAIN_HEADER_NAME, response[4])
                 .header(USERNAME_HEADER_NAME, response[5])
                 .build());

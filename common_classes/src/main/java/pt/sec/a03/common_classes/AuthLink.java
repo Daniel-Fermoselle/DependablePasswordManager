@@ -86,7 +86,9 @@ public class AuthLink {
 							String[] userAndDom = decipherUsernameAndDomain(encodedHashDomain, encodedHashUsername);
 
 							String toVerify = response.getHeaderString(ACK_HEADER_NAME)
-									+ response.getHeaderString(NONCE_HEADER_NAME) + userAndDom[1] + userAndDom[0];
+									+ response.getHeaderString(NONCE_HEADER_NAME)
+									+ response.getHeaderString(RID_HEADER_NAME)
+									+ userAndDom[1] + userAndDom[0];
 
 							PublicKey serverPubKey = Crypto
 									.getPubKeyFromByte(Crypto.decode(response.getHeaderString(PUBLIC_KEY_HEADER_NAME)));
@@ -95,7 +97,9 @@ public class AuthLink {
 							verifySignature(serverPubKey, response.getHeaderString(AUTH_LINK_SIG), toVerify);
 
 							AuthLink.this.bonrr.addToAckList(response.getHeaderString(ACK_HEADER_NAME),
-									Long.parseLong(response.getHeaderString(NONCE_HEADER_NAME)), userAndDom[1], userAndDom[0]);
+									Long.parseLong(response.getHeaderString(NONCE_HEADER_NAME)),
+									Long.parseLong(response.getHeaderString(RID_HEADER_NAME)),
+									userAndDom[1], userAndDom[0]);
 
 						} catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
 							e.printStackTrace();

@@ -274,8 +274,8 @@ public class Bonrr {
         }
     }
 
-    public synchronized void addToAckList(String ack, long wts, String domain, String username) {
-        if (wts == getWts(domain, username)) {
+    public synchronized void addToAckList(String ack, long wts, long rid, String domain, String username) {
+        if (wts == getWts(domain, username) && rid == this.rid) {
             acklist.add(ack);
         }
     }
