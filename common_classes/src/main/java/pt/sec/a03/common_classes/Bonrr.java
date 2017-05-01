@@ -44,6 +44,8 @@ public class Bonrr {
     private ArrayList<String> acklist;
     private ArrayList<HashMap<String, String>> readlist;
 
+    private ArrayList<HashMap<String, String>> errorlist;
+
     //<Domain, <Username, wts>>
     private HashMap<String, HashMap<String, Long>> wts;
     private long rid;
@@ -66,6 +68,7 @@ public class Bonrr {
 		reading=false;
 		writeVal = new HashMap<String, byte[]>();
 		this.rank = 100;
+		this.errorlist = new ArrayList<HashMap<String, String>>();
 	}
 
 	public Bonrr(String bonrr, long wts, long rank, String domain, String username) {
@@ -124,9 +127,11 @@ public class Bonrr {
             authLink.send(servers.get(s), rid, infoToSendTemp, bonrr);
         }
 
-        while (readlist.size() <= ((servers.keySet().size() + FAULT_NUMBER) / 2)) {}
-        
-        checkErrorOccurences(readlist);
+        while (readlist.size() <= ((servers.keySet().size() + FAULT_NUMBER) / 2)) {
+            if(errorlist.size() > ((servers.keySet().size() + FAULT_NUMBER) / 2)) {
+                checkErrorOccurences(errorlist);
+            }
+        }
 
         //ERROR CASE FOR A WRITE WITHOUT PREVIOUS VALUE
         HashMap<String, byte[]> readBroadcastInfo = new HashMap<String, byte[]>();
@@ -200,13 +205,12 @@ public class Bonrr {
                     authLink.send(servers.get(s), getWts(domain, username), rid, rank, infoToSendTemp, bonrr);
 
             }
-            
+
 
             while (acklist.size() <= ((servers.keySet().size() + FAULT_NUMBER) / 2)) {
-                if(readlist.size() > ((servers.keySet().size() + FAULT_NUMBER) / 2)) {
-                    checkErrorOccurences(readlist);
+                if(errorlist.size() > ((servers.keySet().size() + FAULT_NUMBER) / 2)) {
+                    checkErrorOccurences(errorlist);
                 }
-
             }
 
             readlist = new ArrayList<HashMap<String, String>>();
@@ -289,7 +293,6 @@ public class Bonrr {
 		if (status == null) {
 			return;
 		}
-        this.readlist = new ArrayList<>();
         if (status.equals("400")) {
 			System.out.println(BAD_REQUEST_MSG);
 			throw new BadRequestException(BAD_REQUEST_EXCEPTION_MSG);
@@ -349,9 +352,6 @@ public class Bonrr {
     }
 
     public synchronized void addToReadList(HashMap<String, String> value, long readid) {
-        if(readid<-1){
-        	readlist.add(value);
-        }
         System.out.println("RID received: " + readid + " Local Rid: " + this.rid);
         if (readid == this.rid) {
             readlist.add(value);
@@ -382,5 +382,9 @@ public class Bonrr {
         else {
             return this.wts.get(domain).get(username);
         }
+    }
+
+    public synchronized void addToErrorList(HashMap<String, String> value, long readid) {
+        errorlist.add(value);
     }
 }

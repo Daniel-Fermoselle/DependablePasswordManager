@@ -4,14 +4,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import java.security.KeyStore;
-import java.security.PublicKey;
-import java.security.cert.Certificate;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.Future;
-
-import javax.ws.rs.BadRequestException;
-import javax.ws.rs.core.Response;
 
 import org.junit.FixMethodOrder;
 import org.junit.Test;
@@ -21,20 +15,17 @@ import pt.sec.a03.client_lib.ClientLib;
 import pt.sec.a03.common_classes.exception.DataNotFoundException;
 import pt.sec.a03.common_classes.exception.IllegalAccessExistException;
 import pt.sec.a03.common_classes.exception.InvalidArgumentException;
-import pt.sec.a03.common_classes.exception.UsernameAndDomainAlreadyExistException;
 import pt.sec.a03.crypto.Crypto;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class SavePasswordTest extends AbstractClientLibTest {
 
-    private static final long SLEEP_TIME = 2000;
+    private static final long SLEEP_TIME = 1000;
 
 
-    private static final String KEY_STORE_1 = "ks/Client1.jks";
     private static final String KEY_STORE_PASSWORD_1 = "insecure";
     private static final String KEY_STORE_ALIAS_FOR_PUB_PRIV_1 = "client";
 
-    private static final String KEY_STORE_2 = "ks/client2.jks";
     private static final String KEY_STORE_PASSWORD_2 = "insecure";
     private static final String KEY_STORE_ALIAS_FOR_PUB_PRIV_2 = "client";
 
@@ -42,13 +33,7 @@ public class SavePasswordTest extends AbstractClientLibTest {
     private static final String USERNAME_1 = "lol_gosu";
     private static final String PASSWORD_1 = "bestAdc";
     private static final String PASSWORD_2 = "buffLucian";
-    private static final String DOMAIN_3 = "YouTube";
-    private static final String USERNAME_3 = "lol_qt";
-    private static final String PASSWORD_3 = "godAdc";
 
-    private static final String FAKE_SIGNATURE = "fewvrwrwrgkwrgkwewkge";
-    private static final String FAKE_HASH = "WFEFERGGREGegerge";
-    private static final String FAKE_DOMAIN = "kfiefjwekfwkefelwke";
 
     private KeyStore ks1;
     private KeyStore ks2;
@@ -67,13 +52,12 @@ public class SavePasswordTest extends AbstractClientLibTest {
         c1 = new ClientLib(m);
         c2 = new ClientLib(m);
         try {
-            //ks1 = Crypto.readKeystoreFile(KEY_STORE_1, KEY_STORE_PASSWORD_1.toCharArray());
             ks1 = Crypto.readKeystoreFile("../Client/ks/Client1.jks", "insecure".toCharArray());
-            //ks2 = Crypto.readKeystoreFile(KEY_STORE_2, KEY_STORE_PASSWORD_2.toCharArray());
             ks2 = Crypto.readKeystoreFile("../Client/ks/client2.jks", "insecure".toCharArray());
 
             c1.init(ks1, KEY_STORE_ALIAS_FOR_PUB_PRIV_1, KEY_STORE_PASSWORD_1);
             c1.register_user();
+            Thread.sleep(SLEEP_TIME);
 
             c2.init(ks2, KEY_STORE_ALIAS_FOR_PUB_PRIV_2, KEY_STORE_PASSWORD_2);
         } catch (Exception e) {
