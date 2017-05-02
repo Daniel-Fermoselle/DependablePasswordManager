@@ -20,8 +20,9 @@ public class ClientApplication {
 		
 		Map<String,String> m = fileParser(args[0]);
 		String clientKeystore = args[1];
+		long rank = Long.parseLong(args[2]);
 		
-		ClientLib cl = new ClientLib(m);
+		ClientLib cl = new ClientLib(m, rank);
 
 		Console console = System.console();
 		if (console == null) {

@@ -43,7 +43,7 @@ public class RegisterUserTest extends AbstractClientLibTest {
 
 	@Override
 	protected void populate() {
-		c1 = new ClientLib(m);
+		c1 = new ClientLib(m, 100);
 		try {
 			ks1 = Crypto.readKeystoreFile(KEY_STORE_1, KEY_STORE_PASSWORD_1.toCharArray());
 			c1.init(ks1, KEY_STORE_ALIAS_FOR_PUB_PRIV_1, KEY_STORE_PASSWORD_1);

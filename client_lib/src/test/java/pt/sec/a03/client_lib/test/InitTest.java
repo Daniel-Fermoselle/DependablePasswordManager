@@ -39,7 +39,7 @@ public class InitTest extends AbstractClientLibTest {
 		m.put("server2", "localhost:6666");
 		m.put("server3", "localhost:7777");
 		m.put("server4", "localhost:5444");
-		c1 = new ClientLib(m);
+		c1 = new ClientLib(m,100);
 		try {
 			ks1 = Crypto.readKeystoreFile(KEY_STORE_1, KEY_STORE_PASSWORD_1.toCharArray());
 			ks2 = Crypto.readKeystoreFile(KEY_STORE_2, KEY_STORE_PASSWORD_2.toCharArray());

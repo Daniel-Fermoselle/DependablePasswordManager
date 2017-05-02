@@ -76,10 +76,13 @@ public class ClientLib {
 	private Bonrr bonrr;
 
 	private ArrayList<String> responses;
+	
+	long rank;
 
-	public ClientLib(Map<String, String> hosts) {
+	public ClientLib(Map<String, String> hosts, long rank) {
 		this.servers = hosts;
 		client = ClientBuilder.newClient();
+		this.rank = rank;
 	}
 
 	public void init(KeyStore ks, String aliasForPubPrivKey, String keyStorePw) {
@@ -90,7 +93,7 @@ public class ClientLib {
 
 		getNonces();
 
-		bonrr = new Bonrr(cliPubKey, cliPrivKey, servers, serversPubKey, Crypto.encode(cliPubKey.getEncoded()));
+		bonrr = new Bonrr(cliPubKey, cliPrivKey, servers, serversPubKey, Crypto.encode(cliPubKey.getEncoded()), rank);
 
 	}
 
