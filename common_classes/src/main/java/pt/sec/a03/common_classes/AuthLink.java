@@ -35,10 +35,8 @@ public class AuthLink {
 
 	private static final String FORBIDEN_MSG = "Forbiden operation";
 	private static final String BAD_REQUEST_MSG = "Invalid Request";
-	private static final String BAD_REQUEST_EXCEPTION_MSG = "There were an problem with the headers of the request";
 	private static final String DATA_NOT_FOUND_MSG = "Data Not Found";
 	private static final String SERVER_ERROR_MSG = "Internal server error";
-	private static final String INTERNAL_SERVER_FAILURE_EXCEPTION_MSG = "There were an problem with the server";
 
     private Bonrr bonrr;
 	private PublicKey publicKey;
@@ -52,7 +50,8 @@ public class AuthLink {
 		this.privateKey = cliPrivKey;
 	}
 
-	public void send(PublicKey serverPubKey, String uriToSend, long wts, long rid, long rank, HashMap<String, byte[]> infoToSend, String bonrr) {
+	public void send(PublicKey serverPubKey, String uriToSend, long wts, long rid, long rank,
+                     HashMap<String, byte[]> infoToSend, String bonrr) {
 
 		CommonTriplet commonTriplet = new CommonTriplet(Crypto.encode(infoToSend.get(HASH_DOMAIN_IN_MAP)),
 				Crypto.encode(infoToSend.get(HASH_USERNAME_IN_MAP)), Crypto.encode(infoToSend.get(PASSWORD_IN_MAP)),
@@ -168,7 +167,7 @@ public class AuthLink {
 
                             // Verify write signature
                             String toVerifyWriteSig = bonrr + (wts + "") + (rank + "") + userAndDom[1] + userAndDom[0]
-                                    + encodedCipheredPassword + encodedCipheredHashPassword;
+                                + encodedCipheredPassword + encodedCipheredHashPassword;
                             verifySignature(AuthLink.this.publicKey, encodedWriteSig, toVerifyWriteSig);
 
                             HashMap<String,String> value = new HashMap<String, String>();

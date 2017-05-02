@@ -174,6 +174,19 @@ public class Database {
 		this.conn.close();
 	}
 
+    public void updateBonrr(String bonrr, Triplet t) throws SQLException {
+        //Get mysql conneciton
+        getConnection();
+        Statement stmt = this.conn.createStatement();
+
+        String sqlInsert = "UPDATE Bonrrs set rank=" + t.getRank() + ", pw='" + t.getPassword() + "', pwHash='" + t.getHash() + "'" +
+                ", signature= '" + t.getSignature() + "' WHERE bonrr='" + bonrr + "' AND domain='" + t.getDomain() +
+                "' AND username='" + t.getUsername() + "' AND wts=" + t.getWts() + ";";
+        stmt.execute(sqlInsert);
+
+        this.conn.close();
+    }
+
     public Triplet getBonrr(String bonrr, String username, String domain) throws SQLException {
         //Get mysql conneciton
         getConnection();
@@ -205,6 +218,7 @@ public class Database {
             return t;
         }
     }
+
 
 	public String[] getDBParams(String port) throws IOException {
 		String fileString = new String(Files.readAllBytes(Paths.get("metadata/metadata.in")), StandardCharsets.UTF_8);
@@ -244,6 +258,4 @@ public class Database {
 
 		this.conn.close();
 	}
-
-
 }

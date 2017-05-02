@@ -113,7 +113,6 @@ public class PasswordManager {
         }
 	    try {
             getUserByPK(bonrr);
-            //TODO see if its needed more restrictions
             Triplet bonrrInfo = this.db.getBonrr(bonrr, username, domain);
             if (bonrrInfo != null) {
                 return bonrrInfo;
@@ -134,13 +133,21 @@ public class PasswordManager {
         try {
             getUserByPK(bonrr);
             if(!this.db.checkUserAndDomain(bonrr,t)){ 
-            	throw new ForbiddenAccessException("The user with the public key " + bonrr + " has no permissions to access this information");
+            	throw new ForbiddenAccessException("The user with the public key " + bonrr
+                        + " has no permissions to access this information");
             }
-            	
-            //TODO add get bonrr to verify if we are not changing the domain and username of another user if yes
-            // ^ should throw new ForbiddenAccessException("The user with the public key " + publicKey + " has
-            // no permissions to access this information");
-            this.db.saveBonrr(bonrr, t);
+            try {
+                Triplet bonrrInfo = getBonrr(bonrr, t.getUsername(), t.getDomain());
+                if (hasRank(bonrrInfo, t)) {
+                    this.db.updateBonrr(bonrr, t);
+                }
+                else{
+                    this.db.saveBonrr(bonrr, t);
+                }
+            } catch (DataNotFoundException e){
+                this.db.saveBonrr(bonrr, t);
+            }
+
         } catch (SQLException e) {
             e.printStackTrace();
             throw new RuntimeException(e.getMessage());
@@ -148,7 +155,12 @@ public class PasswordManager {
 
     }
 
-
+    private boolean hasRank(Triplet bonrrInfo, Triplet t) {
+	    if(bonrrInfo.getWts() == t.getWts() && bonrrInfo.getRank() < t.getRank()){
+	        return true;
+        }
+        return false;
+    }
 
 
 }
