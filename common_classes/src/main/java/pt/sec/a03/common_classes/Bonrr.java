@@ -2,6 +2,7 @@ package pt.sec.a03.common_classes;
 
 import pt.sec.a03.common_classes.exception.DataNotFoundException;
 import pt.sec.a03.common_classes.exception.IllegalAccessExistException;
+import pt.sec.a03.common_classes.exception.InvalidSignatureException;
 import pt.sec.a03.crypto.Crypto;
 
 import java.security.*;
@@ -34,8 +35,9 @@ public class Bonrr {
 	private static final String INTERNAL_SERVER_FAILURE_EXCEPTION_MSG = "There were an problem with the server";
 
 	public static final int FAULT_NUMBER = 1;
+    private static final String SIG_TO_VERIFY = "sig-to-verify";
 
-	private PublicKey cliPubKey;
+    private PublicKey cliPubKey;
 	private PrivateKey cliPrivKey;
 	private Map<String, String> servers;
 	private Map<String, PublicKey> serversPubKey;
@@ -258,8 +260,13 @@ public class Bonrr {
 
 		for (HashMap<String, String> ocurrency : readlist) {
 			if (Long.parseLong(ocurrency.get(WTS_IN_MAP)) > highestWts) {
-				highestWts = Long.parseLong(ocurrency.get(WTS_IN_MAP));
-				highestValue = ocurrency;
+			    try {
+                    verifySignature(this.cliPubKey, ocurrency.get(SIGNATURE_IN_MAP), ocurrency.get(SIG_TO_VERIFY));
+                    highestWts = Long.parseLong(ocurrency.get(WTS_IN_MAP));
+                    highestValue = ocurrency;
+                } catch (InvalidSignatureException e){
+			        continue;
+                }
 			}
 		}
 		return highestValue;
@@ -389,4 +396,16 @@ public class Bonrr {
     public synchronized void addToErrorList(HashMap<String, String> value) {
         errorlist.add(value);
     }
+
+    private void verifySignature(PublicKey publicKey, String signatureToVer, String signature) {
+        try {
+            if (!Crypto.verifyDigitalSignature(Crypto.decode(signatureToVer), signature.getBytes(), publicKey)) {
+                throw new InvalidSignatureException("Invalid Signature on Bonrr");
+            }
+        } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e.getMessage());
+        }
+    }
+
 }

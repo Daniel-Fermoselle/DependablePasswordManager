@@ -1,5 +1,6 @@
 package pt.sec.a03.common_classes;
 
+import pt.sec.a03.common_classes.exception.InvalidSignatureException;
 import pt.sec.a03.crypto.Crypto;
 
 import javax.crypto.BadPaddingException;
@@ -37,6 +38,7 @@ public class AuthLink {
 	private static final String BAD_REQUEST_MSG = "Invalid Request";
 	private static final String DATA_NOT_FOUND_MSG = "Data Not Found";
 	private static final String SERVER_ERROR_MSG = "Internal server error";
+    private static final String SIG_TO_VERIFY = "sig-to-verify";
 
     private Bonrr bonrr;
 	private PublicKey publicKey;
@@ -165,10 +167,9 @@ public class AuthLink {
                                     + encodedCipheredPassword + encodedCipheredHashPassword + encodedWriteSig;
                             verifySignature(serverPubKey, response.getHeaderString(AUTH_LINK_SIG), toVerify);
 
-                            // Verify write signature
+                            // Create verify write signature
                             String toVerifyWriteSig = bonrr + (wts + "") + (rank + "") + userAndDom[1] + userAndDom[0]
                                 + encodedCipheredPassword + encodedCipheredHashPassword;
-                            verifySignature(AuthLink.this.publicKey, encodedWriteSig, toVerifyWriteSig);
 
                             HashMap<String,String> value = new HashMap<String, String>();
                             value.put(HASH_DOMAIN_IN_MAP, userAndDom[1]);
@@ -179,6 +180,7 @@ public class AuthLink {
                             value.put(SIGNATURE_IN_MAP, encodedWriteSig);
                             value.put(RID_IN_MAP, rid + "");
                             value.put(RANK_IN_MAP, rank + "");
+                            value.put(SIG_TO_VERIFY, toVerifyWriteSig);
 							AuthLink.this.bonrr.addToReadList(value, rid);
 
 					}
@@ -258,8 +260,7 @@ public class AuthLink {
 	private void verifySignature(PublicKey publicKey, String signatureToVer, String signature) {
 		try {
 			if (!Crypto.verifyDigitalSignature(Crypto.decode(signatureToVer), signature.getBytes(), publicKey)) {
-				// TODO throw new InvalidSignatureException();
-				throw new RuntimeException("Invalid Signature on Bonrr");
+				throw new InvalidSignatureException("Invalid Signature on Bonrr");
 			}
 		} catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
 			e.printStackTrace();
