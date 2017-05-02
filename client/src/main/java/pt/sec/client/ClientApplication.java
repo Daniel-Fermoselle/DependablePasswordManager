@@ -19,6 +19,7 @@ public class ClientApplication {
 	public static void main(String args[]) throws Exception {
 		
 		Map<String,String> m = fileParser(args[0]);
+		String clientKeystore = args[1];
 		
 		ClientLib cl = new ClientLib(m);
 
@@ -30,7 +31,7 @@ public class ClientApplication {
 		console.printf("Password Manager initiated:\n");
 		
 		System.out.println("Working Directory = " + System.getProperty("user.dir"));
-		KeyStore ks = Crypto.readKeystoreFile("ks/client1.jks", "insecure".toCharArray());
+		KeyStore ks = Crypto.readKeystoreFile(clientKeystore, "insecure".toCharArray());
 		cl.init(ks, "client", "insecure");
 
 		while (true) {
