@@ -1,6 +1,7 @@
 package pt.sec.a03.server.domain;
 
 import java.sql.SQLException;
+import java.util.Random;
 
 import pt.sec.a03.common_classes.Bonrr;
 import pt.sec.a03.server.database.Database;
@@ -136,17 +137,7 @@ public class PasswordManager {
             	throw new ForbiddenAccessException("The user with the public key " + bonrr
                         + " has no permissions to access this information");
             }
-            try {
-                Triplet bonrrInfo = getBonrr(bonrr, t.getUsername(), t.getDomain());
-                if (hasRank(bonrrInfo, t)) {
-                    this.db.updateBonrr(bonrr, t);
-                }
-                else{
-                    this.db.saveBonrr(bonrr, t);
-                }
-            } catch (DataNotFoundException e){
-                this.db.saveBonrr(bonrr, t);
-            }
+            this.db.saveBonrr(bonrr, t);
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -156,11 +147,10 @@ public class PasswordManager {
     }
 
     private boolean hasRank(Triplet bonrrInfo, Triplet t) {
-	    if(bonrrInfo.getWts() == t.getWts() && bonrrInfo.getRank() < t.getRank()){
-	        return true;
+        if(bonrrInfo.getWts() == t.getWts() && bonrrInfo.getRank() < t.getRank()){
+            return true;
         }
         return false;
     }
-
 
 }

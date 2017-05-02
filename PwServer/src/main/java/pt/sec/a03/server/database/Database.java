@@ -169,8 +169,16 @@ public class Database {
                 " values ('" + bonrr + "', " + t.getWts() + ", '" + t.getUsername() + "', '"
                 + t.getDomain() + "', " + t.getRank() + ", '" + t.getSignature() + "', '" + t.getPassword() + "', '" + t.getHash() + "');";
 
-		stmt.execute(sqlInsert);
-
+		try {
+			stmt.execute(sqlInsert);
+		}catch (Exception e){
+			Triplet bonrrInfo = getBonrr(bonrr, t.getUsername(), t.getDomain());
+			if (bonrrInfo != null && hasRank(bonrrInfo, t)) {
+				updateBonrr(bonrr, t);
+				this.conn.close();
+				return;
+			}
+		}
 		this.conn.close();
 	}
 
@@ -257,5 +265,12 @@ public class Database {
 		System.setOut(originalStream);
 
 		this.conn.close();
+	}
+
+	private boolean hasRank(Triplet bonrrInfo, Triplet t) {
+		if(bonrrInfo.getWts() == t.getWts() && bonrrInfo.getRank() < t.getRank()){
+			return true;
+		}
+		return false;
 	}
 }
