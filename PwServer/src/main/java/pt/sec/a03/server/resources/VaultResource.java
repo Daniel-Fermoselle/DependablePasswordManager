@@ -59,7 +59,7 @@ public class VaultResource {
         }
 
         System.out.println("Received Post packet addPassword");
-        authLink.deliverWrite(publicKey, authSig, signature, wts, t, rid, rank);
+        authLink.deliverWrite(publicKey, authSig, signature, bonrr, wts, t, rid, rank);
 
         Triplet triplet = new Triplet(t.getDomain(), t.getUsername(), t.getPassword(), t.getHash(), signature,
                 Long.parseLong(wts), Long.parseLong(rid), Long.parseLong(rank));
@@ -72,9 +72,9 @@ public class VaultResource {
                 .header(AUTH_LINK_SIG, response[1])
                 .header(ACK_HEADER_NAME, response[2])
                 .header(NONCE_HEADER_NAME, response[3])
-                .header(RID_HEADER_NAME, rid)
-                .header(DOMAIN_HEADER_NAME, response[4])
-                .header(USERNAME_HEADER_NAME, response[5])
+                .header(RID_HEADER_NAME, response[4])
+                .header(DOMAIN_HEADER_NAME, response[5])
+                .header(USERNAME_HEADER_NAME, response[6])
                 .build());
     }
 
@@ -94,9 +94,9 @@ public class VaultResource {
 
         System.out.println("Received Get packet getPassword");
 
-        authLink.deliverRead(publicKey, authSig, rid, domain, username);
+        authLink.deliverRead(publicKey, authSig, bonrr, rid, domain, username);
 
-        String[] response = vaultService.get(publicKey, username, domain, rid, bonrr, MyApplication.BYZ_FAULT_CREATOR);
+        String[] response = vaultService.get(publicKey, username, domain, rid, bonrr);
 
         CommonTriplet triplet = new CommonTriplet();
         triplet.setDomain(response[5]);

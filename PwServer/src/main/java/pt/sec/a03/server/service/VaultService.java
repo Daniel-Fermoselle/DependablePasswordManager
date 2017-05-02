@@ -64,73 +64,62 @@ public class VaultService {
 	}
 
 	public String[] put(String publicKey, Triplet t, String bonrr) {
-		// Decipher
+		// Decipher domain and username
 		String[] userAndDom = decipherUsernameAndDomain(t.getDomain(), t.getUsername());
 
 		// Get Bonrr instance
 		Bonrr bonrrInstance = pwm.getBonrrInstance(bonrr, userAndDom[1], userAndDom[0]);
 
-		System.out.println("Got BonrrInstance");
-
-		// Verify deliver
+		// Verify wts and rank on deliver
 		if (bonrrInstance.deliver(t.getWts(), t.getRank(), userAndDom[1], userAndDom[0])) {
-			System.out.println("Going to update/put Bonrr");
 
-            System.out.println("Going to verify sig");
-            System.out.println("Bonrr: " + bonrr + " \nWts: " + t.getWts() + " Rid: " + t.getRid() + " Rank: " + t.getRank());
-            // Verify signature
+		    // Verify write signature
 			String serverSideTosign = bonrr + (t.getWts() + "") + (t.getRank() + "") + userAndDom[1] + userAndDom[0]
 					+ t.getPassword() + t.getHash();
 			verifySignature(publicKey, t.getSignature(), serverSideTosign);
 
-            System.out.println("Verified update/put Bonrr");
-
-            Triplet triplet = new Triplet(userAndDom[1], userAndDom[0], t.getPassword(), t.getHash(), t.getSignature(),
+			//Creating Triplet
+			Triplet triplet = new Triplet(userAndDom[1], userAndDom[0], t.getPassword(), t.getHash(), t.getSignature(),
 					t.getWts(),t.getRid(), t.getRank());
 
 			// Save to bonrr
-            System.out.println("Going to save update/put Bonrr");
-            pwm.saveBonrr(bonrr, triplet);
+			pwm.saveBonrr(bonrr, triplet);
 		}
 
-		// Response
+        //Ciphet username and domain
 		String[] cipherUserDom = cipherUsernameAndDomain(userAndDom[1], userAndDom[0], publicKey);
 
-		String ackMsg = "ACK" + (t.getWts() + "") + (t.getRid() + "") + userAndDom[1] + userAndDom[0];
-
-		// Make signature
+        // Make signature
+        String ackMsg = "ACK" + (t.getWts() + "") + (t.getRid() + "") + userAndDom[1] + userAndDom[0];
 		String sign = makeSignature(ackMsg);
 
-		return new String[] {Crypto.encode(this.pubKey.getEncoded()), sign, "ACK", t.getWts() + "", cipherUserDom[1],
-				cipherUserDom[0] };
+		return new String[] {Crypto.encode(this.pubKey.getEncoded()), sign, "ACK", t.getWts() + "", t.getRid() + "",
+				cipherUserDom[1], cipherUserDom[0] };
 	}
 
-	public String[] get(String publicKey, String username, String domain, String rid, String bonrr, boolean byzFaultCreator) {
+	public String[] get(String publicKey, String username, String domain, String rid, String bonrr) {
 
 		// Decipher domain and username
 		String[] userAndDom = decipherUsernameAndDomain(domain, username);
 
 		// Get Bonrr instance
 		Triplet bonrrInfo = pwm.getBonrr(bonrr, userAndDom[0], userAndDom[1]);
-
-		String[] cipherUserDom = cipherUsernameAndDomain(bonrrInfo.getDomain(), bonrrInfo.getUsername(), publicKey);
-		bonrrInfo.setDomain(cipherUserDom[1]);
-		bonrrInfo.setUsername(cipherUserDom[0]);
 		
 		//CREATING BYZANTINE FAULTS
-		if(byzFaultCreator) {
+		if(MyApplication.BYZ_FAULT_CREATOR) {
 		    System.out.println("Added Fault");
 		    bonrrInfo.setPassword(bonrrInfo.getPassword() + "ByzantineFault");
 		}
-		/*
-		 * if(!bonrrInstance.deliver(rid, READ_MODE)){ throw new
-		 * InvalidNonceException("rid with wrong value"); }
-		 */
 
 		// Make signature
 		String toSign = rid + (bonrrInfo.getWts() + "") + (bonrrInfo.getRank() + "") + bonrrInfo.getDomain()
                 + bonrrInfo.getUsername() + bonrrInfo.getPassword() + bonrrInfo.getHash() + bonrrInfo.getSignature();
 		String sign = makeSignature(toSign);
+
+		//Ciphet username and domain
+        String[] cipherUserDom = cipherUsernameAndDomain(bonrrInfo.getDomain(), bonrrInfo.getUsername(), publicKey);
+        bonrrInfo.setDomain(cipherUserDom[1]);
+        bonrrInfo.setUsername(cipherUserDom[0]);
 
 		return new String[] { Crypto.encode(this.pubKey.getEncoded()), sign, rid, bonrrInfo.getWts() + "",
 				bonrrInfo.getRank() + "", bonrrInfo.getDomain(), bonrrInfo.getUsername(), bonrrInfo.getPassword(),

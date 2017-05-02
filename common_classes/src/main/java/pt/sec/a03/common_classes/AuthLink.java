@@ -44,8 +44,7 @@ public class AuthLink {
 	private PublicKey publicKey;
 	private PrivateKey privateKey;
 
-	public AuthLink() {
-	}
+	public AuthLink() {}
 
 	public AuthLink(Bonrr bonrr, PublicKey cliPubKey, PrivateKey cliPrivKey) {
 		this.bonrr = bonrr;
@@ -63,7 +62,7 @@ public class AuthLink {
 		WebTarget vault = client.target("http://" + uriToSend + "/PwServer/").path("vault");
 
 		// Verify Signature
-		String toSign = Crypto.encode(infoToSend.get(SIGNATURE_IN_MAP)) + wts + rid + rank;
+		String toSign = Crypto.encode(infoToSend.get(SIGNATURE_IN_MAP)) + bonrr + (wts + "") + (rid + "") + (rank + "");
 		toSign = toSign + commonTriplet.getDomain();
 		toSign = toSign + commonTriplet.getUsername();
 		toSign = toSign + commonTriplet.getPassword();
@@ -82,54 +81,27 @@ public class AuthLink {
 					public void completed(Response response) {
 						try {
 
-							System.out.println(
-									"Response of save password status code " + response.getStatus() + " received.");
+							System.out.println("Response of save password status code " + response.getStatus()
+                                    + " received from " + uriToSend + ".");
 
-							if (response.getStatus() == 400) {
-								System.out.println(BAD_REQUEST_MSG);
-								HashMap<String,String> map = new HashMap<String,String>();
-								map.put("400", "400");
-								AuthLink.this.bonrr.addToErrorList(map, -400);
-								return;
-								//throw new BadRequestException(BAD_REQUEST_EXCEPTION_MSG);
-							} else if (response.getStatus() == 403) {
-								System.out.println(FORBIDEN_MSG);
-								HashMap<String,String> map = new HashMap<String,String>();
-								map.put("403", "403");
-								AuthLink.this.bonrr.addToErrorList(map, -403);
-								return;
-								//throw new IllegalAccessExistException("This combination of username and domain already exists");
-							} else if (response.getStatus() == 404) {
-								System.out.println(DATA_NOT_FOUND_MSG);
-								HashMap<String,String> map = new HashMap<String,String>();
-								map.put("404", "404");
-								AuthLink.this.bonrr.addToErrorList(map, -404);
-								return;
-								//throw new DataNotFoundException("This public key is not registered in the server");
-							} else if (response.getStatus() == 500) {
-								System.out.println(SERVER_ERROR_MSG);
-								HashMap<String,String> map = new HashMap<String,String>();
-								map.put("500", "500");
-								AuthLink.this.bonrr.addToErrorList(map, -500);
-								return;
-								//throw new InternalServerErrorException(INTERNAL_SERVER_FAILURE_EXCEPTION_MSG);
-							}
+							if(checkForErrors(response)){
+							    return;
+                            }
 
+                            //Get Server PublicKey
+                            PublicKey serverPubKey = Crypto
+                                    .getPubKeyFromByte(Crypto.decode(response.getHeaderString(PUBLIC_KEY_HEADER_NAME)));
 
+                            //Get Username and domain
 							String encodedHashDomain = response.getHeaderString(DOMAIN_HEADER_NAME);
 							String encodedHashUsername = response.getHeaderString(USERNAME_HEADER_NAME);
-
 							String[] userAndDom = decipherUsernameAndDomain(encodedHashDomain, encodedHashUsername);
 
-							String toVerify = response.getHeaderString(ACK_HEADER_NAME)
-									+ response.getHeaderString(NONCE_HEADER_NAME)
+                            // Verify signature
+                            String toVerify = response.getHeaderString(ACK_HEADER_NAME)
+                                    + response.getHeaderString(NONCE_HEADER_NAME)
 									+ response.getHeaderString(RID_HEADER_NAME)
 									+ userAndDom[1] + userAndDom[0];
-
-							PublicKey serverPubKey = Crypto
-									.getPubKeyFromByte(Crypto.decode(response.getHeaderString(PUBLIC_KEY_HEADER_NAME)));
-
-							// Verify signature
 							verifySignature(serverPubKey, response.getHeaderString(AUTH_LINK_SIG), toVerify);
 
 							AuthLink.this.bonrr.addToAckList(response.getHeaderString(ACK_HEADER_NAME),
@@ -151,7 +123,7 @@ public class AuthLink {
 				});
 	}
 
-	public void send(String uriToSend, long readId, HashMap<String, byte[]> infoToSend, String bonrr) {
+    public void send(String uriToSend, long readId, HashMap<String, byte[]> infoToSend, String bonrr) {
 
 		String hashedDomain = Crypto.encode(infoToSend.get(HASH_DOMAIN_IN_MAP));
 		String hashedUsername = Crypto.encode(infoToSend.get(HASH_USERNAME_IN_MAP));
@@ -160,7 +132,7 @@ public class AuthLink {
 		WebTarget vault = client.target("http://" + uriToSend + "/PwServer/").path("vault");
 
 		// Verify Signature
-		String toSign = "" + readId;
+		String toSign = bonrr + readId;
 		toSign = toSign + hashedDomain;
 		toSign = toSign + hashedUsername;
 		byte[] authSig = makeSignature(privateKey, toSign);
@@ -176,38 +148,19 @@ public class AuthLink {
 					public void completed(Response response) {
 						try {
 
+                            System.out.println("Response of save password status code " + response.getStatus()
+                                    + " received from " + uriToSend + ".");
+
                             if(response.getStatus() == 404 && !AuthLink.this.bonrr.getReading()){
                                 AuthLink.this.bonrr.addToReadList(null, readId);
                                 return;
-                            } else if (response.getStatus() == 400) {
-                				System.out.println(BAD_REQUEST_MSG);
-                				HashMap<String,String> map = new HashMap<String,String>();
-                				map.put("400", "400");
-                                AuthLink.this.bonrr.addToErrorList(map, -400);
+                            } else if (checkForErrors(response)){
                                 return;
-                				//throw new BadRequestException(BAD_REQUEST_EXCEPTION_MSG);
-                			} else if (response.getStatus() == 403) {
-                				System.out.println(FORBIDEN_MSG);
-                				HashMap<String,String> map = new HashMap<String,String>();
-                				map.put("403", "403");
-                                AuthLink.this.bonrr.addToErrorList(map, -403);
-                                return;
-                				//throw new IllegalAccessExistException("This combination of username and domain already exists");
-                			} else if (response.getStatus() == 404) {
-                				System.out.println(DATA_NOT_FOUND_MSG);
-                				HashMap<String,String> map = new HashMap<String,String>();
-                				map.put("404", "404");
-                                AuthLink.this.bonrr.addToErrorList(map, -404);
-                                return;
-                				//throw new DataNotFoundException("This public key is not registered in the server");
-                			} else if (response.getStatus() == 500) {
-                				System.out.println(SERVER_ERROR_MSG);
-                				HashMap<String,String> map = new HashMap<String,String>();
-                				map.put("500", "500");
-                                AuthLink.this.bonrr.addToErrorList(map, -500);
-                                return;
-                				//throw new InternalServerErrorException(INTERNAL_SERVER_FAILURE_EXCEPTION_MSG);
-                			}
+                            }
+
+                            //Get Server PublicKey
+                            PublicKey serverPubKey = Crypto
+                                    .getPubKeyFromByte(Crypto.decode(response.getHeaderString(PUBLIC_KEY_HEADER_NAME)));
 
                             CommonTriplet t = response.readEntity(CommonTriplet.class);
                             String encodedHashDomain = t.getDomain();
@@ -219,24 +172,17 @@ public class AuthLink {
                             long rid = Long.parseLong(response.getHeaderString(RID_HEADER_NAME));
                             long rank = Long.parseLong(response.getHeaderString(RANK_HEADER_NAME));
 
-							System.out.println(
-									"Response of save password status code " + response.getStatus() + " received.");
-
-							String toVerify = (rid + "") + (wts + "") + (rank + "") + encodedHashDomain + encodedHashUsername + encodedCipheredPassword
-                                    + encodedCipheredHashPassword + encodedWriteSig;
-
-							PublicKey serverPubKey = Crypto
-									.getPubKeyFromByte(Crypto.decode(response.getHeaderString(PUBLIC_KEY_HEADER_NAME)));
-
-							// Verify authentication link signature
-							verifySignature(serverPubKey, response.getHeaderString(AUTH_LINK_SIG), toVerify);
-
+                            //Decipher username and domain
                             String[] userAndDom = decipherUsernameAndDomain(encodedHashDomain, encodedHashUsername);
 
-                            String toVerifyWriteSig = bonrr + (wts + "") + (rank + "") + userAndDom[1] + userAndDom[0]
-                                    + encodedCipheredPassword + encodedCipheredHashPassword;
+                            // Verify authentication link signature
+                            String toVerify = (rid + "") + (wts + "") + (rank + "") + userAndDom[1] + userAndDom[0]
+                                    + encodedCipheredPassword + encodedCipheredHashPassword + encodedWriteSig;
+                            verifySignature(serverPubKey, response.getHeaderString(AUTH_LINK_SIG), toVerify);
 
                             // Verify write signature
+                            String toVerifyWriteSig = bonrr + (wts + "") + (rank + "") + userAndDom[1] + userAndDom[0]
+                                    + encodedCipheredPassword + encodedCipheredHashPassword;
                             verifySignature(AuthLink.this.publicKey, encodedWriteSig, toVerifyWriteSig);
 
                             HashMap<String,String> value = new HashMap<String, String>();
@@ -264,10 +210,11 @@ public class AuthLink {
 				});
 	}
 
-	public void deliverWrite(String publicKey, String authSig, String signature, String wts, CommonTriplet t,
-							 String rid, String rank) {
+	public void deliverWrite(String publicKey, String authSig, String signature, String bonrr, String wts,
+							 CommonTriplet t, String rid, String rank) {
 		try {
-			String toVerify = signature + wts + rid + rank + t.getDomain() + t.getUsername() + t.getPassword() + t.getHash();
+			String toVerify = signature + bonrr + wts + rid + rank + t.getDomain() + t.getUsername() + t.getPassword()
+					+ t.getHash();
 			PublicKey pubKey = Crypto.getPubKeyFromByte(Crypto.decode(publicKey));
 			verifySignature(pubKey, authSig, toVerify);
 		} catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
@@ -276,9 +223,9 @@ public class AuthLink {
 		}
 	}
 
-    public void deliverRead(String publicKey, String authSig, String rid, String domain, String username) {
+    public void deliverRead(String publicKey, String authSig, String bonrr, String rid, String domain, String username) {
         try {
-            String toVerify = rid + domain + username;
+            String toVerify = bonrr + rid + domain + username;
             PublicKey pubKey = Crypto.getPubKeyFromByte(Crypto.decode(publicKey));
             verifySignature(pubKey, authSig, toVerify);
         } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
@@ -288,7 +235,37 @@ public class AuthLink {
         }
     }
 
-	private byte[] makeSignature(PrivateKey cliPrivKey, String toSign) {
+    private boolean checkForErrors(Response response) {
+        if (response.getStatus() == 400) {
+            System.out.println(BAD_REQUEST_MSG);
+            HashMap<String,String> map = new HashMap<String,String>();
+            map.put("400", "400");
+            AuthLink.this.bonrr.addToErrorList(map, -400);
+            return true;
+        } else if (response.getStatus() == 403) {
+            System.out.println(FORBIDEN_MSG);
+            HashMap<String,String> map = new HashMap<String,String>();
+            map.put("403", "403");
+            AuthLink.this.bonrr.addToErrorList(map, -403);
+            return true;
+        } else if (response.getStatus() == 404) {
+            System.out.println(DATA_NOT_FOUND_MSG);
+            HashMap<String,String> map = new HashMap<String,String>();
+            map.put("404", "404");
+            AuthLink.this.bonrr.addToErrorList(map, -404);
+            return true;
+        } else if (response.getStatus() == 500) {
+            System.out.println(SERVER_ERROR_MSG);
+            HashMap<String,String> map = new HashMap<String,String>();
+            map.put("500", "500");
+            AuthLink.this.bonrr.addToErrorList(map, -500);
+            return true;
+        } else{
+            return false;
+        }
+    }
+
+    private byte[] makeSignature(PrivateKey cliPrivKey, String toSign) {
 		try {
 			return Crypto.makeDigitalSignature(toSign.getBytes(), cliPrivKey);
 		} catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
