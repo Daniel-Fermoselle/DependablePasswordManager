@@ -48,9 +48,7 @@ public class ClientLib {
 
 	// Internal message constants
 	private static final String SUCCESS_MSG = "Success";
-	private static final String FORBIDEN_MSG = "Forbiden operation";
 	private static final String ALREADY_EXISTS_MSG = "Entity already exists";
-	private static final String DATA_NOT_FOUND_MSG = "Data Not Found";
 	private static final String BAD_REQUEST_MSG = "Invalid Request";
 	private static final String SERVER_ERROR_MSG = "Internal server error";
 	private static final String ELSE_MSG = "Error";
@@ -59,8 +57,6 @@ public class ClientLib {
 	private static final String OVERSIZE_PASSWORD_MSG = "Password to big to the system 245 bytes maximum";
 	private static final String INVALID_TIMESTAMP_EXCEPTION_MSG = "The timestamp received is invalid";
 	private static final String BAD_REQUEST_EXCEPTION_MSG = "There were an problem with the headers of the request";
-	private static final String INTERNAL_SERVER_FAILURE_EXCEPTION_MSG = "There were an problem with the server";
-	private static final String UNEXPECTED_ERROR_EXCEPTION_MSG = "There was an unexpected error";
 	private static final String INVALID_ARGUMENSTS_MSG = "One of the arguments was invalid";
 
 
@@ -141,8 +137,8 @@ public class ClientLib {
 				.async().post(Entity.json(null), new InvocationCallback<Response>() {
 					@Override
 					public void completed(Response postResponse) {
-						System.out.println("Response of register user status code "
-								+ postResponse.getStatus() + " received.");
+						System.out.println("Response of save password status code " + postResponse.getStatus()
+								+ " received from " + servers.get(alias) + ".");
 
                         if (postResponse.getStatus() == 201) {
                             String sigToVerify = postResponse.getHeaderString(SIGNATURE_HEADER_NAME);
@@ -175,7 +171,6 @@ public class ClientLib {
 					@Override
 					public void failed(Throwable throwable) {
 						System.out.println("Invocation failed in resgister user.");
-						throwable.printStackTrace();
 					}
 				});
 	}
@@ -371,7 +366,6 @@ public class ClientLib {
 			@Override
 			public void failed(Throwable throwable) {
 				System.out.println("Invocation failed.");
-				throwable.printStackTrace();
 			}
 		});
 	}

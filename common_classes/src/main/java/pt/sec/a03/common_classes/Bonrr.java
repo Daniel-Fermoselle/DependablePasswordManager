@@ -87,8 +87,9 @@ public class Bonrr {
         this.acklist = new ArrayList<String>();
         this.readlist = new ArrayList<HashMap<String, String>>();
         this.errorlist = new ArrayList<>();
+        this.reading=false;
 
-		//Preform read
+        //Preform read
 		HashMap<String, byte[]> infoToRead = new HashMap<String, byte[]>();
 		infoToRead.put(HASH_DOMAIN_IN_MAP, infoToSend.get(HASH_DOMAIN_IN_MAP));
 		infoToRead.put(HASH_USERNAME_IN_MAP, infoToSend.get(HASH_USERNAME_IN_MAP));
@@ -97,11 +98,11 @@ public class Bonrr {
 
 	public String read(HashMap<String, byte[]> infoToSend) {
         //Set variables to read
-        rid = rid + 1;
-        acklist =  new ArrayList<String>();
-        readlist = new ArrayList<HashMap<String, String>>();
-        reading=true;
+        this.rid = rid + 1;
+        this.acklist =  new ArrayList<String>();
+        this.readlist = new ArrayList<HashMap<String, String>>();
         this.errorlist = new ArrayList<>();
+        this.reading=true;
 
         //Preform read
         return readBroadcast(infoToSend);
@@ -139,7 +140,7 @@ public class Bonrr {
 
         //ERROR CASE FOR A WRITE WITHOUT PREVIOUS VALUE
         HashMap<String, byte[]> readBroadcastInfo = new HashMap<String, byte[]>();
-        if(verifyNoValueRead()){
+        if(verifyNoValueRead() && !reading){
             readlist = new ArrayList<HashMap<String, String>>();
             updateWts(domain, username, getWts(domain, username) + 1);
             readBroadcastInfo.put(HASH_DOMAIN_IN_MAP, writeVal.get(HASH_DOMAIN_IN_MAP));
@@ -310,7 +311,7 @@ public class Bonrr {
 			throw new IllegalAccessExistException("This combination of username and domain already exists");
 		} else if (status.equals("404")) {
 			System.out.println(DATA_NOT_FOUND_MSG);
-			throw new DataNotFoundException("This public key is not registered in the server");
+			throw new DataNotFoundException(DATA_NOT_FOUND_MSG);
 		} else if (status.equals("500")) {
 			System.out.println(SERVER_ERROR_MSG);
 			throw new InternalServerErrorException(INTERNAL_SERVER_FAILURE_EXCEPTION_MSG);
@@ -321,8 +322,16 @@ public class Bonrr {
     private byte[] makeSignature(HashMap<String, byte[]> infoToSend) {
         String domain = new String(infoToSend.get(HASH_DOMAIN_IN_MAP));
         String username = new String(infoToSend.get(HASH_USERNAME_IN_MAP));
-        System.out.println("Bonrr: " + bonrr + " Wts: " + getWts(domain, username) + " Rid: " + rid + " Rank: " + rank);
-        String toSign = bonrr + (getWts(domain, username) + "") + (rank + "");
+        String toSign = bonrr + (getWts(domain, username) + "");
+        if(reading){
+            toSign = toSign + new String (infoToSend.get(RANK_IN_MAP));
+            System.out.println("Wts: " + getWts(domain, username) + " Rid: " + rid + " Rank: "
+                    + Long.parseLong(new String (infoToSend.get(RANK_IN_MAP))));
+        }
+        else{
+            toSign = toSign + (rank + "");
+            System.out.println("Wts: " + getWts(domain, username) + " Rid: " + rid + " Rank: " + rank);
+        }
         toSign = toSign + domain;
         toSign = toSign + username;
         toSign = toSign + Crypto.encode(infoToSend.get(PASSWORD_IN_MAP));

@@ -109,8 +109,7 @@ public class AuthLink {
 
 					@Override
 					public void failed(Throwable throwable) {
-						System.out.println("Invocation failed in save password.");
-						throwable.printStackTrace();
+						System.out.println("Invocation failed in save password from " + uriToSend + ".");
 					}
 				});
 	}
@@ -187,8 +186,7 @@ public class AuthLink {
 
 					@Override
 					public void failed(Throwable throwable) {
-						System.out.println("Invocation failed in save password.");
-						throwable.printStackTrace();
+						System.out.println("Invocation failed in save password from " + uriToSend + ".");
 					}
 				});
 	}
