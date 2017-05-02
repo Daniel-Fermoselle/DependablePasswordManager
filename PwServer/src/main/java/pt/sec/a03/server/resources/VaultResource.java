@@ -68,13 +68,12 @@ public class VaultResource {
         stop();
         
         asyncResponse.resume(Response.status(Status.CREATED)
-                .header(PUBLIC_KEY_HEADER_NAME, response[0])
-                .header(AUTH_LINK_SIG, response[1])
-                .header(ACK_HEADER_NAME, response[2])
-                .header(NONCE_HEADER_NAME, response[3])
-                .header(RID_HEADER_NAME, response[4])
-                .header(DOMAIN_HEADER_NAME, response[5])
-                .header(USERNAME_HEADER_NAME, response[6])
+                .header(AUTH_LINK_SIG, response[0])
+                .header(ACK_HEADER_NAME, response[1])
+                .header(NONCE_HEADER_NAME, response[2])
+                .header(RID_HEADER_NAME, response[3])
+                .header(DOMAIN_HEADER_NAME, response[4])
+                .header(USERNAME_HEADER_NAME, response[5])
                 .build());
     }
 
@@ -99,20 +98,19 @@ public class VaultResource {
         String[] response = vaultService.get(publicKey, username, domain, rid, bonrr);
 
         CommonTriplet triplet = new CommonTriplet();
-        triplet.setDomain(response[5]);
-        triplet.setUsername(response[6]);
-        triplet.setPassword(response[7]);
-        triplet.setHash(response[8]);
+        triplet.setDomain(response[4]);
+        triplet.setUsername(response[5]);
+        triplet.setPassword(response[6]);
+        triplet.setHash(response[7]);
         
         stop();
 
         asyncResponse.resume(Response.status(Status.OK)
-                .header(PUBLIC_KEY_HEADER_NAME, response[0])
-                .header(AUTH_LINK_SIG, response[1])
-                .header(RID_HEADER_NAME, response[2])
-                .header(NONCE_HEADER_NAME, response[3])
-                .header(RANK_HEADER_NAME, response[4])
-                .header(SIGNATURE_HEADER_NAME, response[9])
+                .header(AUTH_LINK_SIG, response[0])
+                .header(RID_HEADER_NAME, response[1])
+                .header(NONCE_HEADER_NAME, response[2])
+                .header(RANK_HEADER_NAME, response[3])
+                .header(SIGNATURE_HEADER_NAME, response[8])
                 .entity(triplet)
                 .build());
     }

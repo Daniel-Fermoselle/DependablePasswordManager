@@ -52,7 +52,7 @@ public class AuthLink {
 		this.privateKey = cliPrivKey;
 	}
 
-	public void send(String uriToSend, long wts, long rid, long rank, HashMap<String, byte[]> infoToSend, String bonrr) {
+	public void send(PublicKey serverPubKey, String uriToSend, long wts, long rid, long rank, HashMap<String, byte[]> infoToSend, String bonrr) {
 
 		CommonTriplet commonTriplet = new CommonTriplet(Crypto.encode(infoToSend.get(HASH_DOMAIN_IN_MAP)),
 				Crypto.encode(infoToSend.get(HASH_USERNAME_IN_MAP)), Crypto.encode(infoToSend.get(PASSWORD_IN_MAP)),
@@ -79,7 +79,6 @@ public class AuthLink {
 				.post(Entity.json(commonTriplet), new InvocationCallback<Response>() {
 					@Override
 					public void completed(Response response) {
-						try {
 
 							System.out.println("Response of save password status code " + response.getStatus()
                                     + " received from " + uriToSend + ".");
@@ -87,10 +86,6 @@ public class AuthLink {
 							if(checkForErrors(response)){
 							    return;
                             }
-
-                            //Get Server PublicKey
-                            PublicKey serverPubKey = Crypto
-                                    .getPubKeyFromByte(Crypto.decode(response.getHeaderString(PUBLIC_KEY_HEADER_NAME)));
 
                             //Get Username and domain
 							String encodedHashDomain = response.getHeaderString(DOMAIN_HEADER_NAME);
@@ -109,10 +104,6 @@ public class AuthLink {
 									Long.parseLong(response.getHeaderString(RID_HEADER_NAME)),
 									userAndDom[1], userAndDom[0]);
 
-						} catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
-							e.printStackTrace();
-							throw new RuntimeException(e.getMessage());
-						}
 					}
 
 					@Override
@@ -123,7 +114,7 @@ public class AuthLink {
 				});
 	}
 
-    public void send(String uriToSend, long readId, HashMap<String, byte[]> infoToSend, String bonrr) {
+    public void send(PublicKey serverPubKey, String uriToSend, long readId, HashMap<String, byte[]> infoToSend, String bonrr) {
 
 		String hashedDomain = Crypto.encode(infoToSend.get(HASH_DOMAIN_IN_MAP));
 		String hashedUsername = Crypto.encode(infoToSend.get(HASH_USERNAME_IN_MAP));
@@ -146,7 +137,6 @@ public class AuthLink {
 				.get(new InvocationCallback<Response>() {
 					@Override
 					public void completed(Response response) {
-						try {
 
                             System.out.println("Response of save password status code " + response.getStatus()
                                     + " received from " + uriToSend + ".");
@@ -157,10 +147,6 @@ public class AuthLink {
                             } else if (checkForErrors(response)){
                                 return;
                             }
-
-                            //Get Server PublicKey
-                            PublicKey serverPubKey = Crypto
-                                    .getPubKeyFromByte(Crypto.decode(response.getHeaderString(PUBLIC_KEY_HEADER_NAME)));
 
                             CommonTriplet t = response.readEntity(CommonTriplet.class);
                             String encodedHashDomain = t.getDomain();
@@ -196,10 +182,6 @@ public class AuthLink {
                             value.put(RANK_IN_MAP, rank + "");
 							AuthLink.this.bonrr.addToReadList(value, rid);
 
-						} catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
-							e.printStackTrace();
-							throw new RuntimeException(e.getMessage());
-						}
 					}
 
 					@Override
@@ -240,25 +222,25 @@ public class AuthLink {
             System.out.println(BAD_REQUEST_MSG);
             HashMap<String,String> map = new HashMap<String,String>();
             map.put("400", "400");
-            AuthLink.this.bonrr.addToErrorList(map, -400);
+            AuthLink.this.bonrr.addToErrorList(map);
             return true;
         } else if (response.getStatus() == 403) {
             System.out.println(FORBIDEN_MSG);
             HashMap<String,String> map = new HashMap<String,String>();
             map.put("403", "403");
-            AuthLink.this.bonrr.addToErrorList(map, -403);
+            AuthLink.this.bonrr.addToErrorList(map);
             return true;
         } else if (response.getStatus() == 404) {
             System.out.println(DATA_NOT_FOUND_MSG);
             HashMap<String,String> map = new HashMap<String,String>();
             map.put("404", "404");
-            AuthLink.this.bonrr.addToErrorList(map, -404);
+            AuthLink.this.bonrr.addToErrorList(map);
             return true;
         } else if (response.getStatus() == 500) {
             System.out.println(SERVER_ERROR_MSG);
             HashMap<String,String> map = new HashMap<String,String>();
             map.put("500", "500");
-            AuthLink.this.bonrr.addToErrorList(map, -500);
+            AuthLink.this.bonrr.addToErrorList(map);
             return true;
         } else{
             return false;

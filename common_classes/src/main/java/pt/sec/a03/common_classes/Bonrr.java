@@ -84,6 +84,7 @@ public class Bonrr {
         this.writeVal = infoToSend;
         this.acklist = new ArrayList<String>();
         this.readlist = new ArrayList<HashMap<String, String>>();
+        this.errorlist = new ArrayList<>();
 
 		//Preform read
 		HashMap<String, byte[]> infoToRead = new HashMap<String, byte[]>();
@@ -98,6 +99,7 @@ public class Bonrr {
         acklist =  new ArrayList<String>();
         readlist = new ArrayList<HashMap<String, String>>();
         reading=true;
+        this.errorlist = new ArrayList<>();
 
         //Preform read
         return readBroadcast(infoToSend);
@@ -124,7 +126,7 @@ public class Bonrr {
             infoToSendTemp.put(HASH_USERNAME_IN_MAP, dataCiphered.get(1));
 
             // Send
-            authLink.send(servers.get(s), rid, infoToSendTemp, bonrr);
+            authLink.send(serversPubKey.get(s), servers.get(s), rid, infoToSendTemp, bonrr);
         }
 
         while (readlist.size() <= ((servers.keySet().size() + FAULT_NUMBER) / 2)) {
@@ -199,10 +201,10 @@ public class Bonrr {
 
                 // Send
                 if(reading)
-                    authLink.send(servers.get(s), getWts(domain, username), rid,
+                    authLink.send(serversPubKey.get(s), servers.get(s), getWts(domain, username), rid,
                             Long.parseLong(new String (infoToSend.get(RANK_IN_MAP))), infoToSendTemp, bonrr);
                 else
-                    authLink.send(servers.get(s), getWts(domain, username), rid, rank, infoToSendTemp, bonrr);
+                    authLink.send(serversPubKey.get(s), servers.get(s), getWts(domain, username), rid, rank, infoToSendTemp, bonrr);
 
             }
 
@@ -384,7 +386,7 @@ public class Bonrr {
         }
     }
 
-    public synchronized void addToErrorList(HashMap<String, String> value, long readid) {
+    public synchronized void addToErrorList(HashMap<String, String> value) {
         errorlist.add(value);
     }
 }

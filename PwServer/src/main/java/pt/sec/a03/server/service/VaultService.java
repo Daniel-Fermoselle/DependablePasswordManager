@@ -93,7 +93,7 @@ public class VaultService {
         String ackMsg = "ACK" + (t.getWts() + "") + (t.getRid() + "") + userAndDom[1] + userAndDom[0];
 		String sign = makeSignature(ackMsg);
 
-		return new String[] {Crypto.encode(this.pubKey.getEncoded()), sign, "ACK", t.getWts() + "", t.getRid() + "",
+		return new String[] { sign, "ACK", t.getWts() + "", t.getRid() + "",
 				cipherUserDom[1], cipherUserDom[0] };
 	}
 
@@ -121,7 +121,7 @@ public class VaultService {
         bonrrInfo.setDomain(cipherUserDom[1]);
         bonrrInfo.setUsername(cipherUserDom[0]);
 
-		return new String[] { Crypto.encode(this.pubKey.getEncoded()), sign, rid, bonrrInfo.getWts() + "",
+		return new String[] {sign, rid, bonrrInfo.getWts() + "",
 				bonrrInfo.getRank() + "", bonrrInfo.getDomain(), bonrrInfo.getUsername(), bonrrInfo.getPassword(),
 				bonrrInfo.getHash(), bonrrInfo.getSignature() };
 	}
