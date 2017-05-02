@@ -19,8 +19,10 @@ public class ClientApplication {
 	public static void main(String args[]) throws Exception {
 		
 		Map<String,String> m = fileParser(args[0]);
+		String clientKeystore = args[1];
+		long rank = Long.parseLong(args[2]);
 		
-		ClientLib cl = new ClientLib(m);
+		ClientLib cl = new ClientLib(m, rank);
 
 		Console console = System.console();
 		if (console == null) {
@@ -30,7 +32,7 @@ public class ClientApplication {
 		console.printf("Password Manager initiated:\n");
 		
 		System.out.println("Working Directory = " + System.getProperty("user.dir"));
-		KeyStore ks = Crypto.readKeystoreFile("ks/client1.jks", "insecure".toCharArray());
+		KeyStore ks = Crypto.readKeystoreFile(clientKeystore, "insecure".toCharArray());
 		cl.init(ks, "client", "insecure");
 
 		while (true) {

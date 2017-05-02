@@ -56,7 +56,7 @@ public class Bonrr {
 	private HashMap<String, byte[]> writeVal;
 
 	public Bonrr(PublicKey cliPubKey, PrivateKey cliPrivKey, Map<String, String> servers,
-			Map<String, PublicKey> serversPubKey, String bonrr) {
+			Map<String, PublicKey> serversPubKey, String bonrr, long rank) {
 		this.cliPubKey = cliPubKey;
 		this.cliPrivKey = cliPrivKey;
 		this.servers = servers;
@@ -69,7 +69,7 @@ public class Bonrr {
 		this.bonrr = bonrr;
 		reading=false;
 		writeVal = new HashMap<String, byte[]>();
-		this.rank = 100;
+		this.rank = rank;
 		this.errorlist = new ArrayList<HashMap<String, String>>();
 	}
 
