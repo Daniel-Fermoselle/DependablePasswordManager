@@ -106,7 +106,7 @@ For the first add "slow-10" (without "") after localhost:port on one of the line
 	This will cause the server to take 10 seconds to send a response you can specify any time you want,
 	for example, "slow-5" will cause a delay of 5 seconds
 For the second add "fault" after localhost:port on one of the lines above.
-	This will make the server change the password that is going to be sent. We always change the password to ByzantineFault and wts to 1000 so make sure you don't use this password, this is just a satefy measure.
+	This will make the server change the password that is going to be sent. We always add to the password the word ByzantineFault and wts to 1000.
 For the third add "crash" after localhost:port on one of the lines above.
 	This will crash the server after it receives a request from a client.
 
