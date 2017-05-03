@@ -109,6 +109,7 @@ public class VaultService {
 		if(MyApplication.BYZ_FAULT_CREATOR) {
 		    System.out.println("Added Fault");
 		    bonrrInfo.setPassword(bonrrInfo.getPassword() + "ByzantineFault");
+		    bonrrInfo.setWts(1000);
 		}
 
 		// Make signature

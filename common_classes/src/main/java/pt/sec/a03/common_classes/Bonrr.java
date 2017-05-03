@@ -266,6 +266,7 @@ public class Bonrr {
                     highestWts = Long.parseLong(ocurrency.get(WTS_IN_MAP));
                     highestValue = ocurrency;
                 } catch (InvalidSignatureException e){
+                	System.out.println("Invalid  signature received.");
 			        continue;
                 }
 			}
